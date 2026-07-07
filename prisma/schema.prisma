@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          Role      @default(STUDENT)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  student       Student?
+  teacher       Teacher?
+  leads         Lead[]
+}
+
+enum Role {
+  ADMIN
+  TEACHER
+  STUDENT
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Lead {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  status      LeadStatus @default(NEW)
+  source      String?
+  notes       String?  @db.Text
+  assignedTo  String?
+  userId      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@index([status])
+  @@index([email])
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CONSULTATION_SCHEDULED
+  CONSULTATION_COMPLETED
+  PROPOSAL_SENT
+  CONVERTED
+  LOST
+}
+
+model Student {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  plan            Plan
+  status          StudentStatus @default(ACTIVE)
+  startDate       DateTime  @default(now())
+  nextPaymentDate DateTime?
+  subscriptionId  String?   @unique
+  customerId      String?
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes         Class[]
+  payments        Payment[]
+
+  @@index([status])
+  @@index([subscriptionId])
+}
+
+enum Plan {
+  BASIC
+  STANDARD
+  PREMIUM
+  CUSTOM
+}
+
+enum StudentStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  TRIAL
+}
+
+model Teacher {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  calendlyUrl String?
+  availability String[] @default([])
+  bio         String?  @db.Text
+  specialties String[] @default([])
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes     Class[]
+
+  @@index([isActive])
+}
+
+model Class {
+  id          String    @id @default(cuid())
+  studentId   String
+  teacherId   String
+  scheduledAt DateTime
+  duration    Int       @default(60) // minutes
+  status      ClassStatus @default(SCHEDULED)
+  meetLink    String?
+  notes       String?   @db.Text
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  teacher     Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([teacherId])
+  @@index([scheduledAt])
+}
+
+enum ClassStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model Payment {
+  id              String        @id @default(cuid())
+  studentId       String
+  amount          Float
+  currency        String        @default("BRL")
+  status          PaymentStatus @default(PENDING)
+  paymentMethod   String
+  stripePaymentId String?       @unique
+  dueDate         DateTime
+  paidAt          DateTime?
+  invoiceUrl      String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([studentId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String   @db.Text
+  excerpt     String?
+  coverImage  String?
+  published   Boolean  @default(false)
+  author      String
+  tags        String[] @default([])
+  seoTitle    String?
+  seoDescription String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
+  @@index([published])
+}
