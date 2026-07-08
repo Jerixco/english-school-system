@@ -85,10 +85,15 @@ export default function LoginPage() {
               {loading ? 'Entrando...' : 'Entrar'}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <Link href="/" className="text-purple-600 hover:underline">
-              Voltar para o site
+          <div className="mt-4 text-center text-sm space-y-2">
+            <Link href="/register" className="text-purple-600 hover:underline">
+              Não tem uma conta? Cadastre-se
             </Link>
+            <div>
+              <Link href="/" className="text-purple-600 hover:underline">
+                Voltar para o site
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

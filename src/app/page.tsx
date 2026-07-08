@@ -21,11 +21,11 @@ export default function HomePage() {
             <Link href="/contato" className="text-sm hover:text-purple-600 transition">Contato</Link>
           </nav>
           <div className="flex items-center gap-3">
-            <Link href="/login">
-              <Button variant="ghost">Entrar</Button>
+            <Link href="/register">
+              <Button variant="ghost">Cadastrar</Button>
             </Link>
-            <Link href="/agendar">
-              <Button>Agendar Consulta Gratuita</Button>
+            <Link href="/login">
+              <Button>Entrar</Button>
             </Link>
           </div>
         </div>

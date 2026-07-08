@@ -20,11 +20,14 @@ export default function ContatoPage() {
             <Link href="/professores" className="text-sm hover:text-purple-600 transition">Professores</Link>
             <Link href="/planos" className="text-sm hover:text-purple-600 transition">Planos</Link>
           </nav>
-          <Link href="/agendar">
-            <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
-              Agendar Consulta Gratuita
-            </button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/register">
+              <Button variant="ghost">Cadastrar</Button>
+            </Link>
+            <Link href="/login">
+              <Button>Entrar</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
