@@ -1,9 +1,8 @@
-'use client'
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import PlanCard from '@/components/PlanCard'
+import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, ArrowRight } from 'lucide-react'
-import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
 
 const PLANS = {
   basic: {
@@ -51,31 +50,6 @@ const PLANS = {
 }
 
 export default function PlanosPage() {
-  const [loading, setLoading] = useState<string | null>(null)
-
-  const handleSubscribe = async (planKey: string, priceId: string) => {
-    setLoading(planKey)
-    try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: 'user@example.com', // In production, get from auth
-          name: 'User Name',
-          priceId,
-        }),
-      })
-
-      const { url } = await response.json()
-      if (url) {
-        window.location.href = url
-      }
-    } catch (error) {
-      console.error('Error creating checkout session:', error)
-    } finally {
-      setLoading(null)
-    }
-  }
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -85,17 +59,17 @@ export default function PlanosPage() {
             English School
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-sm hover:text-purple-600 transition">Home</a>
-            <a href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</a>
-            <a href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</a>
-            <a href="/professores" className="text-sm hover:text-purple-600 transition">Professores</a>
-            <a href="/contato" className="text-sm hover:text-purple-600 transition">Contato</a>
+            <Link href="/" className="text-sm hover:text-purple-600 transition">Home</Link>
+            <Link href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</Link>
+            <Link href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</Link>
+            <Link href="/professores" className="text-sm hover:text-purple-600 transition">Professores</Link>
+            <Link href="/contato" className="text-sm hover:text-purple-600 transition">Contato</Link>
           </nav>
-          <a href="/agendar">
+          <Link href="/agendar">
             <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
               Agendar Consulta Gratuita
             </button>
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -114,40 +88,17 @@ export default function PlanosPage() {
         <div className="container mx-auto max-w-6xl">
           <div className="grid md:grid-cols-3 gap-8">
             {Object.entries(PLANS).map(([key, plan]) => (
-              <Card key={key} className={plan.popular ? 'border-purple-600 shadow-lg' : ''}>
-                <CardHeader>
-                  {plan.popular && (
-                    <div className="bg-purple-600 text-white text-sm px-3 py-1 rounded-full inline-block mb-2">
-                      Mais Popular
-                    </div>
-                  )}
-                  <CardTitle>{plan.name}</CardTitle>
-                  <CardDescription>{plan.description}</CardDescription>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">{plan.price}</span>
-                    <span className="text-gray-600">/mês</span>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-3 mb-6">
-                    {plan.features.map((feature) => (
-                      <li key={feature} className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    className="w-full"
-                    variant={plan.popular ? 'default' : 'outline'}
-                    onClick={() => plan.priceId && handleSubscribe(key, plan.priceId)}
-                    disabled={loading === key || !plan.priceId}
-                  >
-                    {loading === key ? 'Processando...' : 'Começar Agora'}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
+              plan.priceId ? (
+                <PlanCard
+                  key={key}
+                  name={plan.name}
+                  description={plan.description}
+                  price={plan.price}
+                  priceId={plan.priceId}
+                  features={plan.features}
+                  popular={plan.popular}
+                />
+              ) : null
             ))}
           </div>
         </div>
@@ -209,12 +160,12 @@ export default function PlanosPage() {
           <p className="text-xl text-gray-600 mb-8">
             Agende uma consulta gratuita e vamos encontrar o plano ideal para você.
           </p>
-          <a href="/agendar">
+          <Link href="/agendar">
             <Button size="lg" className="text-lg px-8 py-6">
               Agendar Consulta Gratuita
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-          </a>
+          </Link>
         </div>
       </section>
 

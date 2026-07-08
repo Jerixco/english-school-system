@@ -1,8 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Mail, Phone, MapPin, Send } from 'lucide-react'
+import { Mail, Phone, MapPin } from 'lucide-react'
+import ContactForm from '@/components/ContactForm'
+import Link from 'next/link'
 
 export default function ContatoPage() {
   return (
@@ -14,17 +14,17 @@ export default function ContatoPage() {
             English School
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-sm hover:text-purple-600 transition">Home</a>
-            <a href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</a>
-            <a href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</a>
-            <a href="/professores" className="text-sm hover:text-purple-600 transition">Professores</a>
-            <a href="/planos" className="text-sm hover:text-purple-600 transition">Planos</a>
+            <Link href="/" className="text-sm hover:text-purple-600 transition">Home</Link>
+            <Link href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</Link>
+            <Link href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</Link>
+            <Link href="/professores" className="text-sm hover:text-purple-600 transition">Professores</Link>
+            <Link href="/planos" className="text-sm hover:text-purple-600 transition">Planos</Link>
           </nav>
-          <a href="/agendar">
+          <Link href="/agendar">
             <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
               Agendar Consulta Gratuita
             </button>
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -84,43 +84,7 @@ export default function ContatoPage() {
               </div>
             </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Envie uma Mensagem</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Nome</Label>
-                    <Input id="name" placeholder="Seu nome completo" />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" type="email" placeholder="seu@email.com" />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Telefone</Label>
-                    <Input id="phone" placeholder="(11) 99999-9999" />
-                  </div>
-                  <div>
-                    <Label htmlFor="subject">Assunto</Label>
-                    <Input id="subject" placeholder="Assunto da mensagem" />
-                  </div>
-                  <div>
-                    <Label htmlFor="message">Mensagem</Label>
-                    <textarea
-                      id="message"
-                      className="flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      placeholder="Escreva sua mensagem..."
-                    />
-                  </div>
-                  <Button type="submit" className="w-full">
-                    <Send className="mr-2 h-4 w-4" />
-                    Enviar Mensagem
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            <ContactForm />
           </div>
         </div>
       </section>
@@ -132,11 +96,11 @@ export default function ContatoPage() {
           <p className="text-xl text-gray-600 mb-8">
             Agende uma consulta gratuita e converse com um de nossos professores.
           </p>
-          <a href="/agendar">
+          <Link href="/agendar">
             <Button size="lg" className="text-lg px-8 py-6">
               Agendar Consulta Gratuita
             </Button>
-          </a>
+          </Link>
         </div>
       </section>
 

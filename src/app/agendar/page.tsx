@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, CheckCircle } from 'lucide-react'
-import CalendlyWidget from '@/components/calendly-widget'
+import ScheduleForm from '@/components/ScheduleForm'
+import Link from 'next/link'
 
 export default function AgendarPage() {
   return (
@@ -13,17 +14,17 @@ export default function AgendarPage() {
             English School
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="/" className="text-sm hover:text-purple-600 transition">Home</a>
-            <a href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</a>
-            <a href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</a>
-            <a href="/professores" className="text-sm hover:text-purple-600 transition">Professores</a>
-            <a href="/planos" className="text-sm hover:text-purple-600 transition">Planos</a>
+            <Link href="/" className="text-sm hover:text-purple-600 transition">Home</Link>
+            <Link href="/sobre" className="text-sm hover:text-purple-600 transition">Sobre</Link>
+            <Link href="/metodologia" className="text-sm hover:text-purple-600 transition">Metodologia</Link>
+            <Link href="/professores" className="text-sm hover:text-purple-600 transition">Professores</Link>
+            <Link href="/planos" className="text-sm hover:text-purple-600 transition">Planos</Link>
           </nav>
-          <a href="/contato">
+          <Link href="/contato">
             <button className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition">
               Contato
             </button>
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -37,19 +38,10 @@ export default function AgendarPage() {
         </div>
       </section>
 
-      {/* Calendly Integration */}
+      {/* Schedule Form */}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-4xl">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">Escolha o melhor horário para você</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-gray-100 rounded-lg p-4">
-                <CalendlyWidget />
-              </div>
-            </CardContent>
-          </Card>
+          <ScheduleForm />
         </div>
       </section>
 

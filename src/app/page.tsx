@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ArrowRight, CheckCircle, Users, Award, Clock, Globe, Zap } from 'lucide-react'
+import LeadForm from '@/components/LeadForm'
 
 export default function HomePage() {
   return (
@@ -251,19 +252,36 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-6">Pronto para começar sua jornada?</h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Agende sua consulta gratuita e descubra como podemos ajudar você a alcançar fluência em inglês.
-          </p>
-          <Link href="/agendar">
-            <Button size="lg" className="text-lg px-8 py-6">
-              Agendar Consulta Gratuita
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+      {/* CTA with Lead Form */}
+      <section className="py-20 px-4 bg-gradient-to-br from-purple-50 to-blue-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-bold mb-6">Pronto para começar sua jornada?</h2>
+              <p className="text-xl text-gray-600 mb-8">
+                Deixe seus dados e entraremos em contato para agendar sua consulta gratuita.
+              </p>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                  <span className="text-gray-700">Primeira aula grátis</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                  <span className="text-gray-700">Sem compromisso</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-6 w-6 text-green-500" />
+                  <span className="text-gray-700">Avaliação gratuita do nível</span>
+                </div>
+              </div>
+            </div>
+            <LeadForm 
+              title="Agende sua Consulta"
+              description="Preencha o formulário e entraremos em contato"
+              source="home"
+            />
+          </div>
         </div>
       </section>
 
