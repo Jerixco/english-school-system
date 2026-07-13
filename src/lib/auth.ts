@@ -1,19 +1,17 @@
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { verifyTwoFactorToken } from '@/lib/two-factor'
+import { verifyTwoFactorToken, decryptTwoFactorSecret } from '@/lib/two-factor'
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: 'Credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
-        twoFactorToken: { label: '2FA Token', type: 'text' }
+        twoFactorToken: { label: '2FA Token', type: 'text' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -21,27 +19,23 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: {
-            student: true,
-            teacher: true,
-          }
+          where: { email: credentials.email.toLowerCase().trim() },
         })
 
         if (!user || !user.password) {
           throw new Error('Credenciais inválidas')
         }
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        )
+        if (user.lockedUntil && user.lockedUntil > new Date()) {
+          throw new Error('Conta temporariamente bloqueada. Tente novamente mais tarde.')
+        }
+
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
           throw new Error('Credenciais inválidas')
         }
 
-        // Check if 2FA is enabled
         if (user.twoFactorEnabled) {
           if (!credentials.twoFactorToken) {
             throw new Error('TWO_FACTOR_REQUIRED')
@@ -51,10 +45,8 @@ export const authOptions: NextAuthOptions = {
             throw new Error('Erro na configuração 2FA')
           }
 
-          const isValidToken = verifyTwoFactorToken(
-            credentials.twoFactorToken as string,
-            user.twoFactorSecret
-          )
+          const secret = decryptTwoFactorSecret(user.twoFactorSecret)
+          const isValidToken = verifyTwoFactorToken(credentials.twoFactorToken, secret)
 
           if (!isValidToken) {
             throw new Error('Token 2FA inválido')
@@ -67,14 +59,17 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
         }
-      }
-    })
+      },
+    }),
   ],
   session: {
     strategy: 'jwt',
+    maxAge: 8 * 60 * 60,
+    updateAge: 60 * 60,
   },
   pages: {
     signIn: '/login',
+    error: '/login',
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -93,4 +88,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 }

@@ -17,6 +17,14 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const validatePassword = (pwd: string): string | null => {
+    if (pwd.length < 8) return 'A senha deve ter pelo menos 8 caracteres'
+    if (!/[A-Z]/.test(pwd)) return 'A senha deve conter pelo menos uma letra maiúscula'
+    if (!/[a-z]/.test(pwd)) return 'A senha deve conter pelo menos uma letra minúscula'
+    if (!/[0-9]/.test(pwd)) return 'A senha deve conter pelo menos um número'
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -28,8 +36,9 @@ export default function RegisterPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres')
+    const passwordError = validatePassword(password)
+    if (passwordError) {
+      setError(passwordError)
       setLoading(false)
       return
     }
@@ -41,16 +50,22 @@ export default function RegisterPage() {
         body: JSON.stringify({ name, email, password }),
       })
 
-      const data = await response.json()
+      let data
+      try {
+        data = await response.json()
+      } catch {
+        setError('Erro de comunicação com o servidor. Verifique se o banco de dados está ativo.')
+        return
+      }
 
       if (!response.ok) {
         setError(data.error || 'Erro ao criar conta')
-      } else {
-        router.push('/login?registered=true')
+        return
       }
-    } catch (error) {
+
+      router.push('/login?registered=true')
+    } catch {
       setError('Erro ao criar conta. Tente novamente.')
-      console.error('Register error:', error)
     } finally {
       setLoading(false)
     }
@@ -64,7 +79,7 @@ export default function RegisterPage() {
             English School
           </div>
           <CardTitle className="text-2xl">Criar Conta</CardTitle>
-          <CardDescription>Cadastre-se para acessar o sistema</CardDescription>
+          <CardDescription>Cadastre-se para acessar o portal do aluno</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -82,6 +97,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                minLength={2}
               />
             </div>
             <div className="space-y-2">
@@ -100,12 +116,15 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
               />
+              <p className="text-xs text-gray-500">
+                Mínimo 8 caracteres, com maiúscula, minúscula e número
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmar Senha</Label>
@@ -116,7 +135,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>

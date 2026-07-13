@@ -1,5 +1,26 @@
 import { z } from 'zod'
 
+// Auth validation schemas
+export const registerSchema = z.object({
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
+  email: z.string().email('Email inválido'),
+  password: z
+    .string()
+    .min(8, 'A senha deve ter pelo menos 8 caracteres')
+    .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
+    .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula')
+    .regex(/[0-9]/, 'A senha deve conter pelo menos um número'),
+})
+
+export const loginSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string().min(1, 'Senha é obrigatória'),
+})
+
+export const twoFactorTokenSchema = z.object({
+  token: z.string().length(6, 'O código deve ter 6 dígitos').regex(/^\d+$/, 'Apenas números'),
+})
+
 // Lead validation schema
 export const leadSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
@@ -114,4 +135,21 @@ export const validateCheckout = (data: any) => {
   }
   
   return checkoutSchema.parse(sanitized)
+}
+
+export const validateRegister = (data: unknown) => {
+  const parsed = registerSchema.parse(data)
+  return {
+    name: sanitizeString(parsed.name),
+    email: sanitizeEmail(parsed.email),
+    password: parsed.password,
+  }
+}
+
+export const validateLogin = (data: unknown) => {
+  const parsed = loginSchema.parse(data)
+  return {
+    email: sanitizeEmail(parsed.email),
+    password: parsed.password,
+  }
 }
