@@ -5,13 +5,14 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const { calendlyUrl, bio, specialties, availability, isActive } = await req.json()
 
     const teacher = await prisma.teacher.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         calendlyUrl,
         bio,
@@ -33,11 +34,12 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await prisma.teacher.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

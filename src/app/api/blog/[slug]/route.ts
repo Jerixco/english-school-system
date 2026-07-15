@@ -4,7 +4,7 @@ import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     // Rate limiting
@@ -18,8 +18,9 @@ export async function GET(
       )
     }
 
+    const { slug } = await params
     const post = await prisma.blogPost.findUnique({
-      where: { slug: params.slug },
+      where: { slug },
     })
 
     if (!post) {
@@ -41,7 +42,7 @@ export async function GET(
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
     // Rate limiting
@@ -56,9 +57,10 @@ export async function PATCH(
     }
 
     const { title, content, excerpt, coverImage, published, tags, seoTitle, seoDescription } = await req.json()
+    const { slug } = await params
 
     const post = await prisma.blogPost.update({
-      where: { slug: params.slug },
+      where: { slug },
       data: {
         title,
         content,
@@ -83,11 +85,12 @@ export async function PATCH(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const { slug } = await params
     await prisma.blogPost.delete({
-      where: { slug: params.slug },
+      where: { slug },
     })
 
     return NextResponse.json({ success: true })
