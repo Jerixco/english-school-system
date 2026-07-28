@@ -217,3 +217,41 @@ export const sendPaymentReminderEmail = async (
 
   return sendEmail(email, 'Lembrete de Pagamento', html)
 }
+
+export const sendPasswordResetEmail = async (email: string, resetUrl: string) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+        .content { padding: 30px; background: #f9f9f9; }
+        .button { display: inline-block; padding: 12px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>Recuperação de Senha</h1>
+        </div>
+        <div class="content">
+          <p>Olá!</p>
+          <p>Você solicitou a recuperação de senha para sua conta na Escola de Inglês.</p>
+          <p>Clique no botão abaixo para definir uma nova senha:</p>
+          <a href="${resetUrl}" class="button">Redefinir Senha</a>
+          <p style="margin-top: 30px;">Se você não solicitou isso, por favor ignore este email.</p>
+          <p>Atenciosamente,<br>Equipe da Escola de Inglês</p>
+        </div>
+        <div class="footer">
+          <p>© 2026 Escola de Inglês. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+  return sendEmail(email, 'Recuperação de Senha - Escola de Inglês', html)
+}

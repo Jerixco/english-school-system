@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { checkRateLimit, authRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { validateRegister } from '@/lib/validation'
 import { createAuditLog } from '@/lib/account-security'
+import { sendWelcomeEmail } from '@/lib/email'
 import { ZodError } from 'zod'
 
 export async function POST(req: NextRequest) {
@@ -63,6 +64,11 @@ export async function POST(req: NextRequest) {
       details: `Novo usuário registrado: ${email}`,
       ipAddress: identifier,
       userAgent: req.headers.get('user-agent') || undefined,
+    })
+
+    // Disparar email de boas-vindas
+    await sendWelcomeEmail(email, name).catch((err) => {
+      console.error('Failed to send welcome email:', err)
     })
 
     return NextResponse.json(

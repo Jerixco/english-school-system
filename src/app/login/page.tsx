@@ -207,9 +207,16 @@ function LoginForm() {
           )}
 
           <div className="mt-4 text-center text-sm space-y-2">
-            <Link href="/register" className="text-purple-600 hover:underline">
-              Não tem uma conta? Cadastre-se
-            </Link>
+            <div>
+              <Link href="/forgot-password" className="text-purple-600 hover:underline">
+                Esqueceu sua senha?
+              </Link>
+            </div>
+            <div>
+              <Link href="/register" className="text-purple-600 hover:underline">
+                Não tem uma conta? Cadastre-se
+              </Link>
+            </div>
             <div>
               <Link href="/" className="text-purple-600 hover:underline">
                 Voltar para o site
