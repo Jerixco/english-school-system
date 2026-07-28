@@ -258,3 +258,24 @@ model BlogPost {
   @@index([slug])
   @@index([published])
 }
+
+model WhatsAppQueue {
+  id          String           @id @default(cuid())
+  phoneNumber String
+  message     String           @db.Text
+  status      WhatsAppStatus   @default(PENDING)
+  attempts    Int              @default(0)
+  errorMessage String?        @db.Text
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum WhatsAppStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}

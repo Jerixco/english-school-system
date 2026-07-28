@@ -244,6 +244,30 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Validação de BOLA/IDOR: se não for admin, usuário deve ser o próprio estudante ou o professor
+    if (!isAdmin(user)) {
+      const isUserStudent = student.userId === user.id
+      const teacherRecord = await prisma.teacher.findUnique({
+        where: { id: teacherId },
+        select: { userId: true },
+      })
+      const isUserTeacher = teacherRecord?.userId === user.id
+
+      if (!isUserStudent && !isUserTeacher) {
+        await logAuditAction(
+          user.id,
+          'class_create',
+          { studentId, teacherId, reason: 'unauthorized_scheduling' },
+          req,
+          'failure'
+        )
+        return NextResponse.json(
+          { error: 'Você não tem permissão para agendar aula para este estudante/professor' },
+          { status: 403 }
+        )
+      }
+    }
+
     // Verificar plano ativo
     if (!await isStudentPlanActive(studentId)) {
       await logAuditAction(
