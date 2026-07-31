@@ -1,12 +1,16 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { LeadStatus, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { validateLead } from '@/lib/validation'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { getRequestUserId } from '@/lib/request-user'
 
 export async function GET(req: NextRequest) {
   try {
+    const userId = getRequestUserId(req)
+
     // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
@@ -20,8 +24,19 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const hasStatus = status && Object.values(LeadStatus).includes(status as LeadStatus)
 
-    const where = status ? { status: status as any } : {}
+    if (status && !hasStatus) {
+      return NextResponse.json(
+        { error: 'Invalid status filter' },
+        { status: 400 }
+      )
+    }
+
+    const where: Prisma.LeadWhereInput = {
+      userId,
+      ...(status ? { status: status as LeadStatus } : {}),
+    }
 
     const leads = await prisma.lead.findMany({
       where,
@@ -40,6 +55,13 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(leads)
   } catch (error) {
+    if (error instanceof Error && error.message.includes('X-User-Id')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      )
+    }
+
     console.error('Error fetching leads:', error)
     return NextResponse.json(
       { error: 'Failed to fetch leads' },
@@ -50,6 +72,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const userId = getRequestUserId(req)
+
     // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
@@ -67,13 +91,23 @@ export async function POST(req: NextRequest) {
     const validatedData = validateLead(body)
 
     const lead = await prisma.lead.create({
-      data: validatedData,
+      data: {
+        ...validatedData,
+        userId,
+      },
     })
 
     return NextResponse.json(lead, { status: 201 })
   } catch (error: any) {
     console.error('Error creating lead:', error)
     
+    if (error instanceof Error && error.message.includes('X-User-Id')) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      )
+    }
+
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },

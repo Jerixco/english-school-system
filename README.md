@@ -18,6 +18,7 @@ Sistema completo para gestão de escola de inglês online com automações integ
 - **Frontend**: Next.js 14, React, TypeScript, TailwindCSS, shadcn/ui
 - **Backend**: Next.js API Routes, Prisma ORM
 - **Database**: PostgreSQL
+- **Documentação de API**: OpenAPI + Swagger UI
 - **Pagamentos**: Stripe
 - **Agendamento**: Calendly
 - **Automação**: Nodemailer (e-mail), WhatsApp Business API
@@ -48,6 +49,7 @@ Edite o arquivo `.env` com suas credenciais
 
 4. Configure o banco de dados:
 ```bash
+docker compose up -d
 npx prisma migrate dev
 npx prisma db push
 ```
@@ -76,6 +78,25 @@ english-school-system/
 ## 🔐 Variáveis de Ambiente
 
 Consulte o arquivo `.env.example` para todas as variáveis necessárias.
+
+## ✅ Qualidade e cobertura
+
+- Lint (ESLint): `npm run lint`
+- Testes: `npm test`
+- Cobertura mínima (90%): `npm run test:coverage`
+
+## 📘 OpenAPI/Swagger (a partir de request specs)
+
+1. Gere/atualize o `public/openapi.json` a partir dos request specs:
+```bash
+npm run openapi:generate
+```
+2. Rode o projeto:
+```bash
+npm run dev
+```
+3. Acesse a documentação interativa:
+`http://localhost:3000/api-docs`
 
 ## 📊 Dashboard
 

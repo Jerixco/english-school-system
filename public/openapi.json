@@ -1,0 +1,175 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "English School API",
+    "version": "1.0.0",
+    "description": "Gerado a partir dos request specs de leads."
+  },
+  "paths": {
+    "/api/leads": {
+      "get": {
+        "summary": "Listar leads do usuário do header",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "NEW",
+                "CONTACTED",
+                "CONSULTATION_SCHEDULED",
+                "CONSULTATION_COMPLETED",
+                "PROPOSAL_SENT",
+                "CONVERTED",
+                "LOST"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Leads retornados com sucesso"
+          },
+          "400": {
+            "description": "Header ou status inválido"
+          },
+          "429": {
+            "description": "Rate limit excedido"
+          }
+        }
+      },
+      "post": {
+        "summary": "Criar lead no escopo do usuário do header",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "email"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Lead criado com sucesso"
+          },
+          "400": {
+            "description": "Header ou payload inválido"
+          },
+          "429": {
+            "description": "Rate limit excedido"
+          }
+        }
+      }
+    },
+    "/api/leads/{id}": {
+      "patch": {
+        "summary": "Atualizar lead somente do usuário dono",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead atualizado com sucesso"
+          },
+          "404": {
+            "description": "Lead não encontrado no escopo do usuário"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Excluir lead somente do usuário dono",
+        "parameters": [
+          {
+            "name": "X-User-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lead excluído com sucesso"
+          },
+          "404": {
+            "description": "Lead não encontrado no escopo do usuário"
+          }
+        }
+      }
+    }
+  }
+}
