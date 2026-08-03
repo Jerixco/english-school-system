@@ -1,30 +1,71 @@
-import { RateLimiterMemory, RateLimiterRedis } from 'rate-limiter-flexible'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
+import { Ratelimit } from '@upstash/ratelimit'
+import { Redis } from '@upstash/redis'
 
-// Rate limiter for general API requests
+// Check if Upstash Redis env variables exist
+const hasUpstash = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
+
+const redis = hasUpstash
+  ? new Redis({
+      url: process.env.KV_REST_API_URL!,
+      token: process.env.KV_REST_API_TOKEN!,
+    })
+  : null
+
+const upstashApiLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(100, '60 s'), prefix: 'ratelimit:api' })
+  : null
+
+const upstashAuthLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(5, '300 s'), prefix: 'ratelimit:auth' })
+  : null
+
+const upstashStripeLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(3, '3600 s'), prefix: 'ratelimit:stripe' })
+  : null
+
+// Fallback Memory Rate Limiters for local dev
 export const apiRateLimiter = new RateLimiterMemory({
   keyPrefix: 'api_limit',
-  points: 100, // Number of requests
-  duration: 60, // Per 60 seconds
+  points: 100,
+  duration: 60,
 })
 
-// Rate limiter for authentication endpoints (stricter)
 export const authRateLimiter = new RateLimiterMemory({
   keyPrefix: 'auth_limit',
-  points: 5, // Number of requests
-  duration: 300, // Per 5 minutes
+  points: 5,
+  duration: 300,
 })
 
-// Rate limiter for Stripe checkout (prevent abuse)
 export const stripeRateLimiter = new RateLimiterMemory({
   keyPrefix: 'stripe_limit',
-  points: 3, // Number of requests
-  duration: 3600, // Per hour
+  points: 3,
+  duration: 3600,
 })
 
 export const checkRateLimit = async (
   limiter: RateLimiterMemory,
   identifier: string
 ): Promise<{ success: boolean; remaining?: number; resetTime?: Date }> => {
+  if (redis) {
+    let upstashLimiter = upstashApiLimiter
+    if (limiter === authRateLimiter) upstashLimiter = upstashAuthLimiter
+    if (limiter === stripeRateLimiter) upstashLimiter = upstashStripeLimiter
+
+    if (upstashLimiter) {
+      try {
+        const res = await upstashLimiter.limit(identifier)
+        return {
+          success: res.success,
+          remaining: res.remaining,
+          resetTime: new Date(res.reset),
+        }
+      } catch (err) {
+        console.warn('Upstash rate limit fallback to memory:', err)
+      }
+    }
+  }
+
   try {
     const result = await limiter.consume(identifier)
     return {

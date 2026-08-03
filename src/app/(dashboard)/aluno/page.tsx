@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, CreditCard, Bookmark, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
+import AiTutorCard from '@/components/dashboard/AiTutorCard'
 
 interface StudentData {
   plan: string
@@ -132,6 +133,11 @@ export default function AlunoDashboardPage() {
             </h3>
           </CardContent>
         </Card>
+      </div>
+
+      {/* AI Tutor Card */}
+      <div className="mb-6">
+        <AiTutorCard />
       </div>
 
       <div className="grid lg:grid-cols-7 gap-4">
