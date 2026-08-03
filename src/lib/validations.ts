@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 // ============================================
-// VALIDAÇÕES GLOBAIS SEGURAS
+// VALIDAÇÕES GLOBAIS SEGURAS & SCHEMAS DE AUTH
 // ============================================
 
 export const emailSchema = z
@@ -12,16 +12,15 @@ export const emailSchema = z
 
 export const passwordSchema = z
   .string()
-  .min(12, 'Senha deve ter pelo menos 12 caracteres')
-  .regex(/[A-Z]/, 'Senha deve conter letra maiúscula')
-  .regex(/[a-z]/, 'Senha deve conter letra minúscula')
-  .regex(/[0-9]/, 'Senha deve conter número')
-  .regex(/[!@#$%^&*]/, 'Senha deve conter caractere especial')
+  .min(8, 'A senha deve ter pelo menos 8 caracteres')
+  .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
+  .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula')
+  .regex(/[0-9]/, 'A senha deve conter pelo menos um número')
 
 export const phoneSchema = z
   .string()
-  .regex(/^\+?[1-9]\d{1,14}$/, 'Phone inválido')
-  .max(20, 'Phone muito longo')
+  .regex(/^\+?[1-9]\d{1,14}$/, 'Telefone inválido')
+  .max(20, 'Telefone muito longo')
   .optional()
 
 export const idSchema = z
@@ -39,11 +38,49 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(10),
 })
 
+export const registerSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+})
+
+export const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Senha é obrigatória'),
+})
+
+export const twoFactorTokenSchema = z.object({
+  token: z.string().length(6, 'O código deve ter 6 dígitos').regex(/^\d+$/, 'Apenas números'),
+})
+
 // ============================================
-// STUDENT VALIDAÇÕES
+// LEAD SCHEMAS & VALIDAÇÃO
+// ============================================
+
+export const leadSchema = z.object({
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100),
+  email: emailSchema,
+  phone: z.string().optional().refine(
+    (val) => !val || /^\+?[\d\s-()]+$/.test(val),
+    'Telefone inválido'
+  ),
+  source: z.string().optional(),
+  notes: z.string().max(1000).optional(),
+})
+
+// ============================================
+// STUDENT SCHEMAS & VALIDAÇÃO
 // ============================================
 
 export const studentPlanEnum = z.enum(['BASIC', 'STANDARD', 'PREMIUM', 'CUSTOM'])
+
+export const studentSchema = z.object({
+  userId: z.string().min(1, 'ID do usuário é obrigatório'),
+  plan: studentPlanEnum,
+  subscriptionId: z.string().optional(),
+  customerId: z.string().optional(),
+  notes: z.string().max(1000).optional(),
+})
 
 export const createStudentSchema = z.object({
   email: emailSchema,
@@ -57,27 +94,33 @@ export const updateStudentSchema = z.object({
   name: nameSchema.optional(),
   phone: phoneSchema,
   plan: studentPlanEnum.optional(),
-  // Campos que NÃO podem ser atualizados pelo usuário
-  // role, id, email, password, twoFactorEnabled
 })
 
 export const studentFilterSchema = z.object({
   ...paginationSchema.shape,
   status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'TRIAL']).optional(),
   plan: studentPlanEnum.optional(),
-  search: z.string().max(100).optional(), // nome ou email
+  search: z.string().max(100).optional(),
 })
 
 // ============================================
-// TEACHER VALIDAÇÕES
+// TEACHER SCHEMAS & VALIDAÇÃO
 // ============================================
 
+export const teacherSchema = z.object({
+  userId: z.string().min(1, 'ID do usuário é obrigatório'),
+  calendlyUrl: z.string().url('URL do Calendly inválida').optional(),
+  bio: z.string().max(2000).optional(),
+  specialties: z.array(z.string()).optional(),
+  availability: z.array(z.string()).optional(),
+})
+
 export const createTeacherSchema = z.object({
-  userId: idSchema, // Admin passa o user ID
+  userId: idSchema,
   calendlyUrl: z.string().url().optional(),
   bio: z.string().max(1000).optional(),
   specialties: z.array(z.string()).optional(),
-  availability: z.array(z.string()).optional(), // horários em formato ISO
+  availability: z.array(z.string()).optional(),
 })
 
 export const updateTeacherSchema = z.object({
@@ -96,10 +139,19 @@ export const teacherFilterSchema = z.object({
 })
 
 // ============================================
-// CLASS (AULA) VALIDAÇÕES
+// CLASS (AULA) SCHEMAS & VALIDAÇÃO
 // ============================================
 
 export const classStatusEnum = z.enum(['SCHEDULED', 'COMPLETED', 'CANCELLED', 'NO_SHOW'])
+
+export const classSchema = z.object({
+  studentId: z.string().min(1, 'ID do aluno é obrigatório'),
+  teacherId: z.string().min(1, 'ID do professor é obrigatório'),
+  scheduledAt: z.string().or(z.date()).transform((val) => new Date(val)),
+  duration: z.number().min(15, 'Duração mínima de 15 minutos').max(180, 'Duração máxima de 180 minutos'),
+  meetLink: z.string().url('Link inválido').optional(),
+  notes: z.string().max(1000).optional(),
+})
 
 export const createClassSchema = z.object({
   studentId: idSchema,
@@ -108,7 +160,7 @@ export const createClassSchema = z.object({
     (date) => date > new Date(),
     'Data deve ser no futuro'
   ),
-  duration: z.number().int().positive().max(480).default(60), // até 8h
+  duration: z.number().int().positive().max(480).default(60),
   meetLink: z.string().url().optional(),
 })
 
@@ -132,8 +184,14 @@ export const classFilterSchema = z.object({
 })
 
 // ============================================
-// PAYMENT VALIDAÇÕES
+// STRIPE CHECKOUT & PAYMENT SCHEMAS
 // ============================================
+
+export const checkoutSchema = z.object({
+  email: emailSchema,
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  priceId: z.string().min(1, 'Price ID é obrigatório'),
+})
 
 export const paymentStatusEnum = z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'])
 
@@ -162,15 +220,89 @@ export const paymentFilterSchema = z.object({
   dateTo: z.coerce.date().optional(),
 })
 
-// ============================================
-// RESPONSE TYPES
-// ============================================
-
 export const errorResponseSchema = z.object({
   error: z.string(),
   code: z.string().optional(),
   timestamp: z.date().optional(),
 })
+
+// ============================================
+// HELPER SANITIZERS & VALIDATORS
+// ============================================
+
+export const sanitizeString = (input: string): string => {
+  return input
+    .trim()
+    .replace(/[<>]/g, '')
+    .replace(/[\x00-\x1F\x7F]/g, '')
+}
+
+export const sanitizeEmail = (email: string): string => {
+  return email.toLowerCase().trim()
+}
+
+export const validateLead = (data: any) => {
+  const sanitized = {
+    name: sanitizeString(data.name),
+    email: sanitizeEmail(data.email),
+    phone: data.phone ? sanitizeString(data.phone) : undefined,
+    source: data.source ? sanitizeString(data.source) : undefined,
+    notes: data.notes ? sanitizeString(data.notes) : undefined,
+  }
+  return leadSchema.parse(sanitized)
+}
+
+export const validateStudent = (data: any) => {
+  const sanitized = {
+    ...data,
+    notes: data.notes ? sanitizeString(data.notes) : undefined,
+  }
+  return studentSchema.parse(sanitized)
+}
+
+export const validateClass = (data: any) => {
+  const sanitized = {
+    ...data,
+    meetLink: data.meetLink ? sanitizeString(data.meetLink) : undefined,
+    notes: data.notes ? sanitizeString(data.notes) : undefined,
+  }
+  return classSchema.parse(sanitized)
+}
+
+export const validateTeacher = (data: any) => {
+  const sanitized = {
+    ...data,
+    calendlyUrl: data.calendlyUrl ? sanitizeString(data.calendlyUrl) : undefined,
+    bio: data.bio ? sanitizeString(data.bio) : undefined,
+  }
+  return teacherSchema.parse(sanitized)
+}
+
+export const validateCheckout = (data: any) => {
+  const sanitized = {
+    email: sanitizeEmail(data.email),
+    name: sanitizeString(data.name),
+    priceId: data.priceId,
+  }
+  return checkoutSchema.parse(sanitized)
+}
+
+export const validateRegister = (data: unknown) => {
+  const parsed = registerSchema.parse(data)
+  return {
+    name: sanitizeString(parsed.name),
+    email: sanitizeEmail(parsed.email),
+    password: parsed.password,
+  }
+}
+
+export const validateLogin = (data: unknown) => {
+  const parsed = loginSchema.parse(data)
+  return {
+    email: sanitizeEmail(parsed.email),
+    password: parsed.password,
+  }
+}
 
 export type EmailSchema = z.infer<typeof emailSchema>
 export type PasswordSchema = z.infer<typeof passwordSchema>

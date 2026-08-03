@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { registerSchema, loginSchema, leadSchema, sanitizeString, sanitizeEmail } from './validation'
+import { registerSchema, loginSchema, leadSchema, sanitizeString, sanitizeEmail } from './validations'
 
 describe('Validation Schemas and Helpers', () => {
   describe('registerSchema', () => {
@@ -17,7 +17,7 @@ describe('Validation Schemas and Helpers', () => {
       const invalidData = {
         name: 'John Doe',
         email: 'john@example.com',
-        password: 'weakpassword', // no uppercase, no number
+        password: 'weakpassword',
       }
       const result = registerSchema.safeParse(invalidData)
       expect(result.success).toBe(false)

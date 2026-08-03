@@ -13,7 +13,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createAuditLog } from '@/lib/account-security'
 import { getClientIdentifier } from '@/lib/rate-limiter'
-import { twoFactorTokenSchema } from '@/lib/validation'
+import { twoFactorTokenSchema } from '@/lib/validations'
 import { ZodError } from 'zod'
 
 export async function POST(req: NextRequest) {

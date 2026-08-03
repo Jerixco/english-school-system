@@ -2,18 +2,27 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { validateLead } from '@/lib/validation'
+import { validateLead } from '@/lib/validations'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { ZodError } from 'zod'
 
 export async function GET(req: NextRequest) {
   try {
-    // Rate limiting
+    const user = await getAuthenticatedUser()
+    if (!user || !isAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Não autorizado. Apenas administradores podem acessar a lista de leads.' },
+        { status: 403 }
+      )
+    }
+
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
     
     if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: 'Muitas requisições. Tente novamente mais tarde.' },
         { status: 429 }
       )
     }
@@ -42,7 +51,7 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     console.error('Error fetching leads:', error)
     return NextResponse.json(
-      { error: 'Failed to fetch leads' },
+      { error: 'Falha ao buscar leads.' },
       { status: 500 }
     )
   }
@@ -50,20 +59,17 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
     
     if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
+        { error: 'Muitas requisições. Tente novamente mais tarde.' },
         { status: 429 }
       )
     }
 
     const body = await req.json()
-    
-    // Validate and sanitize input
     const validatedData = validateLead(body)
 
     const lead = await prisma.lead.create({
@@ -74,15 +80,15 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error creating lead:', error)
     
-    if (error.name === 'ZodError') {
+    if (error instanceof ZodError) {
       return NextResponse.json(
-        { error: 'Invalid input data', details: error.errors },
+        { error: 'Dados inválidos', details: error.errors },
         { status: 400 }
       )
     }
     
     return NextResponse.json(
-      { error: 'Failed to create lead' },
+      { error: 'Falha ao criar lead.' },
       { status: 500 }
     )
   }
