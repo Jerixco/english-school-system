@@ -49,6 +49,32 @@ Rules:
 3. Keep your answers concise (2-4 sentences) and end with an engaging open-ended question to keep the conversation flowing.
 4. Always be polite, positive, and supportive.`
 
+    // Format and sanitize history for Google Generative AI SDK requirement:
+    // 1. First item MUST have role 'user'.
+    // 2. Alternating role turns.
+    let formattedHistory: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
+    if (Array.isArray(history)) {
+      for (const item of history) {
+        if (!item.parts || typeof item.parts !== 'string') continue
+        const role = item.role === 'user' ? 'user' : 'model'
+
+        // Ignore messages if the first element would be 'model'
+        if (formattedHistory.length === 0 && role === 'model') {
+          continue
+        }
+
+        // Avoid consecutive duplicate roles
+        if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === role) {
+          continue
+        }
+
+        formattedHistory.push({
+          role,
+          parts: [{ text: item.parts }],
+        })
+      }
+    }
+
     const availableModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash']
     let responseText = ''
     let lastError = null
@@ -60,14 +86,7 @@ Rules:
           systemInstruction: SYSTEM_INSTRUCTION,
         })
 
-        const chatHistory = Array.isArray(history)
-          ? history.map((item: { role: string; parts: string }) => ({
-              role: item.role === 'user' ? 'user' : 'model',
-              parts: [{ text: item.parts }],
-            }))
-          : []
-
-        const chat = model.startChat({ history: chatHistory })
+        const chat = model.startChat({ history: formattedHistory })
         const result = await chat.sendMessage(message)
         responseText = result.response.text()
         if (responseText) break
