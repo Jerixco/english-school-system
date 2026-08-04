@@ -20,6 +20,7 @@ model User {
   lockedUntil      DateTime?
   failedLoginCount Int       @default(0)
   lastFailedLogin  DateTime?
+  deletedAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -104,6 +105,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
 model Lead {
   id          String   @id @default(cuid())
   name        String
@@ -143,6 +156,7 @@ model Student {
   subscriptionId  String?   @unique
   customerId      String?
   notes           String?   @db.Text
+  deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -190,10 +204,11 @@ model Class {
   studentId   String
   teacherId   String
   scheduledAt DateTime
-  duration    Int       @default(60) // minutes
+  duration    Int       @default(60)
   status      ClassStatus @default(SCHEDULED)
   meetLink    String?
   notes       String?   @db.Text
+  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -215,7 +230,7 @@ enum ClassStatus {
 model Payment {
   id              String        @id @default(cuid())
   studentId       String
-  amount          Float
+  amount          Int           // Armazenado em centavos (ex: R$ 297,00 = 29700)
   currency        String        @default("BRL")
   status          PaymentStatus @default(PENDING)
   paymentMethod   String
@@ -223,6 +238,7 @@ model Payment {
   dueDate         DateTime
   paidAt          DateTime?
   invoiceUrl      String?
+  deletedAt       DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
