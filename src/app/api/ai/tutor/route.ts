@@ -58,12 +58,10 @@ Rules:
         if (!item.parts || typeof item.parts !== 'string') continue
         const role = item.role === 'user' ? 'user' : 'model'
 
-        // Ignore messages if the first element would be 'model'
         if (formattedHistory.length === 0 && role === 'model') {
           continue
         }
 
-        // Avoid consecutive duplicate roles
         if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === role) {
           continue
         }
@@ -75,9 +73,9 @@ Rules:
       }
     }
 
-    const availableModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash']
+    const availableModels = ['gemini-1.5-flash', 'gemini-1.5-pro']
     let responseText = ''
-    let lastError = null
+    let lastError: any = null
 
     for (const modelName of availableModels) {
       try {
@@ -90,19 +88,41 @@ Rules:
         const result = await chat.sendMessage(message)
         responseText = result.response.text()
         if (responseText) break
-      } catch (err) {
+      } catch (err: any) {
         lastError = err
-        console.warn(`Model ${modelName} failed, trying fallback...`, err)
+        console.warn(`Model ${modelName} failed:`, err?.message || err)
       }
     }
 
     if (!responseText) {
+      const errMsg = lastError?.message || String(lastError || '')
+      if (errMsg.includes('429') || errMsg.includes('Quota exceeded') || errMsg.includes('Too Many Requests')) {
+        return NextResponse.json(
+          {
+            error:
+              '⏳ O limite temporário de respostas por minuto do Gemini foi atingido. Por favor, aguarde cerca de 1 minuto antes de enviar a próxima mensagem!',
+          },
+          { status: 429 }
+        )
+      }
       throw lastError || new Error('Não foi possível obter resposta do Gemini AI.')
     }
 
     return NextResponse.json({ reply: responseText })
   } catch (error: any) {
     console.error('Gemini AI Tutor error:', error)
+    const errMsg = error?.message || String(error || '')
+
+    if (errMsg.includes('429') || errMsg.includes('Quota exceeded') || errMsg.includes('Too Many Requests')) {
+      return NextResponse.json(
+        {
+          error:
+            '⏳ O limite temporário de respostas por minuto do Gemini foi atingido. Por favor, aguarde cerca de 1 minuto antes de enviar a próxima mensagem!',
+        },
+        { status: 429 }
+      )
+    }
+
     return NextResponse.json(
       { error: error.message || 'Desculpe, ocorreu um erro ao conectar com o Tutor de IA.' },
       { status: 500 }
