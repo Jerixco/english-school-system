@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Bot, Send, Sparkles, User, RefreshCw } from 'lucide-react'
+import { Bot, Send, Sparkles, User, RefreshCw, AlertCircle } from 'lucide-react'
 
 interface Message {
   role: 'user' | 'model'
   text: string
+  isError?: boolean
 }
 
 export default function AiTutorCard() {
@@ -32,10 +33,12 @@ export default function AiTutorCard() {
     setLoading(true)
 
     try {
-      const historyPayload = updatedMessages.map((m) => ({
-        role: m.role,
-        parts: m.text,
-      }))
+      const historyPayload = updatedMessages
+        .filter((m) => !m.isError)
+        .map((m) => ({
+          role: m.role,
+          parts: m.text,
+        }))
 
       const res = await fetch('/api/ai/tutor', {
         method: 'POST',
@@ -49,7 +52,7 @@ export default function AiTutorCard() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Erro de resposta')
+        throw new Error(data.error || 'Erro ao conectar com o serviço de IA.')
       }
 
       setMessages([...updatedMessages, { role: 'model', text: data.reply }])
@@ -58,7 +61,8 @@ export default function AiTutorCard() {
         ...updatedMessages,
         {
           role: 'model',
-          text: 'Sorry, I had trouble connecting. Please try sending your message again!',
+          text: `⚠️ ${err.message || 'Desculpe, ocorreu um erro de conexão.'}`,
+          isError: true,
         },
       ])
     } finally {
@@ -110,14 +114,22 @@ export default function AiTutorCard() {
               }`}
             >
               {msg.role === 'model' && (
-                <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 shrink-0">
-                  <Bot className="h-4 w-4" />
+                <div
+                  className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                    msg.isError
+                      ? 'bg-red-100 text-red-600'
+                      : 'bg-purple-100 text-purple-600'
+                  }`}
+                >
+                  {msg.isError ? <AlertCircle className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                 </div>
               )}
               <div
                 className={`p-3 rounded-lg max-w-[80%] whitespace-pre-wrap ${
                   msg.role === 'user'
                     ? 'bg-purple-600 text-white rounded-tr-none'
+                    : msg.isError
+                    ? 'bg-red-50 text-red-800 border border-red-200 rounded-tl-none'
                     : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200'
                 }`}
               >

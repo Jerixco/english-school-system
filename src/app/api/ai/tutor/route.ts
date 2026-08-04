@@ -8,20 +8,26 @@ import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ error: 'Chave GEMINI_API_KEY não configurada nas variáveis de ambiente' }, { status: 500 })
+    if (!apiKey || apiKey === 'your-gemini-api-key-here') {
+      return NextResponse.json(
+        {
+          error:
+            'A chave GEMINI_API_KEY não está configurada no seu arquivo .env local ou nas variáveis da Vercel.',
+        },
+        { status: 500 }
+      )
     }
 
     const user = await getAuthenticatedUser()
     if (!user) {
-      return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+      return NextResponse.json({ error: 'Não autenticado. Por favor, faça login.' }, { status: 401 })
     }
 
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
     if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Muitas requisições. Aguarde um instante.' },
+        { error: 'Muitas requisições enviadas. Aguarde alguns segundos.' },
         { status: 429 }
       )
     }
@@ -30,7 +36,7 @@ export async function POST(req: NextRequest) {
     const { message, history } = body
 
     if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Mensagem inválida' }, { status: 400 })
+      return NextResponse.json({ error: 'Mensagem inválida.' }, { status: 400 })
     }
 
     const genAI = new GoogleGenerativeAI(apiKey)
@@ -43,27 +49,43 @@ Rules:
 3. Keep your answers concise (2-4 sentences) and end with an engaging open-ended question to keep the conversation flowing.
 4. Always be polite, positive, and supportive.`
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_INSTRUCTION,
-    })
+    const availableModels = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash']
+    let responseText = ''
+    let lastError = null
 
-    const chatHistory = Array.isArray(history)
-      ? history.map((item: { role: string; parts: string }) => ({
-          role: item.role === 'user' ? 'user' : 'model',
-          parts: [{ text: item.parts }],
-        }))
-      : []
+    for (const modelName of availableModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          systemInstruction: SYSTEM_INSTRUCTION,
+        })
 
-    const chat = model.startChat({ history: chatHistory })
-    const result = await chat.sendMessage(message)
-    const responseText = result.response.text()
+        const chatHistory = Array.isArray(history)
+          ? history.map((item: { role: string; parts: string }) => ({
+              role: item.role === 'user' ? 'user' : 'model',
+              parts: [{ text: item.parts }],
+            }))
+          : []
+
+        const chat = model.startChat({ history: chatHistory })
+        const result = await chat.sendMessage(message)
+        responseText = result.response.text()
+        if (responseText) break
+      } catch (err) {
+        lastError = err
+        console.warn(`Model ${modelName} failed, trying fallback...`, err)
+      }
+    }
+
+    if (!responseText) {
+      throw lastError || new Error('Não foi possível obter resposta do Gemini AI.')
+    }
 
     return NextResponse.json({ reply: responseText })
   } catch (error: any) {
     console.error('Gemini AI Tutor error:', error)
     return NextResponse.json(
-      { error: 'Desculpe, ocorreu um erro ao conectar com o Tutor de IA.' },
+      { error: error.message || 'Desculpe, ocorreu um erro ao conectar com o Tutor de IA.' },
       { status: 500 }
     )
   }
