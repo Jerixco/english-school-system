@@ -9,21 +9,21 @@ const SYSTEM_INSTRUCTION = `You are Alex, an expert, warm, and encouraging Engli
 Your goal is to help students practice conversational English. Always reply primarily in English. 
 If the student makes a grammatical error, include a gentle "💡 Quick Tip:" section at the end.`
 
-const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-1.5-pro-latest']
+const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro']
 
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey || apiKey === 'your-gemini-api-key-here') {
       return NextResponse.json(
-        { error: 'A chave GEMINI_API_KEY não está configurada no ambiente.' },
+        { error: 'A chave GEMINI_API_KEY não está configurada no ambiente da Vercel ou .env.' },
         { status: 500 }
       )
     }
 
     const user = await getAuthenticatedUser()
     if (!user) {
-      return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+      return NextResponse.json({ error: 'Sessão expirada. Por favor, faça login novamente.' }, { status: 401 })
     }
 
     const rateLimit = await checkRateLimit(aiRateLimiter, getClientIdentifier(req))
@@ -65,11 +65,14 @@ export async function POST(req: NextRequest) {
         if (replyText) break
       } catch (err: any) {
         lastError = err
+        console.warn(`Model ${modelName} failed:`, err?.message || err)
       }
     }
 
     if (!replyText) {
-      const isQuotaError = lastError?.message?.includes('429') || lastError?.message?.includes('Quota')
+      const errMsg = lastError?.message || String(lastError || '')
+      const isQuotaError = errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Too Many Requests')
+
       if (isQuotaError) {
         return NextResponse.json(
           { error: '⏳ O limite temporário de respostas por minuto do Gemini foi atingido. Aguarde 1 minuto.' },
@@ -83,7 +86,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Gemini AI Tutor error:', error)
     return NextResponse.json(
-      { error: error.message || 'Erro interno no serviço de IA.' },
+      { error: error?.message || 'Erro interno ao conectar com a Inteligência Artificial.' },
       { status: 500 }
     )
   }
