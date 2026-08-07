@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { LeadStatus, Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { validateLead } from '@/lib/validations'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
@@ -29,8 +30,18 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
+    const hasStatus = status && Object.values(LeadStatus).includes(status as LeadStatus)
 
-    const where = status ? { status: status as any } : {}
+    if (status && !hasStatus) {
+      return NextResponse.json(
+        { error: 'Filtro de status inválido.' },
+        { status: 400 }
+      )
+    }
+
+    const where: Prisma.LeadWhereInput = {
+      ...(status ? { status: status as LeadStatus } : {}),
+    }
 
     const leads = await prisma.lead.findMany({
       where,
