@@ -54,26 +54,10 @@ O **English School System** é uma solução SaaS pronta para comercialização 
 
 ## 🔑 Variáveis de Ambiente (`.env`)
 
-Crie um arquivo `.env` na raiz do projeto com as seguintes variáveis:
+Para configurar o ambiente de desenvolvimento ou produção, **renomeie o arquivo `.env.example` para `.env` e preencha com suas chaves locais**:
 
-```env
-# Banco de Dados (Neon PostgreSQL)
-DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@ep-square-grass-ac49lare-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
-
-# Segurança NextAuth
-NEXTAUTH_SECRET="SUA_CHAVE_SECRETA_NEXTAUTH_MINIMO_32_CHARS"
-NEXTAUTH_URL="http://localhost:3000"
-
-# Chave de Criptografia de Dados Sensíveis (AES-256-GCM - Exatos 32 Caracteres)
-ENCRYPTION_KEY="12345678901234567890123456789012"
-
-# Upstash Redis (Rate Limiting em Produção)
-KV_REST_API_URL="https://your-upstash-instance.upstash.io"
-KV_REST_API_TOKEN="your_upstash_token"
-
-# Pagamentos (Stripe - Opcional)
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
+```bash
+cp .env.example .env
 ```
 
 ---
@@ -85,21 +69,32 @@ STRIPE_WEBHOOK_SECRET="whsec_..."
 git clone https://github.com/Jerixco/english-school-system.git
 cd english-school-system
 
-# 2. Instalar dependências
+# 2. Configurar as variáveis de ambiente
+cp .env.example .env
+
+# 3. Instalar dependências
 npm install
 
-# 3. Sincronizar o Banco de Dados (Prisma Push)
+# 4. Sincronizar o Banco de Dados (Prisma Push)
 npx prisma db push
 
-# 4. Popular o Banco com Dados Iniciais (Seeding)
+# 5. Popular o Banco com Dados Iniciais (Seeding)
 npx tsx prisma/seed.ts
 
-# 5. Executar os Testes Unitários
+# 6. Executar os Testes Unitários
 npx vitest run
 
-# 6. Iniciar o Servidor de Desenvolvimento
+# 7. Iniciar o Servidor de Desenvolvimento
 npm run dev
 ```
+
+---
+
+## 📑 Credenciais de Teste (Seed)
+
+Após rodar o comando de seed (`npx tsx prisma/seed.ts` ou `npx prisma db seed`), o sistema criará automaticamente as contas de teste locais (Administrador, Professor e Aluno). 
+
+> 💡 **Consulte o arquivo `prisma/seed.ts`** para verificar os e-mails e credenciais geradas para ambiente de desenvolvimento.
 
 ---
 
@@ -112,16 +107,13 @@ npm run dev
 
 ---
 
-## 📑 Credenciais de Acesso Padrão (Seed)
+## 🔒 Governança de Repositório & Transferência Comercial
 
-| Função | E-mail | Senha |
-| :--- | :--- | :--- |
-| **Administrador** | `admin@englishschool.com` | `Senha123!` |
-| **Professor** | `teacher@englishschool.com` | `Senha123!` |
-| **Aluno** | `student@englishschool.com` | `Senha123!` |
+- **Repositório Privado:** Mantenha o repositório como **Privado** no GitHub durante as negociações comerciais, concedendo acesso via *Collaborators* com permissão de leitura apenas para potenciais compradores avaliarem o código.
+- **Transferência de Propriedade:** Assim que a venda for concluída, realize a transferência de propriedade total do repositório (*Transfer Ownership*) diretamente para a conta do comprador pelo painel de **Settings > Danger Zone** do GitHub.
 
 ---
 
-## 📜 Licença & Handover Comercial
+## 📜 Licença
 
-Este software foi auditado e certificado com **100% de prontidão enterprise**, cobrindo diretrizes de segurança da OWASP, proteção de dados pela LGPD e suporte para alta concorrência. Todos os direitos de propriedade intelectual transferíveis ao comprador final.
+Este software possui certificação de prontidão enterprise, com salvaguarda de propriedade intelectual para transferência exclusiva ao comprador.
