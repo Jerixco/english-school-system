@@ -1,12 +1,12 @@
 # 🏫 English School System — Enterprise SaaS Platform
 
-> **Sistema Completo de Gestão Escolar & Plataforma de Aprendizado com Inteligência Artificial (Next.js 16+, PostgreSQL/Neon, Prisma, NextAuth, Stripe & Google Gemini AI)**
+> **Sistema Completo de Gestão Escolar & Plataforma de Estudos (Next.js 16+, PostgreSQL/Neon, Prisma, NextAuth, Stripe & LGPD Compliance)**
 
 ---
 
 ## 💎 Visão Geral do Produto
 
-O **English School System** é uma solução SaaS pronta para comercialização (*turnkey enterprise solution*), projetada para escolas de idiomas, professores particulares e edtechs. A plataforma combina gestão de leads (CRM), controle financeiro, agendamento de aulas com integração ao Calendly/Google Meet e um **Tutor de Inglês com Inteligência Artificial (Google Gemini 1.5/2.0)** ativo 24/7.
+O **English School System** é uma solução SaaS pronta para comercialização (*turnkey enterprise solution*), projetada para escolas de idiomas, professores particulares e edtechs. A plataforma combina gestão de leads (CRM), controle financeiro, agendamento de aulas integrável ao Calendly/Google Meet, segurança com autenticação 2FA e total conformidade com a LGPD.
 
 ---
 
@@ -17,32 +17,28 @@ O **English School System** é uma solução SaaS pronta para comercialização 
                       │ (HTTPS / TLS 1.3)
                       ▼
 [ Next.js 16 Server (App Router / NextAuth JWT / Middleware Security) ]
-     │                │                 │                   │
-     ▼                ▼                 ▼                   ▼
-[ Neon Postgres ] [ Upstash Redis ] [ Google Gemini ] [ Sentry / Error Log ]
-  (Prisma ORM)    (Rate Limiting)     (AI Tutor API)   (Observabilidade)
+     │                │                                     │
+     ▼                ▼                                     ▼
+[ Neon Postgres ] [ Upstash Redis ]                  [ Sentry / Error Log ]
+  (Prisma ORM)    (Rate Limiting)                     (Observabilidade)
 ```
 
 ---
 
 ## 🚀 Principais Módulos & Recursos
 
-### 1. 🤖 Alex — AI English Tutor (IA Generativa 24/7)
-- Prática de conversa em inglês com correção gramatical inteligente em tempo real (*"💡 Quick Tip"*).
-- Sanitização estrita de turnos de diálogo e fallback automático entre modelos Gemini (`gemini-1.5-flash`, `gemini-1.5-flash-latest`, `gemini-1.5-pro-latest`).
-- Proteção contra abusos via **Upstash Redis Rate Limiting** (5 req/min por IP).
-
-### 2. 🔐 Autenticação, Autorização & Segurança Enterprise
+### 1. 🔐 Autenticação, Autorização & Segurança Enterprise
 - **NextAuth.js v4** com estratégia JWT e hashing BCrypt (fator 12).
 - **Autenticação em Dois Fatores (2FA/TOTP)** com QR Code e segredos armazenados sob criptografia **AES-256-GCM**.
 - **Bloqueio Automático de Conta (Brute-Force Protection)** após 5 tentativas incorretas.
 - **Revogação Dinâmica de Sessão**: Tokens JWT de contas bloqueadas ou excluídas são revogados em tempo real.
 - **Conformidade LGPD (Art. 18)**: Módulo de anonimização irreversível PII (*Direito ao Esquecimento*).
 
-### 3. 📊 CRM de Leads, Financeiro & Agendamentos
+### 2. 📊 CRM de Leads, Financeiro & Agendamentos
 - Kanban interativo para qualificação e conversão de novos leads.
 - Controle de matrículas, planos de alunos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) e assinaturas Stripe.
 - Histórico de aulas com status (`SCHEDULED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`).
+- Portais dedicados por nível de acesso (**Administrador**, **Professor** e **Aluno**).
 
 ---
 
@@ -51,9 +47,8 @@ O **English School System** é uma solução SaaS pronta para comercialização 
 - **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS, Lucide Icons, Framer Motion.
 - **Backend:** Next.js Server Actions, Route Handlers, Zod Validation, Upstash Redis Rate Limiting.
 - **Banco de Dados:** Neon PostgreSQL (Cloud Serverless) via Prisma ORM v5.
-- **IA:** Google Generative AI (`@google/generative-ai` SDK).
 - **Segurança & Criptografia:** AES-256-GCM, BCrypt.js, TOTP (`speakeasy`), Content Security Policy (CSP), Strict Rate Limiting.
-- **Testes & Qualidade:** Vitest, ESLint, TypeScript Strict Mode.
+- **Testes & Qualidade:** Vitest, ESLint, TypeScript Strict Mode, Playwright E2E.
 
 ---
 
@@ -71,9 +66,6 @@ NEXTAUTH_URL="http://localhost:3000"
 
 # Chave de Criptografia de Dados Sensíveis (AES-256-GCM - Exatos 32 Caracteres)
 ENCRYPTION_KEY="12345678901234567890123456789012"
-
-# Inteligência Artificial (Google AI Studio)
-GEMINI_API_KEY="AIzaSy..."
 
 # Upstash Redis (Rate Limiting em Produção)
 KV_REST_API_URL="https://your-upstash-instance.upstash.io"
@@ -111,7 +103,7 @@ npm run dev
 
 ---
 
-## 🚀 Deploy em Produção (Vercel & Docker)
+## 🚀 Deploy em Produção (Vercel)
 
 ### Deploy na Vercel (Recomendado)
 1. Conecte o repositório GitHub na [Vercel](https://vercel.com).
