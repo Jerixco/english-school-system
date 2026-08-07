@@ -73,33 +73,49 @@ async function main() {
   })
   console.log('✅ Perfil de Aluno criado:', studentUser.email)
 
-  // 4. Criar Aula de Exemplo
-  const sampleClass = await prisma.class.create({
-    data: {
-      studentId: student.id,
-      teacherId: teacher.id,
-      scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Amanhã
-      duration: 60,
-      status: 'SCHEDULED',
-      meetLink: 'https://meet.google.com/abc-defg-hij',
-      notes: 'Aula focada em apresentações corporativas',
-    },
+  // 4. Criar Aula de Exemplo (Idempotente)
+  const existingClass = await prisma.class.findFirst({
+    where: { studentId: student.id, teacherId: teacher.id },
   })
-  console.log('✅ Aula demonstrativa agendada ID:', sampleClass.id)
 
-  // 5. Criar Pagamento de Exemplo
-  const samplePayment = await prisma.payment.create({
-    data: {
-      studentId: student.id,
-      amount: 49700, // R$ 497,00 em centavos
-      currency: 'BRL',
-      status: 'COMPLETED',
-      paymentMethod: 'card',
-      dueDate: new Date(),
-      paidAt: new Date(),
-    },
+  if (!existingClass) {
+    const sampleClass = await prisma.class.create({
+      data: {
+        studentId: student.id,
+        teacherId: teacher.id,
+        scheduledAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // Amanhã
+        duration: 60,
+        status: 'SCHEDULED',
+        meetLink: 'https://meet.google.com/abc-defg-hij',
+        notes: 'Aula focada em apresentações corporativas',
+      },
+    })
+    console.log('✅ Aula demonstrativa agendada ID:', sampleClass.id)
+  } else {
+    console.log('ℹ️ Aula demonstrativa já existente:', existingClass.id)
+  }
+
+  // 5. Criar Pagamento de Exemplo (Idempotente)
+  const existingPayment = await prisma.payment.findFirst({
+    where: { studentId: student.id },
   })
-  console.log('✅ Pagamento demonstrativo criado ID:', samplePayment.id)
+
+  if (!existingPayment) {
+    const samplePayment = await prisma.payment.create({
+      data: {
+        studentId: student.id,
+        amount: 49700, // R$ 497,00 em centavos
+        currency: 'BRL',
+        status: 'COMPLETED',
+        paymentMethod: 'card',
+        dueDate: new Date(),
+        paidAt: new Date(),
+      },
+    })
+    console.log('✅ Pagamento demonstrativo criado ID:', samplePayment.id)
+  } else {
+    console.log('ℹ️ Pagamento demonstrativo já existente:', existingPayment.id)
+  }
 
   console.log('\n🎉 Seed concluído com sucesso!')
   console.log('--------------------------------------------------')
