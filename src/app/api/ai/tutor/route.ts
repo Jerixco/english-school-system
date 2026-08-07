@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getAuthenticatedUser } from '@/lib/security'
-import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 
 const SYSTEM_INSTRUCTION = `You are Alex, an expert, warm, and encouraging English teacher at English School. 
 Your goal is to help students practice conversational English. Always reply primarily in English. 
@@ -26,9 +26,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
     }
 
-    const rateLimit = await checkRateLimit(apiRateLimiter, getClientIdentifier(req))
+    const rateLimit = await checkRateLimit(aiRateLimiter, getClientIdentifier(req))
     if (!rateLimit.success) {
-      return NextResponse.json({ error: 'Muitas requisições. Aguarde alguns instantes.' }, { status: 429 })
+      return NextResponse.json(
+        { error: '⏳ Limite de mensagens para o Tutor IA atingido. Por favor, aguarde 1 minuto.' },
+        { status: 429 }
+      )
     }
 
     const { message, history } = await req.json()

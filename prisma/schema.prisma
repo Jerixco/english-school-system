@@ -31,6 +31,9 @@ model User {
   leads         Lead[]
   auditLogs     AuditLog[]
   loginAttempts LoginAttempt[]
+
+  @@index([deletedAt])
+  @@index([role])
 }
 
 model LoginAttempt {
@@ -166,6 +169,7 @@ model Student {
 
   @@index([status])
   @@index([subscriptionId])
+  @@index([deletedAt])
 }
 
 enum Plan {
@@ -218,6 +222,9 @@ model Class {
   @@index([studentId])
   @@index([teacherId])
   @@index([scheduledAt])
+  @@index([studentId, scheduledAt])
+  @@index([teacherId, scheduledAt])
+  @@index([deletedAt])
 }
 
 enum ClassStatus {
@@ -247,6 +254,8 @@ model Payment {
   @@index([studentId])
   @@index([status])
   @@index([dueDate])
+  @@index([studentId, status])
+  @@index([deletedAt])
 }
 
 enum PaymentStatus {

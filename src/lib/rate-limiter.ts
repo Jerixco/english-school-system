@@ -16,6 +16,10 @@ const upstashApiLimiter = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(100, '60 s'), prefix: 'ratelimit:api' })
   : null
 
+const upstashAiLimiter = redis
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(5, '60 s'), prefix: 'ratelimit:ai' })
+  : null
+
 const upstashAuthLimiter = redis
   ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(5, '300 s'), prefix: 'ratelimit:auth' })
   : null
@@ -28,6 +32,12 @@ const upstashStripeLimiter = redis
 export const apiRateLimiter = new RateLimiterMemory({
   keyPrefix: 'api_limit',
   points: 100,
+  duration: 60,
+})
+
+export const aiRateLimiter = new RateLimiterMemory({
+  keyPrefix: 'ai_limit',
+  points: 5,
   duration: 60,
 })
 
@@ -49,6 +59,7 @@ export const checkRateLimit = async (
 ): Promise<{ success: boolean; remaining?: number; resetTime?: Date }> => {
   if (redis) {
     let upstashLimiter = upstashApiLimiter
+    if (limiter === aiRateLimiter) upstashLimiter = upstashAiLimiter
     if (limiter === authRateLimiter) upstashLimiter = upstashAuthLimiter
     if (limiter === stripeRateLimiter) upstashLimiter = upstashStripeLimiter
 
