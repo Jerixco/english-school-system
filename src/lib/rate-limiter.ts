@@ -17,7 +17,7 @@ const upstashApiLimiter = redis
   : null
 
 const upstashAiLimiter = redis
-  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(5, '60 s'), prefix: 'ratelimit:ai' })
+  ? new Ratelimit({ redis, limiter: Ratelimit.slidingWindow(30, '60 s'), prefix: 'ratelimit:ai' })
   : null
 
 const upstashAuthLimiter = redis
@@ -37,7 +37,7 @@ export const apiRateLimiter = new RateLimiterMemory({
 
 export const aiRateLimiter = new RateLimiterMemory({
   keyPrefix: 'ai_limit',
-  points: 5,
+  points: 30,
   duration: 60,
 })
 
