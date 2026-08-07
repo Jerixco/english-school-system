@@ -9,14 +9,14 @@ const SYSTEM_INSTRUCTION = `You are Alex, an expert, warm, and encouraging Engli
 Your goal is to help students practice conversational English. Always reply primarily in English. 
 If the student makes a grammatical error, include a gentle "💡 Quick Tip:" section at the end.`
 
-const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro']
+const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b']
 
 export async function POST(req: NextRequest) {
   try {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey || apiKey === 'your-gemini-api-key-here') {
       return NextResponse.json(
-        { error: 'A chave GEMINI_API_KEY não está configurada no ambiente da Vercel ou .env.' },
+        { error: 'A chave GEMINI_API_KEY não está configurada no ambiente.' },
         { status: 500 }
       )
     }
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const genAI = new GoogleGenerativeAI(apiKey)
     let replyText = ''
-    let lastError: any = null
+    let isQuotaExceeded = false
 
     for (const modelName of AVAILABLE_MODELS) {
       try {
@@ -64,29 +64,33 @@ export async function POST(req: NextRequest) {
         replyText = result.response.text()
         if (replyText) break
       } catch (err: any) {
-        lastError = err
-        console.warn(`Model ${modelName} failed:`, err?.message || err)
+        const errMsg = err?.message || String(err || '')
+        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Too Many Requests')) {
+          isQuotaExceeded = true
+        }
+        console.warn(`Model ${modelName} notice:`, errMsg)
       }
     }
 
     if (!replyText) {
-      const errMsg = lastError?.message || String(lastError || '')
-      const isQuotaError = errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Too Many Requests')
-
-      if (isQuotaError) {
+      if (isQuotaExceeded) {
         return NextResponse.json(
-          { error: '⏳ O limite temporário de respostas por minuto do Gemini foi atingido. Aguarde 1 minuto.' },
+          { error: '⏳ O limite temporário de respostas por minuto da IA foi atingido. Aguarde 1 minuto.' },
           { status: 429 }
         )
       }
-      throw lastError || new Error('Falha na comunicação com o serviço de IA.')
+
+      return NextResponse.json(
+        { error: '⏳ O serviço de IA está temporariamente ocupado. Por favor, tente enviar novamente em alguns segundos.' },
+        { status: 429 }
+      )
     }
 
     return NextResponse.json({ reply: replyText })
   } catch (error: any) {
     console.error('Gemini AI Tutor error:', error)
     return NextResponse.json(
-      { error: error?.message || 'Erro interno ao conectar com a Inteligência Artificial.' },
+      { error: 'Ocorreu um erro temporário ao conectar com a IA. Tente novamente.' },
       { status: 500 }
     )
   }
