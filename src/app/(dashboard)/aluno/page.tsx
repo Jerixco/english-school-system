@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Calendar, CreditCard, Bookmark, ShieldAlert } from 'lucide-react'
 import Link from 'next/link'
-import AiTutorCard from '@/components/dashboard/AiTutorCard'
+// Preservado para uso futuro: import AiTutorCard from '@/components/dashboard/AiTutorCard'
 
 interface StudentData {
   plan: string
@@ -135,10 +135,7 @@ export default function AlunoDashboardPage() {
         </Card>
       </div>
 
-      {/* AI Tutor Card */}
-      <div className="mb-6">
-        <AiTutorCard />
-      </div>
+      {/* AI Tutor Card desabilitado temporariamente (Código preservado em AiTutorCard.tsx) */}
 
       <div className="grid lg:grid-cols-7 gap-4">
         <div className="lg:col-span-4">
