@@ -1,27 +1,58 @@
-import CryptoJS from 'crypto-js'
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto'
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-encryption-key-change-in-production'
+function getSecretKey(): Buffer {
+  const key = process.env.ENCRYPTION_KEY
+  if (!key || key.length < 32) {
+    if (process.env.NODE_ENV === 'test') {
+      return createHash('sha256').update('test-secret-key-32-characters-min').digest()
+    }
+    throw new Error('ENCRYPTION_KEY environment variable must be set and be at least 32 characters long.')
+  }
+  return createHash('sha256').update(key).digest()
+}
 
-export const encrypt = (data: string): string => {
-  return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString()
+export const encrypt = (text: string): string => {
+  const iv = randomBytes(12)
+  const key = getSecretKey()
+  const cipher = createCipheriv('aes-256-gcm', key, iv)
+  
+  let encrypted = cipher.update(text, 'utf8', 'hex')
+  encrypted += cipher.final('hex')
+  const authTag = cipher.getAuthTag().toString('hex')
+  
+  return `${iv.toString('hex')}:${authTag}:${encrypted}`
 }
 
 export const decrypt = (encryptedData: string): string => {
-  const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY)
-  return bytes.toString(CryptoJS.enc.Utf8)
+  const parts = encryptedData.split(':')
+  if (parts.length !== 3) {
+    throw new Error('Invalid encrypted payload format.')
+  }
+  
+  const [ivHex, authTagHex, encryptedHex] = parts
+  const iv = Buffer.from(ivHex, 'hex')
+  const authTag = Buffer.from(authTagHex, 'hex')
+  const key = getSecretKey()
+  
+  const decipher = createDecipheriv('aes-256-gcm', key, iv)
+  decipher.setAuthTag(authTag)
+  
+  let decrypted = decipher.update(encryptedHex, 'hex', 'utf8')
+  decrypted += decipher.final('utf8')
+  
+  return decrypted
 }
 
 export const hash = (data: string): string => {
-  return CryptoJS.SHA256(data).toString()
+  return createHash('sha256').update(data).digest('hex')
 }
 
-// Encrypt sensitive fields before storing in database
 export const encryptSensitiveData = (data: {
   phone?: string
   document?: string
   address?: string
 }): { phone?: string; document?: string; address?: string } => {
-  const encrypted: any = {}
+  const encrypted: { phone?: string; document?: string; address?: string } = {}
   
   if (data.phone) encrypted.phone = encrypt(data.phone)
   if (data.document) encrypted.document = encrypt(data.document)
@@ -30,13 +61,12 @@ export const encryptSensitiveData = (data: {
   return encrypted
 }
 
-// Decrypt sensitive fields when retrieving from database
 export const decryptSensitiveData = (data: {
   phone?: string
   document?: string
   address?: string
 }): { phone?: string; document?: string; address?: string } => {
-  const decrypted: any = {}
+  const decrypted: { phone?: string; document?: string; address?: string } = {}
   
   if (data.phone) decrypted.phone = decrypt(data.phone)
   if (data.document) decrypted.document = decrypt(data.document)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession, getStripeCustomerId } from '@/lib/stripe'
-import { validateCheckout } from '@/lib/validation'
+import { validateCheckout } from '@/lib/validations'
 import { checkRateLimit, stripeRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 
 export async function POST(req: NextRequest) {

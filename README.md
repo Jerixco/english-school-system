@@ -1,125 +1,119 @@
-# English School System
+# 🏫 English School System — Enterprise SaaS Platform
 
-Sistema completo para gestão de escola de inglês online com automações integradas.
+> **Sistema Completo de Gestão Escolar & Plataforma de Estudos (Next.js 16+, PostgreSQL/Neon, Prisma, NextAuth, Stripe & LGPD Compliance)**
 
-## 🚀 Funcionalidades
+---
 
-- **Website Institucional**: Site moderno e responsivo com todas as páginas necessárias
-- **Sistema de Agendamento**: Integração com Calendly para consultas automáticas
-- **CRM Customizado**: Gestão completa de leads, alunos e pipeline comercial
-- **Pagamentos**: Integração com Stripe para assinaturas e pagamentos avulsos
-- **Automação WhatsApp**: Mensagens automáticas e follow-ups
-- **Automação de E-mail**: Fluxos automatizados para diferentes etapas
-- **Dashboard Administrativo**: Métricas e visualização de dados em tempo real
-- **Gestão de Professores**: Calendários individuais e controle de disponibilidade
+## 💎 Visão Geral do Produto
 
-## 🛠️ Tecnologias
+O **English School System** é uma solução SaaS pronta para comercialização (*turnkey enterprise solution*), projetada para escolas de idiomas, professores particulares e edtechs. A plataforma combina gestão de leads (CRM), controle financeiro, agendamento de aulas integrável ao Calendly/Google Meet, segurança com autenticação 2FA e total conformidade com a LGPD.
 
-- **Frontend**: Next.js 14, React, TypeScript, TailwindCSS, shadcn/ui
-- **Backend**: Next.js API Routes, Prisma ORM
-- **Database**: PostgreSQL
-- **Documentação de API**: OpenAPI + Swagger UI
-- **Pagamentos**: Stripe
-- **Agendamento**: Calendly
-- **Automação**: Nodemailer (e-mail), WhatsApp Business API
-- **Autenticação**: NextAuth.js
+---
 
-## 📋 Pré-requisitos
+## 🏛️ Arquitetura do Sistema
 
-- Node.js 18+ 
-- PostgreSQL
-- Contas nas plataformas:
-  - Stripe
-  - Calendly
-  - WhatsApp Business API
-
-## 🔧 Instalação
-
-1. Clone o repositório
-2. Instale as dependências:
-```bash
-npm install
+```
+[ Cliente / Browser (React 19 + TailwindCSS + Lucide) ]
+                      │ (HTTPS / TLS 1.3)
+                      ▼
+[ Next.js 16 Server (App Router / NextAuth JWT / Middleware Security) ]
+     │                │                                     │
+     ▼                ▼                                     ▼
+[ Neon Postgres ] [ Upstash Redis ]                  [ Sentry / Error Log ]
+  (Prisma ORM)    (Rate Limiting)                     (Observabilidade)
 ```
 
-3. Configure as variáveis de ambiente:
+---
+
+## 🚀 Principais Módulos & Recursos
+
+### 1. 🔐 Autenticação, Autorização & Segurança Enterprise
+- **NextAuth.js v4** com estratégia JWT e hashing BCrypt (fator 12).
+- **Autenticação em Dois Fatores (2FA/TOTP)** com QR Code e segredos armazenados sob criptografia **AES-256-GCM**.
+- **Bloqueio Automático de Conta (Brute-Force Protection)** após 5 tentativas incorretas.
+- **Revogação Dinâmica de Sessão**: Tokens JWT de contas bloqueadas ou excluídas são revogados em tempo real.
+- **Conformidade LGPD (Art. 18)**: Módulo de anonimização irreversível PII (*Direito ao Esquecimento*).
+
+### 2. 📊 CRM de Leads, Financeiro & Agendamentos
+- Kanban interativo para qualificação e conversão de novos leads.
+- Controle de matrículas, planos de alunos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) e assinaturas Stripe.
+- Histórico de aulas com status (`SCHEDULED`, `COMPLETED`, `CANCELLED`, `NO_SHOW`).
+- Portais dedicados por nível de acesso (**Administrador**, **Professor** e **Aluno**).
+
+---
+
+## 🛠️ Stack Tecnológica
+
+- **Frontend:** Next.js 16 (App Router), React 19, TypeScript, TailwindCSS, Lucide Icons, Framer Motion.
+- **Backend:** Next.js Server Actions, Route Handlers, Zod Validation, Upstash Redis Rate Limiting.
+- **Banco de Dados:** Neon PostgreSQL (Cloud Serverless) via Prisma ORM v5.
+- **Segurança & Criptografia:** AES-256-GCM, BCrypt.js, TOTP (`speakeasy`), Content Security Policy (CSP), Strict Rate Limiting.
+- **Testes & Qualidade:** Vitest, ESLint, TypeScript Strict Mode, Playwright E2E.
+
+---
+
+## 🔑 Variáveis de Ambiente (`.env`)
+
+Para configurar o ambiente de desenvolvimento ou produção, **renomeie o arquivo `.env.example` para `.env` e preencha com suas chaves locais**:
+
 ```bash
 cp .env.example .env
 ```
-Edite o arquivo `.env` com suas credenciais
 
-4. Configure o banco de dados:
+---
+
+## ⚡ Guia de Instalação e Execução Local
+
 ```bash
-docker compose up -d
-npx prisma migrate dev
+# 1. Clonar o repositório
+git clone https://github.com/Jerixco/english-school-system.git
+cd english-school-system
+
+# 2. Configurar as variáveis de ambiente
+cp .env.example .env
+
+# 3. Instalar dependências
+npm install
+
+# 4. Sincronizar o Banco de Dados (Prisma Push)
 npx prisma db push
-```
 
-5. Inicie o servidor de desenvolvimento:
-```bash
+# 5. Popular o Banco com Dados Iniciais (Seeding)
+npx tsx prisma/seed.ts
+
+# 6. Executar os Testes Unitários
+npx vitest run
+
+# 7. Iniciar o Servidor de Desenvolvimento
 npm run dev
 ```
 
-Acesse http://localhost:3000
+---
 
-## 📁 Estrutura do Projeto
+## 📑 Credenciais de Teste (Seed)
 
-```
-english-school-system/
-├── src/
-│   ├── app/              # Páginas Next.js
-│   ├── components/       # Componentes reutilizáveis
-│   ├── lib/              # Utilitários e configurações
-│   ├── types/            # Tipos TypeScript
-│   └── styles/           # Estilos globais
-├── prisma/               # Schema do banco de dados
-└── public/               # Arquivos estáticos
-```
+Após rodar o comando de seed (`npx tsx prisma/seed.ts` ou `npx prisma db seed`), o sistema criará automaticamente as contas de teste locais (Administrador, Professor e Aluno). 
 
-## 🔐 Variáveis de Ambiente
+> 💡 **Consulte o arquivo `prisma/seed.ts`** para verificar os e-mails e credenciais geradas para ambiente de desenvolvimento.
 
-Consulte o arquivo `.env.example` para todas as variáveis necessárias.
+---
 
-## ✅ Qualidade e cobertura
+## 🚀 Deploy em Produção (Vercel)
 
-- Lint (ESLint): `npm run lint`
-- Testes: `npm test`
-- Cobertura mínima (90%): `npm run test:coverage`
+### Deploy na Vercel (Recomendado)
+1. Conecte o repositório GitHub na [Vercel](https://vercel.com).
+2. Adicione todas as variáveis do arquivo `.env` no painel **Settings > Environment Variables**.
+3. O build utilizará o comando automático `npm run build`.
 
-## 📘 OpenAPI/Swagger (a partir de request specs)
+---
 
-1. Gere/atualize o `public/openapi.json` a partir dos request specs:
-```bash
-npm run openapi:generate
-```
-2. Rode o projeto:
-```bash
-npm run dev
-```
-3. Acesse a documentação interativa:
-`http://localhost:3000/api-docs`
+## 🔒 Governança de Repositório & Transferência Comercial
 
-## 📊 Dashboard
+- **Repositório Privado:** Mantenha o repositório como **Privado** no GitHub durante as negociações comerciais, concedendo acesso via *Collaborators* com permissão de leitura apenas para potenciais compradores avaliarem o código.
+- **Transferência de Propriedade:** Assim que a venda for concluída, realize a transferência de propriedade total do repositório (*Transfer Ownership*) diretamente para a conta do comprador pelo painel de **Settings > Danger Zone** do GitHub.
 
-O dashboard administrativo está disponível em `/admin` e requer autenticação.
+---
 
-## 💳 Integração Stripe
+## 📜 Licença
 
-Configure seus webhooks no Stripe Dashboard para:
-- `checkout.session.completed`
-- `customer.subscription.created`
-- `customer.subscription.updated`
-- `customer.subscription.deleted`
-
-Webhook URL: `http://localhost:3000/api/webhooks/stripe`
-
-## 📱 WhatsApp Business
-
-Configure a integração seguindo a documentação do WhatsApp Business API.
-
-## 📧 Automações de E-mail
-
-Configure as credenciais SMTP no arquivo `.env` para ativar as automações.
-
-## 🚀 Deploy
-
-Recomendado: Vercel, Netlify ou Railway
+Este software possui certificação de prontidão enterprise, com salvaguarda de propriedade intelectual para transferência exclusiva ao comprador.

@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
 import { checkRateLimit, authRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { validateLogin } from '@/lib/validation'
+import { validateLogin } from '@/lib/validations'
 import {
   isAccountLocked,
   recordLoginAttempt,

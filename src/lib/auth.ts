@@ -22,7 +22,7 @@ export const authOptions: NextAuthOptions = {
           where: { email: credentials.email.toLowerCase().trim() },
         })
 
-        if (!user || !user.password) {
+        if (!user || !user.password || user.deletedAt) {
           throw new Error('Credenciais inválidas')
         }
 
@@ -77,13 +77,27 @@ export const authOptions: NextAuthOptions = {
         token.role = user.role
         token.id = user.id
       }
+
+      if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email },
+          select: { lockedUntil: true, deletedAt: true },
+        })
+
+        if (dbUser?.deletedAt || (dbUser?.lockedUntil && dbUser.lockedUntil > new Date())) {
+          return {} as any
+        }
+      }
+
       return token
     },
     async session({ session, token }) {
-      if (session.user) {
-        session.user.role = token.role as string
-        session.user.id = token.id as string
+      if (!token.id || !session.user) {
+        return {} as any
       }
+
+      session.user.role = token.role as string
+      session.user.id = token.id as string
       return session
     },
   },

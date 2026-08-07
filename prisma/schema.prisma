@@ -8,7 +8,7 @@ datasource db {
 }
 
 model User {
-  id               String    @id @default(uuid()) @db.Uuid
+  id               String    @id @default(cuid())
   name             String?
   email            String    @unique
   emailVerified    DateTime?
@@ -20,6 +20,7 @@ model User {
   lockedUntil      DateTime?
   failedLoginCount Int       @default(0)
   lastFailedLogin  DateTime?
+  deletedAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -31,11 +32,14 @@ model User {
   assignedLeads Lead[]    @relation("LeadAssignee")
   auditLogs     AuditLog[]
   loginAttempts LoginAttempt[]
+
+  @@index([deletedAt])
+  @@index([role])
 }
 
 model LoginAttempt {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String?  @db.Uuid
+  id        String   @id @default(cuid())
+  userId    String?
   email     String
   ipAddress String
   success   Boolean
@@ -50,8 +54,8 @@ model LoginAttempt {
 }
 
 model AuditLog {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String?  @db.Uuid
+  id        String   @id @default(cuid())
+  userId    String?
   action    String
   details   String?  @db.Text
   ipAddress String?
@@ -72,8 +76,8 @@ enum Role {
 }
 
 model Account {
-  id                String  @id @default(uuid()) @db.Uuid
-  userId            String  @db.Uuid
+  id                String  @id @default(cuid())
+  userId            String
   type              String
   provider          String
   providerAccountId String
@@ -92,9 +96,9 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(uuid()) @db.Uuid
+  id           String   @id @default(cuid())
   sessionToken String   @unique
-  userId       String   @db.Uuid
+  userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -109,16 +113,28 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([token])
+}
+
 model Lead {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(cuid())
   name        String
   email       String
   phone       String?
   status      LeadStatus @default(NEW)
   source      String?
   notes       String?  @db.Text
-  assignedTo  String?  @db.Uuid
-  userId      String?  @db.Uuid
+  assignedTo  String?
+  userId      String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -142,8 +158,8 @@ enum LeadStatus {
 }
 
 model Student {
-  id              String    @id @default(uuid()) @db.Uuid
-  userId          String    @unique @db.Uuid
+  id              String    @id @default(cuid())
+  userId          String    @unique
   plan            Plan
   status          StudentStatus @default(ACTIVE)
   startDate       DateTime  @default(now())
@@ -151,6 +167,7 @@ model Student {
   subscriptionId  String?   @unique
   customerId      String?
   notes           String?   @db.Text
+  deletedAt       DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -160,6 +177,7 @@ model Student {
 
   @@index([status])
   @@index([subscriptionId])
+  @@index([deletedAt])
 }
 
 enum Plan {
@@ -177,8 +195,8 @@ enum StudentStatus {
 }
 
 model Teacher {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @unique @db.Uuid
+  id          String   @id @default(cuid())
+  userId      String   @unique
   calendlyUrl String?
   availability String[] @default([])
   bio         String?  @db.Text
@@ -194,14 +212,15 @@ model Teacher {
 }
 
 model Class {
-  id          String    @id @default(uuid()) @db.Uuid
-  studentId   String    @db.Uuid
-  teacherId   String    @db.Uuid
+  id          String    @id @default(cuid())
+  studentId   String
+  teacherId   String
   scheduledAt DateTime
-  duration    Int       @default(60) // minutes
+  duration    Int       @default(60)
   status      ClassStatus @default(SCHEDULED)
   meetLink    String?
   notes       String?   @db.Text
+  deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -211,6 +230,9 @@ model Class {
   @@index([studentId])
   @@index([teacherId])
   @@index([scheduledAt])
+  @@index([studentId, scheduledAt])
+  @@index([teacherId, scheduledAt])
+  @@index([deletedAt])
 }
 
 enum ClassStatus {
@@ -221,9 +243,9 @@ enum ClassStatus {
 }
 
 model Payment {
-  id              String        @id @default(uuid()) @db.Uuid
-  studentId       String        @db.Uuid
-  amount          Float
+  id              String        @id @default(cuid())
+  studentId       String
+  amount          Int           // Armazenado em centavos (ex: R$ 297,00 = 29700)
   currency        String        @default("BRL")
   status          PaymentStatus @default(PENDING)
   paymentMethod   String
@@ -231,6 +253,7 @@ model Payment {
   dueDate         DateTime
   paidAt          DateTime?
   invoiceUrl      String?
+  deletedAt       DateTime?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
@@ -239,6 +262,8 @@ model Payment {
   @@index([studentId])
   @@index([status])
   @@index([dueDate])
+  @@index([studentId, status])
+  @@index([deletedAt])
 }
 
 enum PaymentStatus {
@@ -249,7 +274,7 @@ enum PaymentStatus {
 }
 
 model BlogPost {
-  id          String   @id @default(uuid()) @db.Uuid
+  id          String   @id @default(cuid())
   title       String
   slug        String   @unique
   content     String   @db.Text
@@ -268,7 +293,7 @@ model BlogPost {
 }
 
 model WhatsAppQueue {
-  id          String           @id @default(uuid()) @db.Uuid
+  id          String           @id @default(cuid())
   phoneNumber String
   message     String           @db.Text
   status      WhatsAppStatus   @default(PENDING)
