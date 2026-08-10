@@ -140,41 +140,57 @@ async function main() {
     console.log('✅ Aula Ao Vivo demonstrativa criada ID:', sampleLive.id)
   }
 
-  // 7. Criar Aulas Gravadas (VOD com Expiração)
-  const existingRecording = await prisma.recording.findFirst({
+  // 7. Atualizar / Criar Aulas Gravadas (VOD com Expiração e Thumbnails Oficiais)
+  await prisma.recording.deleteMany({
     where: { teacherId: teacher.id },
   })
 
-  if (!existingRecording) {
-    const sampleRecording1 = await prisma.recording.create({
-      data: {
-        title: 'Aula 01: Mastering Small Talk in Corporate Meetings',
-        description: 'Técnicas de quebra-gelo e conversação fluida para reuniões internacionais.',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-        thumbnailUrl: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=80',
-        durationMinutes: 45,
-        recordedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // Gravada há 5 dias
-        expiresAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000), // Expira em 25 dias (plano Standard 30 dias)
-        teacherId: teacher.id,
-        studentId: student.id,
-      },
-    })
+  const sampleRecording1 = await prisma.recording.create({
+    data: {
+      title: 'Aula 01: Business English & Negotiation Skills',
+      description: 'Técnicas de persuasão, vocabulário corporativo e simulações de negociação internacional.',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+      thumbnailUrl: '/images/thumbnails/business-english-negotiation.png',
+      durationMinutes: 45,
+      recordedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // Gravada há 3 dias
+      expiresAt: new Date(Date.now() + 27 * 24 * 60 * 60 * 1000), // Expira em 27 dias
+      teacherId: teacher.id,
+      studentId: student.id,
+    },
+  })
 
-    const sampleRecording2 = await prisma.recording.create({
-      data: {
-        title: 'Aula 02: Advanced Email Writing & Phrasal Verbs',
-        description: 'Como estruturar e-mails formais com precisão, clareza e impacto.',
-        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-        thumbnailUrl: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80',
-        durationMinutes: 52,
-        recordedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // Gravada há 10 dias
-        expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), // Expira em 20 dias
-        teacherId: teacher.id,
-        studentId: student.id,
-      },
-    })
-    console.log('✅ Gravações demonstrativas criadas:', [sampleRecording1.id, sampleRecording2.id])
-  }
+  const sampleRecording2 = await prisma.recording.create({
+    data: {
+      title: 'Aula 02: Advanced Phrasal Verbs & Slang',
+      description: 'Imersão nos phrasal verbs e expressões idiomáticas mais usadas em reuniões informais e conversação fluida.',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+      thumbnailUrl: '/images/thumbnails/advanced-phrasal-verbs.png',
+      durationMinutes: 52,
+      recordedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // Gravada há 7 dias
+      expiresAt: new Date(Date.now() + 23 * 24 * 60 * 60 * 1000), // Expira em 23 dias
+      teacherId: teacher.id,
+      studentId: student.id,
+    },
+  })
+
+  const sampleRecording3 = await prisma.recording.create({
+    data: {
+      title: 'Aula 03: Mastering Job Interviews in English',
+      description: 'Como responder com confiança às perguntas mais difíceis, apresentar seus cases e negociar salário em inglês.',
+      videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      thumbnailUrl: '/images/thumbnails/mastering-job-interviews.png',
+      durationMinutes: 48,
+      recordedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // Gravada há 10 dias
+      expiresAt: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000), // Expira em 20 dias
+      teacherId: teacher.id,
+      studentId: student.id,
+    },
+  })
+  console.log('✅ Gravações com thumbnails oficiais registradas:', [
+    sampleRecording1.id,
+    sampleRecording2.id,
+    sampleRecording3.id,
+  ])
 
   console.log('\n🎉 Seed concluído com sucesso!')
   console.log('--------------------------------------------------')
