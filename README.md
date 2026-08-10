@@ -74,13 +74,19 @@ O sistema simula a gestão completa de uma escola de idiomas, abrangendo:
 
 ---
 
-## 🔑 Variáveis de Ambiente (`.env`)
+## 📋 Checklist de Serviços e Variáveis de Ambiente
 
-Para configurar o ambiente de desenvolvimento, copie o arquivo `.env.example` para `.env` e preencha com suas chaves locais:
+O projeto possui fallbacks inteligentes caso alguns serviços externos não estejam configurados em ambiente local:
 
-```bash
-cp .env.example .env
-```
+| Serviço / Variável | Finalidade | Obrigatório Local? | Fallback / Comportamento |
+|---|---|---|---|
+| `DATABASE_URL` | Neon PostgreSQL (Prisma) | **Sim** | Armazenamento de dados e relacionamentos |
+| `NEXTAUTH_SECRET` | Criptografia de Sessão JWT | **Sim** | Segurança dos tokens de autenticação |
+| `ENCRYPTION_KEY` | Criptografia AES-256-GCM | **Sim** (32 chars) | Proteção de segredos 2FA e dados sensíveis |
+| `UPSTASH_REDIS_REST_URL` | Rate Limiter de requisições | *Opcional* | Fallback automático para limiter em memória |
+| `GEMINI_API_KEY` | IA Tutor / Alex Chatbot | *Opcional* | Fallback para respostas instrucionais simuladas |
+| `STRIPE_SECRET_KEY` | Checkout e Assinaturas | *Opcional* | Simulação de fluxo financeiro local |
+| `SMTP_*` / `RESEND_API_KEY` | Envio de E-mails | *Opcional* | Logs em console de disparo |
 
 ---
 
