@@ -1,95 +1,754 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
-import { Users, DollarSign, Calendar, TrendingUp } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Users,
+  DollarSign,
+  Calendar,
+  TrendingUp,
+  Radio,
+  Video,
+  PlayCircle,
+  Clock,
+  PlusCircle,
+  Search,
+  CheckCircle2,
+  Phone,
+  Mail,
+  ArrowRight,
+  UserCheck,
+  Shield,
+} from 'lucide-react'
+import { useSearchParams } from 'next/navigation'
+
+interface AdminData {
+  metrics: {
+    totalStudents: number
+    activeStudents: number
+    totalTeachers: number
+    totalLeads: number
+    totalRevenue: number
+    activeLiveCount: number
+    scheduledLiveCount: number
+    activeRecordingsCount: number
+    leadsByStatus: Record<string, number>
+  }
+  recentPayments: Array<{
+    id: string
+    amount: number
+    status: string
+    dueDate: string
+    paidAt: string | null
+    studentName: string
+    studentEmail: string
+  }>
+  liveSessions: Array<{
+    id: string
+    title: string
+    description: string | null
+    roomName: string
+    status: string
+    scheduledFor: string
+    duration: number
+    meetLink: string | null
+    teacherName: string
+  }>
+  recordings: Array<{
+    id: string
+    title: string
+    description: string | null
+    videoUrl: string
+    thumbnailUrl: string | null
+    durationMinutes: number | null
+    recordedAt: string
+    expiresAt: string
+    daysRemaining: number
+    teacherName: string
+  }>
+  students: Array<{
+    id: string
+    userId: string
+    name: string
+    email: string
+    plan: string
+    status: string
+    startDate: string
+    lastPaymentAmount: number | null
+  }>
+  leads: Array<{
+    id: string
+    name: string
+    email: string
+    phone: string | null
+    status: string
+    source: string | null
+    notes: string | null
+    createdAt: string
+  }>
+}
+
+const LEAD_STATUS_LABELS: Record<string, { label: string; color: string }> = {
+  NEW: { label: 'Novo', color: 'bg-blue-600' },
+  CONTACTED: { label: 'Contatado', color: 'bg-yellow-600' },
+  CONSULTATION_SCHEDULED: { label: 'Consulta Agendada', color: 'bg-purple-600' },
+  CONSULTATION_COMPLETED: { label: 'Consulta Realizada', color: 'bg-indigo-600' },
+  PROPOSAL_SENT: { label: 'Proposta Enviada', color: 'bg-amber-600' },
+  CONVERTED: { label: 'Convertido em Aluno', color: 'bg-green-600' },
+  LOST: { label: 'Perdido', color: 'bg-gray-500' },
+}
 
 export default function AdminDashboard() {
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get('tab') || 'overview'
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'students' | 'classes'>(
+    tabFromUrl as any
+  )
+  const [data, setData] = useState<AdminData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [newLiveTitle, setNewLiveTitle] = useState('')
+  const [isCreatingLive, setIsCreatingLive] = useState(false)
+
+  const fetchDashboardData = () => {
+    setLoading(true)
+    fetch('/api/admin/dashboard')
+      .then(async (res) => {
+        const json = await res.json()
+        if (!res.ok) throw new Error(json.error || 'Falha ao carregar dashboard')
+        setData(json)
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }
+
+  useEffect(() => {
+    setActiveTab((searchParams.get('tab') as any) || 'overview')
+  }, [searchParams])
+
+  useEffect(() => {
+    fetchDashboardData()
+  }, [])
+
+  const handleUpdateLeadStatus = async (leadId: string, nextStatus: string) => {
+    try {
+      const res = await fetch(`/api/leads/${leadId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: nextStatus }),
+      })
+      if (res.ok) {
+        fetchDashboardData()
+      }
+    } catch (e) {
+      console.error('Erro ao atualizar lead:', e)
+    }
+  }
+
+  const handleCreateLiveSession = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newLiveTitle) return
+    setIsCreatingLive(true)
+    try {
+      const res = await fetch('/api/live-sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newLiveTitle,
+          scheduledFor: new Date().toISOString(),
+          duration: 60,
+        }),
+      })
+      if (res.ok) {
+        setNewLiveTitle('')
+        fetchDashboardData()
+      }
+    } catch (e) {
+      console.error('Erro ao criar sala ao vivo:', e)
+    } finally {
+      setIsCreatingLive(false)
+    }
+  }
+
+  if (loading && !data) {
+    return (
+      <DashboardShell title="Painel Administrativo" subtitle="Carregando métricas e dados...">
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Conectando aos serviços da escola...</p>
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  if (error || !data) {
+    return (
+      <DashboardShell title="Painel Administrativo">
+        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+          {error || 'Não foi possível carregar as informações'}
+        </div>
+      </DashboardShell>
+    )
+  }
+
+  const filteredStudents = data.students.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.plan.toLowerCase().includes(searchTerm.toLowerCase())
+  )
+
   return (
-    <DashboardShell title="Dashboard Administrativo" subtitle="Visão geral do sistema">
-      <div className="row g-4 mb-4">
-        <div className="col-md-3">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted small mb-1">Total de Alunos</p>
-                  <h3 className="fw-bold mb-0">—</h3>
-                </div>
-                <Users className="text-muted" size={20} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted small mb-1">Alunos Ativos</p>
-                  <h3 className="fw-bold mb-0">—</h3>
-                </div>
-                <TrendingUp className="text-muted" size={20} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted small mb-1">Receita Mensal</p>
-                  <h3 className="fw-bold mb-0">—</h3>
-                </div>
-                <DollarSign className="text-muted" size={20} />
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <div className="d-flex justify-content-between align-items-start">
-                <div>
-                  <p className="text-muted small mb-1">Aulas Agendadas</p>
-                  <h3 className="fw-bold mb-0">—</h3>
-                </div>
-                <Calendar className="text-muted" size={20} />
-              </div>
-            </div>
-          </div>
-        </div>
+    <DashboardShell
+      title="Painel Administrativo"
+      subtitle="Controle central de matrículas, receita, CRM de leads e transmissões ao vivo."
+    >
+      {/* Navegação por Abas */}
+      <div className="flex border-b border-gray-200 mb-6 gap-2 overflow-x-auto pb-1">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
+            activeTab === 'overview'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <TrendingUp className="h-4 w-4" />
+          Visão Geral & KPIs
+        </button>
+
+        <button
+          onClick={() => setActiveTab('leads')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
+            activeTab === 'leads'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Users className="h-4 w-4" />
+          CRM & Funil de Leads
+          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full font-bold">
+            {data.metrics.totalLeads}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('students')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
+            activeTab === 'students'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <UserCheck className="h-4 w-4" />
+          Alunos & Matrículas
+          <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+            {data.metrics.activeStudents}
+          </span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('classes')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
+            activeTab === 'classes'
+              ? 'bg-purple-600 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Radio className="h-4 w-4" />
+          Aulas Ao Vivo & VOD
+          {data.metrics.activeLiveCount > 0 && (
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
+              AO VIVO
+            </span>
+          )}
+        </button>
       </div>
 
-      <div className="row g-4">
-        <div className="col-md-4">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <h5 className="fw-bold">Gerenciar Alunos</h5>
-              <p className="text-muted small">Visualize e gerencie todos os alunos cadastrados</p>
-              <span className="text-primary fw-medium small">Em breve →</span>
+      {/* ========================================================================= */}
+      {/* ABA 1: VISÃO GERAL & KPIS                                                */}
+      {/* ========================================================================= */}
+      {activeTab === 'overview' && (
+        <div className="space-y-6">
+          {/* Grid de Métricas Principais */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border-l-4 border-l-purple-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Alunos Ativos</p>
+                    <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                      {data.metrics.activeStudents}
+                    </h3>
+                    <small className="text-gray-500">de {data.metrics.totalStudents} total</small>
+                  </div>
+                  <div className="bg-purple-100 p-3 rounded-full text-purple-600">
+                    <Users className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-green-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Receita Total Recebida</p>
+                    <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                      {data.metrics.totalRevenue.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL',
+                      })}
+                    </h3>
+                    <small className="text-green-600 font-semibold">100% liquidados</small>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-full text-green-600">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-blue-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Leads no Funil CRM</p>
+                    <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                      {data.metrics.totalLeads}
+                    </h3>
+                    <small className="text-blue-600 font-semibold">
+                      {data.metrics.leadsByStatus['NEW'] || 0} novos contatos
+                    </small>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+                    <TrendingUp className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-red-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Aulas Ao Vivo & VOD</p>
+                    <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                      {data.metrics.activeLiveCount} <span className="text-sm font-normal text-gray-500">ao vivo</span>
+                    </h3>
+                    <small className="text-purple-600 font-semibold">
+                      {data.metrics.activeRecordingsCount} gravações salvas
+                    </small>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-full text-red-600">
+                    <Radio className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid lg:grid-cols-7 gap-6">
+            {/* Pagamentos Recentes */}
+            <div className="lg:col-span-4">
+              <Card className="h-full">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <DollarSign className="h-5 w-5 text-green-600" />
+                      Últimos Pagamentos Recebidos
+                    </CardTitle>
+                    <CardDescription>Fluxo financeiro com reconciliação Stripe</CardDescription>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {data.recentPayments.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4">Nenhum pagamento registrado.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {data.recentPayments.map((p) => (
+                        <div key={p.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                          <div>
+                            <div className="font-semibold text-gray-900">{p.studentName}</div>
+                            <small className="text-gray-500">{p.studentEmail}</small>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-gray-900">
+                              {p.amount.toLocaleString('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL',
+                              })}
+                            </div>
+                            <Badge className="bg-green-600 text-xs">Pago</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Matrículas Recentes */}
+            <div className="lg:col-span-3">
+              <Card className="h-full">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <UserCheck className="h-5 w-5 text-purple-600" />
+                    Últimos Alunos Cadastrados
+                  </CardTitle>
+                  <CardDescription>Matrículas ativas na plataforma</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {data.students.length === 0 ? (
+                    <p className="text-gray-500 text-sm py-4">Nenhum aluno cadastrado.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {data.students.slice(0, 4).map((s) => (
+                        <div key={s.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                          <div>
+                            <div className="font-semibold text-gray-900">{s.name}</div>
+                            <small className="text-gray-500">Plano {s.plan}</small>
+                          </div>
+                          <Badge className="bg-green-600 text-xs">{s.status}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
-        <div className="col-md-4">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <h5 className="fw-bold">Gerenciar Leads</h5>
-              <p className="text-muted small">Acompanhe e converta leads em alunos</p>
-              <span className="text-primary fw-medium small">Em breve →</span>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ABA 2: CRM & FUNIL DE LEADS (KANBAN)                                      */}
+      {/* ========================================================================= */}
+      {activeTab === 'leads' && (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">Funil de Aquisição & CRM</h3>
+              <p className="text-sm text-gray-500">
+                Acompanhe e converta interessados em alunos matriculados.
+              </p>
             </div>
           </div>
-        </div>
-        <div className="col-md-4">
-          <div className="card stat-card h-100">
-            <div className="card-body">
-              <h5 className="fw-bold">Gerenciar Aulas</h5>
-              <p className="text-muted small">Visualize e gerencie todas as aulas agendadas</p>
-              <span className="text-primary fw-medium small">Em breve →</span>
-            </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Coluna 1: Novos Leads */}
+            <Card className="border-t-4 border-t-blue-600">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex justify-between">
+                  <span>Novos Contatos</span>
+                  <Badge className="bg-blue-600">{data.metrics.leadsByStatus['NEW'] || 0}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {data.leads
+                  .filter((l) => l.status === 'NEW')
+                  .map((lead) => (
+                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div className="font-bold text-gray-900">{lead.name}</div>
+                      <div className="text-gray-600 flex items-center gap-1 truncate">
+                        <Mail className="h-3 w-3" /> {lead.email}
+                      </div>
+                      {lead.phone && (
+                        <div className="text-gray-600 flex items-center gap-1">
+                          <Phone className="h-3 w-3" /> {lead.phone}
+                        </div>
+                      )}
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONTACTED')}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
+                      >
+                        Marcar Contatado →
+                      </Button>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+
+            {/* Coluna 2: Contatados */}
+            <Card className="border-t-4 border-t-yellow-600">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex justify-between">
+                  <span>Em Contato</span>
+                  <Badge className="bg-yellow-600">{data.metrics.leadsByStatus['CONTACTED'] || 0}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {data.leads
+                  .filter((l) => l.status === 'CONTACTED')
+                  .map((lead) => (
+                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div className="font-bold text-gray-900">{lead.name}</div>
+                      <div className="text-gray-600 truncate">{lead.email}</div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONSULTATION_SCHEDULED')}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs h-7"
+                      >
+                        Agendar Consulta →
+                      </Button>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+
+            {/* Coluna 3: Consulta Agendada */}
+            <Card className="border-t-4 border-t-purple-600">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex justify-between">
+                  <span>Consulta Agendada</span>
+                  <Badge className="bg-purple-600">
+                    {data.metrics.leadsByStatus['CONSULTATION_SCHEDULED'] || 0}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {data.leads
+                  .filter((l) => l.status === 'CONSULTATION_SCHEDULED')
+                  .map((lead) => (
+                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div className="font-bold text-gray-900">{lead.name}</div>
+                      <div className="text-gray-600 truncate">{lead.email}</div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONVERTED')}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white text-xs h-7"
+                      >
+                        Converter em Aluno 🎓
+                      </Button>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
+
+            {/* Coluna 4: Convertidos */}
+            <Card className="border-t-4 border-t-green-600">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex justify-between">
+                  <span>Convertidos</span>
+                  <Badge className="bg-green-600">{data.metrics.leadsByStatus['CONVERTED'] || 0}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {data.leads
+                  .filter((l) => l.status === 'CONVERTED')
+                  .map((lead) => (
+                    <div key={lead.id} className="p-3 bg-green-50 rounded-lg border border-green-200 text-xs space-y-1">
+                      <div className="font-bold text-green-900">{lead.name}</div>
+                      <div className="text-green-700 truncate">{lead.email}</div>
+                      <div className="text-green-600 font-semibold flex items-center gap-1">
+                        <CheckCircle2 className="h-3.5 w-3.5" /> Matrícula Realizada
+                      </div>
+                    </div>
+                  ))}
+              </CardContent>
+            </Card>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ABA 3: GESTÃO DE ALUNOS & MATRÍCULAS                                     */}
+      {/* ========================================================================= */}
+      {activeTab === 'students' && (
+        <div className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <UserCheck className="h-5 w-5 text-purple-600" />
+                  Alunos Matriculados
+                </CardTitle>
+                <CardDescription>
+                  Gerenciamento de planos, status de matrícula e pagamentos
+                </CardDescription>
+              </div>
+
+              <div className="relative w-full md:w-72">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar por nome, e-mail ou plano..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-100 text-xs text-gray-600 uppercase">
+                    <tr>
+                      <th className="p-3">Nome / E-mail</th>
+                      <th className="p-3">Plano</th>
+                      <th className="p-3">Data Matrícula</th>
+                      <th className="p-3">Último Pagamento</th>
+                      <th className="p-3 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-8 text-gray-500">
+                          Nenhum aluno encontrado com o filtro aplicado.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredStudents.map((s) => (
+                        <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-3">
+                            <div className="font-semibold text-gray-900">{s.name}</div>
+                            <small className="text-gray-500">{s.email}</small>
+                          </td>
+                          <td className="p-3">
+                            <Badge variant="outline" className="font-medium">
+                              {s.plan}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-gray-600">
+                            {new Date(s.startDate).toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="p-3 font-semibold text-gray-900">
+                            {s.lastPaymentAmount
+                              ? s.lastPaymentAmount.toLocaleString('pt-BR', {
+                                  style: 'currency',
+                                  currency: 'BRL',
+                                })
+                              : '—'}
+                          </td>
+                          <td className="p-3 text-right">
+                            <Badge className="bg-green-600">{s.status}</Badge>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ABA 4: AULAS AO VIVO & VOD                                                */}
+      {/* ========================================================================= */}
+      {activeTab === 'classes' && (
+        <div className="space-y-6">
+          {/* Card para Criar Nova Transmissão Instantânea */}
+          <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+            <CardHeader>
+              <CardTitle className="text-base text-purple-950 flex items-center gap-2">
+                <Radio className="h-5 w-5 text-purple-600" />
+                Criar Nova Sala de Aula Ao Vivo
+              </CardTitle>
+              <CardDescription>
+                Abra uma sala de transmissão WebRTC instantânea para alunos e professores.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreateLiveSession} className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  placeholder="Título da Aula (ex: Conversação Avançada B2)..."
+                  value={newLiveTitle}
+                  onChange={(e) => setNewLiveTitle(e.target.value)}
+                  className="bg-white"
+                  required
+                />
+                <Button type="submit" disabled={isCreatingLive} className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  {isCreatingLive ? 'Criando Sala...' : 'Iniciar Sala Ao Vivo'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Lista de Sessões Ao Vivo & Agendadas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-purple-600" />
+                Transmissões Cadastradas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.liveSessions.length === 0 ? (
+                <p className="text-gray-500 text-sm py-4">Nenhuma sessão agendada.</p>
+              ) : (
+                <div className="space-y-3">
+                  {data.liveSessions.map((session) => (
+                    <div key={session.id} className="p-4 bg-gray-50 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <Badge className={session.status === 'LIVE' ? 'bg-red-600 animate-pulse text-white' : 'bg-blue-600 text-white'}>
+                            {session.status === 'LIVE' ? 'Transmitindo Agora' : 'Agendada'}
+                          </Badge>
+                          <h4 className="font-bold text-gray-900">{session.title}</h4>
+                        </div>
+                        <small className="text-gray-500">
+                          Prof. {session.teacherName} · {new Date(session.scheduledFor).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </small>
+                      </div>
+                      {session.meetLink && (
+                        <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                          <a href={session.meetLink} target="_blank" rel="noopener noreferrer">
+                            <PlayCircle className="h-4 w-4 mr-2" />
+                            Acessar Sala
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Lista de Gravações Ativas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Video className="h-5 w-5 text-purple-600" />
+                Gravações Salvas com Tempo de Retenção (VOD)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data.recordings.length === 0 ? (
+                <p className="text-gray-500 text-sm py-4">Nenhuma gravação ativa.</p>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4">
+                  {data.recordings.map((rec) => (
+                    <div key={rec.id} className="p-3 bg-gray-50 rounded-lg border flex justify-between items-center">
+                      <div>
+                        <div className="font-semibold text-gray-900">{rec.title}</div>
+                        <small className="text-gray-500">
+                          Prof. {rec.teacherName} · Gravada em {new Date(rec.recordedAt).toLocaleDateString('pt-BR')}
+                        </small>
+                      </div>
+                      <Badge className="bg-amber-600 text-white whitespace-nowrap">
+                        <Clock className="h-3 w-3 mr-1" />
+                        Expira em {rec.daysRemaining} dias
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DashboardShell>
   )
 }
