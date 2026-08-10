@@ -1,15 +1,9 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import { getAuthenticatedUser } from '@/lib/security'
 import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-
-const SYSTEM_INSTRUCTION = `You are Alex, an expert, warm, and encouraging English teacher at English School. 
-Your goal is to help students practice conversational English. Always reply primarily in English. 
-If the student makes a grammatical error, include a gentle "💡 Quick Tip:" section at the end.`
-
-const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b']
+import { AiTutorService } from '@/services/ai-tutor.service'
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,40 +33,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Mensagem inválida.' }, { status: 400 })
     }
 
-    // Formata o histórico garantindo que a 1ª mensagem seja do tipo 'user' (Exigência do SDK)
-    const formattedHistory: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
-    if (Array.isArray(history)) {
-      for (const item of history) {
-        if (!item.parts || typeof item.parts !== 'string') continue
-        const role = item.role === 'user' ? 'user' : 'model'
-        if (formattedHistory.length === 0 && role === 'model') continue
-        if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === role) continue
+    const aiTutor = new AiTutorService(apiKey)
+    const { text, isQuotaExceeded } = await aiTutor.getReply(message, history)
 
-        formattedHistory.push({ role, parts: [{ text: item.parts }] })
-      }
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey)
-    let replyText = ''
-    let isQuotaExceeded = false
-
-    for (const modelName of AVAILABLE_MODELS) {
-      try {
-        const model = genAI.getGenerativeModel({ model: modelName, systemInstruction: SYSTEM_INSTRUCTION })
-        const chat = model.startChat({ history: formattedHistory })
-        const result = await chat.sendMessage(message)
-        replyText = result.response.text()
-        if (replyText) break
-      } catch (err: any) {
-        const errMsg = err?.message || String(err || '')
-        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Too Many Requests')) {
-          isQuotaExceeded = true
-        }
-        console.warn(`Model ${modelName} notice:`, errMsg)
-      }
-    }
-
-    if (!replyText) {
+    if (!text) {
       if (isQuotaExceeded) {
         return NextResponse.json(
           { error: '⏳ O limite temporário de respostas por minuto da IA foi atingido. Aguarde 1 minuto.' },
@@ -86,7 +50,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ reply: replyText })
+    return NextResponse.json({ reply: text })
   } catch (error: any) {
     console.error('Gemini AI Tutor error:', error)
     return NextResponse.json(
