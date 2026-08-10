@@ -97,7 +97,7 @@ export default function PlanosPage() {
                   name={plan.name}
                   description={plan.description}
                   price={plan.price}
-                  priceId={plan.priceId}
+                  plan={key.toUpperCase() as 'BASIC' | 'STANDARD' | 'PREMIUM'}
                   features={plan.features}
                   popular={plan.popular}
                 />

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { authOptions } from '@/lib/auth'
 import { prisma } from './prisma'
 import { Role } from '@prisma/client'
+import { getClientIpFromHeaders } from './client-ip'
 
 // ============================================
 // TIPOS DE SEGURANÇA
@@ -147,8 +148,7 @@ function sanitizeErrorMessage(message: string): string {
 // ============================================
 
 export function getClientIp(req: NextRequest): string {
-  const forwarded = req.headers.get('x-forwarded-for')
-  return forwarded ? forwarded.split(',')[0].trim() : 'unknown'
+  return getClientIpFromHeaders(req.headers)
 }
 
 export function getUserAgent(req: NextRequest): string {

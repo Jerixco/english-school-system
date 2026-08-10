@@ -188,9 +188,7 @@ export const classFilterSchema = z.object({
 // ============================================
 
 export const checkoutSchema = z.object({
-  email: emailSchema,
-  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  priceId: z.string().min(1, 'Price ID é obrigatório'),
+  plan: z.enum(['BASIC', 'STANDARD', 'PREMIUM']),
 })
 
 export const paymentStatusEnum = z.enum(['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED'])
@@ -224,6 +222,40 @@ export const errorResponseSchema = z.object({
   error: z.string(),
   code: z.string().optional(),
   timestamp: z.date().optional(),
+})
+
+// ============================================
+// BLOG SCHEMAS & VALIDAÇÃO
+// ============================================
+
+const slugSchema = z
+  .string()
+  .min(1, 'Slug é obrigatório')
+  .max(200, 'Slug muito longo')
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug inválido (use apenas letras minúsculas, números e hífens)')
+
+export const createBlogSchema = z.object({
+  title: z.string().min(2, 'Título muito curto').max(200, 'Título muito longo'),
+  slug: slugSchema,
+  content: z.string().min(1, 'Conteúdo é obrigatório').max(100000, 'Conteúdo muito longo'),
+  excerpt: z.string().max(500).optional(),
+  coverImage: z.string().url('URL de capa inválida').optional().or(z.literal('')),
+  published: z.boolean().optional().default(false),
+  author: z.string().min(2, 'Autor é obrigatório').max(100),
+  tags: z.array(z.string().max(50)).max(20).optional().default([]),
+  seoTitle: z.string().max(200).optional(),
+  seoDescription: z.string().max(500).optional(),
+})
+
+export const updateBlogSchema = z.object({
+  title: z.string().min(2).max(200).optional(),
+  content: z.string().min(1).max(100000).optional(),
+  excerpt: z.string().max(500).optional(),
+  coverImage: z.string().url().optional().or(z.literal('')),
+  published: z.boolean().optional(),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  seoTitle: z.string().max(200).optional(),
+  seoDescription: z.string().max(500).optional(),
 })
 
 // ============================================
@@ -279,12 +311,8 @@ export const validateTeacher = (data: any) => {
 }
 
 export const validateCheckout = (data: any) => {
-  const sanitized = {
-    email: sanitizeEmail(data.email),
-    name: sanitizeString(data.name),
-    priceId: data.priceId,
-  }
-  return checkoutSchema.parse(sanitized)
+  const plan = typeof data?.plan === 'string' ? data.plan.toUpperCase() : data?.plan
+  return checkoutSchema.parse({ plan })
 }
 
 export const validateRegister = (data: unknown) => {

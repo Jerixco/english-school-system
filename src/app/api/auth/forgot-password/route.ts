@@ -36,25 +36,27 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    const token = crypto.randomBytes(32).toString('hex')
-    const expires = new Date(Date.now() + 3600 * 1000) // 1 hora
+    // Token enviado ao usuário é aleatório; no banco guardamos só o hash SHA-256.
+    // Assim, vazamento da tabela não entrega tokens utilizáveis (equivalem a senha).
+    const rawToken = crypto.randomBytes(32).toString('hex')
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex')
+    const expiresAt = new Date(Date.now() + 3600 * 1000) // 1 hora
 
-    // Remover tokens anteriores para este email
-    await prisma.verificationToken.deleteMany({
-      where: { identifier: email },
+    // Invalida solicitações anteriores para este email
+    await prisma.passwordResetToken.deleteMany({
+      where: { email },
     })
 
-    // Criar novo token
-    await prisma.verificationToken.create({
+    await prisma.passwordResetToken.create({
       data: {
-        identifier: email,
-        token,
-        expires,
+        email,
+        token: tokenHash,
+        expiresAt,
       },
     })
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const resetUrl = `${appUrl}/reset-password?token=${token}&email=${encodeURIComponent(email)}`
+    const resetUrl = `${appUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`
 
     await sendPasswordResetEmail(email, resetUrl)
 

@@ -33,6 +33,20 @@ export const authOptions: NextAuthOptions = {
         const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
 
         if (!isPasswordValid) {
+          // Conta a falha e bloqueia após o limite (brute-force / stuffing).
+          const MAX_FAILED = 5
+          const LOCK_MS = 15 * 60 * 1000
+          const nextCount = user.failedLoginCount + 1
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              failedLoginCount: nextCount,
+              lastFailedLogin: new Date(),
+              ...(nextCount >= MAX_FAILED
+                ? { lockedUntil: new Date(Date.now() + LOCK_MS), failedLoginCount: 0 }
+                : {}),
+            },
+          })
           throw new Error('Credenciais inválidas')
         }
 
@@ -51,6 +65,14 @@ export const authOptions: NextAuthOptions = {
           if (!isValidToken) {
             throw new Error('Token 2FA inválido')
           }
+        }
+
+        // Login completo com sucesso: zera contadores de bloqueio.
+        if (user.failedLoginCount > 0 || user.lockedUntil || user.lastFailedLogin) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { failedLoginCount: 0, lockedUntil: null, lastFailedLogin: null },
+          })
         }
 
         return {
@@ -81,10 +103,19 @@ export const authOptions: NextAuthOptions = {
       if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
-          select: { lockedUntil: true, deletedAt: true },
+          select: { lockedUntil: true, deletedAt: true, passwordChangedAt: true },
         })
 
         if (dbUser?.deletedAt || (dbUser?.lockedUntil && dbUser.lockedUntil > new Date())) {
+          return {} as any
+        }
+
+        // Invalida tokens emitidos antes da última troca de senha (reset/roubo).
+        if (
+          dbUser?.passwordChangedAt &&
+          typeof token.iat === 'number' &&
+          token.iat * 1000 < dbUser.passwordChangedAt.getTime()
+        ) {
           return {} as any
         }
       }

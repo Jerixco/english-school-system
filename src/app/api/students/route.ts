@@ -180,8 +180,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const body = await req.json()
-    const { plan } = body
+    // Corpo é lido e descartado: auto-registro não aceita campos do cliente.
+    await req.json().catch(() => ({}))
 
     // Verificar se estudante já existe
     const existingStudent = await prisma.student.findUnique({
@@ -202,11 +202,12 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Criar novo estudante
+    // Auto-registro NÃO define plano pago: o plano só sobe via checkout Stripe
+    // (webhook). Ignora qualquer 'plan' vindo do cliente para evitar upgrade grátis.
     const newStudent = await prisma.student.create({
       data: {
         userId: user.id,
-        plan: plan || 'BASIC',
+        plan: 'BASIC',
         status: 'ACTIVE',
       },
       include: {

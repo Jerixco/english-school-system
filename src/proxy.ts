@@ -26,12 +26,40 @@ function getDefaultRouteForRole(role: string): string {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
-  const response = NextResponse.next()
 
   const isDev = process.env.NODE_ENV === 'development'
+
+  // Nonce por request. Em produção substitui 'unsafe-inline' em script-src,
+  // fechando XSS por injeção de <script> inline. Em dev mantém-se permissivo
+  // (HMR/Fast Refresh do Next dependem de inline + eval).
+  const nonce = crypto.randomUUID().replace(/-/g, '')
+
   const scriptSrc = isDev
     ? "'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com"
-    : "'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com"
+    : `'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`
+
+  const csp = [
+    "default-src 'self'",
+    `script-src ${scriptSrc}`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https:",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join('; ')
+
+  // Propaga nonce + CSP nos headers do REQUEST: assim o Next aplica o nonce
+  // automaticamente nos próprios scripts inline de bootstrap/hidratação, e o
+  // layout lê 'x-nonce' para os scripts de analytics.
+  const requestHeaders = new Headers(req.headers)
+  if (!isDev) {
+    requestHeaders.set('x-nonce', nonce)
+    requestHeaders.set('Content-Security-Policy', csp)
+  }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
 
   response.headers.set('X-DNS-Prefetch-Control', 'on')
   response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
@@ -40,10 +68,7 @@ export async function proxy(req: NextRequest) {
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
   response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  response.headers.set(
-    'Content-Security-Policy',
-    `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:;`
-  )
+  response.headers.set('Content-Security-Policy', csp)
 
   if (req.nextUrl.pathname.startsWith('/api/')) {
     response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')

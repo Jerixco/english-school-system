@@ -51,7 +51,8 @@ export const createCheckoutSession = async (
   customerId: string,
   priceId: string,
   successUrl: string,
-  cancelUrl: string
+  cancelUrl: string,
+  metadata?: Record<string, string>
 ) => {
   try {
     const session = await stripe.checkout.sessions.create({
@@ -66,6 +67,8 @@ export const createCheckoutSession = async (
       ],
       success_url: successUrl,
       cancel_url: cancelUrl,
+      metadata,
+      ...(metadata ? { subscription_data: { metadata } } : {}),
     })
 
     return session

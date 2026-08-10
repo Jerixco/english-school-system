@@ -7,6 +7,7 @@ import {
   sendClassReminderWhatsApp 
 } from '@/lib/whatsapp'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { getAuthenticatedUser, isAdmin } from '@/lib/security'
 import { z } from 'zod'
 
 const whatsappSchema = z.object({
@@ -26,6 +27,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: 'Too many requests. Please try again later.' },
         { status: 429 }
+      )
+    }
+
+    // Somente ADMIN pode disparar WhatsApp — impede open relay para phishing/spam.
+    const user = await getAuthenticatedUser()
+    if (!user || !isAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Acesso negado' },
+        { status: user ? 403 : 401 }
       )
     }
 

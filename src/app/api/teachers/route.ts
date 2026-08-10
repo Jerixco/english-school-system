@@ -17,6 +17,9 @@ export async function GET(req: NextRequest) {
       where.isActive = true
     }
 
+    // Email é PII: só exposto para admin. Listagem pública leva name/image.
+    const isAdminUser = Boolean(user && isAdmin(user))
+
     const teachers = await prisma.teacher.findMany({
       where,
       include: {
@@ -24,8 +27,8 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             name: true,
-            email: true,
             image: true,
+            ...(isAdminUser ? { email: true } : {}),
           },
         },
       },

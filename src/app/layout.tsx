@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { headers } from 'next/headers'
 import './globals.css'
 import Providers from '@/components/providers'
 
@@ -57,11 +58,15 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  // Nonce definido pelo proxy (produção); permite os scripts inline de analytics
+  // sob CSP sem 'unsafe-inline'. Em dev é undefined (CSP permissivo).
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+
   return (
     <html lang="pt-BR">
       <head>
@@ -69,9 +74,11 @@ export default function RootLayout({
           <>
             <script
               async
+              nonce={nonce}
               src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
             />
             <script
+              nonce={nonce}
               dangerouslySetInnerHTML={{
                 __html: `
                   window.dataLayer = window.dataLayer || [];
@@ -85,6 +92,7 @@ export default function RootLayout({
         )}
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <script
+            nonce={nonce}
             dangerouslySetInnerHTML={{
               __html: `
                 (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
