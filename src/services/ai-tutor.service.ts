@@ -1,0 +1,79 @@
+import { GoogleGenerativeAI } from '@google/generative-ai'
+
+const SYSTEM_INSTRUCTION = `You are Alex, an expert, warm, and encouraging English teacher at English School. 
+Your goal is to help students practice conversational English. Always reply primarily in English. 
+If the student makes a grammatical error, include a gentle "💡 Quick Tip:" section at the end.`
+
+const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b']
+
+export interface ChatMessage {
+  role: 'user' | 'model'
+  parts: string
+}
+
+export class AiTutorService {
+  private genAI: GoogleGenerativeAI
+
+  constructor(apiKey: string) {
+    this.genAI = new GoogleGenerativeAI(apiKey)
+  }
+
+  /**
+   * Formata o histórico para o formato exigido pelo SDK do Gemini.
+   * Garante que a primeira mensagem seja sempre 'user' e que não haja roles repetidos seguidos.
+   */
+  private formatHistory(history: ChatMessage[]) {
+    const formatted: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
+    
+    if (!Array.isArray(history)) return formatted
+
+    for (const item of history) {
+      if (!item.parts || typeof item.parts !== 'string') continue
+      
+      const role = item.role === 'user' ? 'user' : 'model'
+      
+      // Regra 1: A primeira mensagem deve ser do usuário
+      if (formatted.length === 0 && role === 'model') continue
+      
+      // Regra 2: Alternar roles (não pode ter user/user ou model/model seguidos)
+      if (formatted.length > 0 && formatted[formatted.length - 1].role === role) continue
+
+      formatted.push({ role, parts: [{ text: item.parts }] })
+    }
+
+    return formatted
+  }
+
+  /**
+   * Envia uma mensagem para o Tutor IA e retorna a resposta.
+   * Implementa fallback automático entre modelos disponíveis.
+   */
+  async getReply(message: string, history: ChatMessage[]): Promise<{ text: string; isQuotaExceeded: boolean }> {
+    const formattedHistory = this.formatHistory(history)
+    let isQuotaExceeded = false
+    let replyText = ''
+
+    for (const modelName of AVAILABLE_MODELS) {
+      try {
+        const model = this.genAI.getGenerativeModel({ 
+          model: modelName, 
+          systemInstruction: SYSTEM_INSTRUCTION 
+        })
+        
+        const chat = model.startChat({ history: formattedHistory })
+        const result = await chat.sendMessage(message)
+        replyText = result.response.text()
+        
+        if (replyText) break
+      } catch (err: any) {
+        const errMsg = err?.message || String(err || '')
+        if (errMsg.includes('429') || errMsg.includes('Quota') || errMsg.includes('Too Many Requests')) {
+          isQuotaExceeded = true
+        }
+        console.warn(`AiTutorService: Model ${modelName} notice:`, errMsg)
+      }
+    }
+
+    return { text: replyText, isQuotaExceeded }
+  }
+}
