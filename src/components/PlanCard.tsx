@@ -9,12 +9,12 @@ interface PlanCardProps {
   name: string
   description: string
   price: string
-  priceId: string
+  plan: 'BASIC' | 'STANDARD' | 'PREMIUM'
   features: string[]
   popular?: boolean
 }
 
-export default function PlanCard({ name, description, price, priceId, features, popular }: PlanCardProps) {
+export default function PlanCard({ name, description, price, plan, features, popular }: PlanCardProps) {
   const [loading, setLoading] = useState(false)
 
   const handleSubscribe = async () => {
@@ -24,8 +24,13 @@ export default function PlanCard({ name, description, price, priceId, features, 
       const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ plan }),
       })
+
+      if (response.status === 401) {
+        window.location.href = `/login?callbackUrl=${encodeURIComponent('/planos')}`
+        return
+      }
 
       const { url } = await response.json()
 

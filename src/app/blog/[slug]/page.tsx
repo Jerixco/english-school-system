@@ -2,6 +2,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
 import Link from 'next/link'
+import { sanitizeRichHtml } from '@/lib/sanitize-html'
 
 // This would typically fetch from API based on slug
 const blogPost = {
@@ -86,7 +87,7 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <CardContent className="pt-6">
               <div
                 className="prose prose-lg max-w-none"
-                dangerouslySetInnerHTML={{ __html: blogPost.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(blogPost.content) }}
               />
             </CardContent>
           </Card>

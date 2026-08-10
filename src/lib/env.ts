@@ -24,7 +24,14 @@ try {
 } catch (error) {
   if (error instanceof z.ZodError) {
     const missingVars = error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n')
+    // Em produção, variáveis inválidas são fatais: aborta o boot em vez de rodar
+    // com segredos ausentes/fracos (ex.: ENCRYPTION_KEY curta, NEXTAUTH_SECRET vazio).
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('[ENV VALIDATION FAILED]\n' + missingVars)
+    }
     console.warn('⚠️ [ENV VALIDATION NOTICE]:\n' + missingVars)
+  } else {
+    throw error
   }
   parsedEnv = process.env as any
 }

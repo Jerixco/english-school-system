@@ -20,6 +20,7 @@ model User {
   lockedUntil      DateTime?
   failedLoginCount Int       @default(0)
   lastFailedLogin  DateTime?
+  passwordChangedAt DateTime?
   deletedAt        DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt

@@ -15,7 +15,9 @@ export async function GET() {
     checks.database = { status: 'healthy' }
   } catch (error: any) {
     isHealthy = false
-    checks.database = { status: 'unhealthy', message: error?.message || 'DB connection failed' }
+    // Loga detalhe no servidor; resposta pública não expõe interno do banco.
+    console.error('Health check DB error:', error?.message || error)
+    checks.database = { status: 'unhealthy', message: 'DB connection failed' }
   }
 
   // 2. Check AI Services

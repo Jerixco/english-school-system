@@ -1,6 +1,7 @@
 import { RateLimiterMemory } from 'rate-limiter-flexible'
 import { Ratelimit } from '@upstash/ratelimit'
 import { Redis } from '@upstash/redis'
+import { getClientIpFromHeaders } from './client-ip'
 
 // Check if Upstash Redis env variables exist
 const hasUpstash = Boolean(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN)
@@ -94,7 +95,5 @@ export const checkRateLimit = async (
 }
 
 export const getClientIdentifier = (req: Request): string => {
-  const forwarded = req.headers.get('x-forwarded-for')
-  const ip = forwarded?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown'
-  return ip
+  return getClientIpFromHeaders(req.headers)
 }
