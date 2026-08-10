@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
 import { idSchema } from '@/lib/validations'
+import { LeadService } from '@/services/lead.service'
 import { z } from 'zod'
+
+const leadService = new LeadService()
 
 const updateLeadSchema = z.object({
   status: z
@@ -28,7 +30,6 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
 
@@ -39,7 +40,6 @@ export async function PATCH(
       )
     }
 
-    // Autenticação obrigatória — apenas ADMIN gerencia leads (PII).
     const user = await getAuthenticatedUser()
     if (!user || !isAdmin(user)) {
       return NextResponse.json(
@@ -54,10 +54,7 @@ export async function PATCH(
     const body = await req.json()
     const data = updateLeadSchema.parse(body)
 
-    const lead = await prisma.lead.update({
-      where: { id },
-      data,
-    })
+    const lead = await leadService.updateLead(id, data)
 
     return NextResponse.json(lead)
   } catch (error: any) {
@@ -83,7 +80,6 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
 
@@ -94,7 +90,6 @@ export async function DELETE(
       )
     }
 
-    // Autenticação obrigatória — apenas ADMIN pode deletar leads.
     const user = await getAuthenticatedUser()
     if (!user || !isAdmin(user)) {
       return NextResponse.json(
@@ -106,9 +101,7 @@ export async function DELETE(
     const { id } = await params
     idSchema.parse(id)
 
-    await prisma.lead.delete({
-      where: { id },
-    })
+    await leadService.deleteLead(id)
 
     return NextResponse.json({ success: true })
   } catch (error: any) {

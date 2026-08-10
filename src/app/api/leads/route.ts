@@ -1,11 +1,13 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { validateLead } from '@/lib/validations'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { LeadService } from '@/services/lead.service'
 import { ZodError } from 'zod'
+
+const leadService = new LeadService()
 
 export async function GET(req: NextRequest) {
   try {
@@ -28,24 +30,9 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status')
+    const status = searchParams.get('status') as any
 
-    const where = status ? { status: status as any } : {}
-
-    const leads = await prisma.lead.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    })
+    const leads = await leadService.listLeads({ status })
 
     return NextResponse.json(leads)
   } catch (error) {
@@ -72,9 +59,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const validatedData = validateLead(body)
 
-    const lead = await prisma.lead.create({
-      data: validatedData,
-    })
+    const lead = await leadService.createLead(validatedData)
 
     return NextResponse.json(lead, { status: 201 })
   } catch (error: any) {

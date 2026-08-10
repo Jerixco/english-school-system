@@ -1,16 +1,17 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import {
   getAuthenticatedUser,
   isAdmin,
   createErrorResponse,
   logAuditAction,
-  sanitizeUserData,
 } from '@/lib/security'
 import { studentFilterSchema } from '@/lib/validations'
+import { StudentService } from '@/services/student.service'
+
+const studentService = new StudentService()
 
 /**
  * GET /api/students
@@ -22,7 +23,6 @@ import { studentFilterSchema } from '@/lib/validations'
  */
 export async function GET(req: NextRequest) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
 
@@ -34,7 +34,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Autenticação obrigatória
     const user = await getAuthenticatedUser()
     if (!user) {
       await logAuditAction(null, 'students_list', { reason: 'not_authenticated' }, req, 'failure')
@@ -44,7 +43,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Validar query parameters
     const { searchParams } = new URL(req.url)
     const queryParams = {
       page: searchParams.get('page') || '1',
@@ -57,84 +55,24 @@ export async function GET(req: NextRequest) {
     const validatedQuery = studentFilterSchema.parse(queryParams)
     const { page, limit, status, plan, search } = validatedQuery
 
-    // Construir where clause com segurança
-    const where: any = {}
-
-    // Se não é admin, filtrar por usuário atual
-    if (!isAdmin(user)) {
-      // Student vê apenas a si mesmo
-      where.userId = user.id
+    const isAdminUser = isAdmin(user)
+    if (!isAdminUser) {
       await logAuditAction(user.id, 'students_list', { access_type: 'own_data' }, req)
     } else {
       await logAuditAction(user.id, 'students_list', { access_type: 'admin_all' }, req)
     }
 
-    // Aplicar filtros adicionais
-    if (status) where.status = status
-    if (plan) where.plan = plan
-
-    // Busca por nome ou email
-    if (search) {
-      where.OR = [
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-      ]
-    }
-
-    // Paginação segura
-    const skip = (page - 1) * limit
-    const take = limit
-
-    // Buscar dados + total para paginação
-    const [students, total] = await Promise.all([
-      prisma.student.findMany({
-        where,
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-              role: true,
-            },
-          },
-          payments: {
-            select: {
-              id: true,
-              amount: true,
-              status: true,
-              dueDate: true,
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
-          classes: {
-            select: { id: true },
-            take: 1,
-          },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take,
-      }),
-      prisma.student.count({ where }),
-    ])
-
-    // Sanitizar dados antes de retornar
-    const safeStudents = students.map((student) => ({
-      ...student,
-      user: sanitizeUserData(student.user),
-    }))
-
-    return NextResponse.json({
-      data: safeStudents,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+    const result = await studentService.listStudents({
+      userId: user.id,
+      isAdmin: isAdminUser,
+      page,
+      limit,
+      status: status as any,
+      plan: plan as any,
+      search,
     })
+
+    return NextResponse.json(result)
   } catch (error: any) {
     console.error('Error fetching students:', error)
 
@@ -158,7 +96,6 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
 
@@ -170,7 +107,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Autenticação obrigatória
     const user = await getAuthenticatedUser()
     if (!user) {
       await logAuditAction(null, 'student_create', { reason: 'not_authenticated' }, req, 'failure')
@@ -180,47 +116,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Corpo é lido e descartado: auto-registro não aceita campos do cliente.
     await req.json().catch(() => ({}))
 
-    // Verificar se estudante já existe
-    const existingStudent = await prisma.student.findUnique({
-      where: { userId: user.id },
-    })
-
-    if (existingStudent) {
-      await logAuditAction(
-        user.id,
-        'student_create',
-        { reason: 'student_already_exists' },
-        req,
-        'failure'
-      )
-      return NextResponse.json(
-        { error: 'Você já é um estudante' },
-        { status: 409 }
-      )
-    }
-
-    // Auto-registro NÃO define plano pago: o plano só sobe via checkout Stripe
-    // (webhook). Ignora qualquer 'plan' vindo do cliente para evitar upgrade grátis.
-    const newStudent = await prisma.student.create({
-      data: {
-        userId: user.id,
-        plan: 'BASIC',
-        status: 'ACTIVE',
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
-    })
+    const newStudent = await studentService.createStudent(user.id)
 
     await logAuditAction(
       user.id,
@@ -233,26 +131,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         message: 'Estudante criado com sucesso',
-        data: {
-          ...newStudent,
-          user: sanitizeUserData(newStudent.user),
-        },
+        data: newStudent,
       },
       { status: 201 }
     )
   } catch (error: any) {
     console.error('Error creating student:', error)
 
-    if (error.code === 'P2002') {
+    if (error.message === 'STUDENT_ALREADY_EXISTS' || error.code === 'P2002') {
       await logAuditAction(
         (await getAuthenticatedUser())?.id || null,
         'student_create',
-        { reason: 'unique_constraint_violation' },
+        { reason: 'student_already_exists' },
         req,
         'failure'
       )
       return NextResponse.json(
-        { error: 'Este usuário já é um estudante' },
+        { error: 'Você já é um estudante' },
         { status: 409 }
       )
     }

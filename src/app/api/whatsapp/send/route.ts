@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { 
-  sendWhatsAppMessage, 
-  sendWelcomeWhatsApp, 
-  sendConsultationConfirmationWhatsApp, 
-  sendPaymentConfirmationWhatsApp, 
-  sendClassReminderWhatsApp 
-} from '@/lib/whatsapp'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { WhatsAppService } from '@/services/whatsapp.service'
 import { z } from 'zod'
+
+const whatsappService = new WhatsAppService()
 
 const whatsappSchema = z.object({
   type: z.enum(['welcome', 'consultation', 'payment', 'reminder', 'custom']),
@@ -19,7 +15,6 @@ const whatsappSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(apiRateLimiter, identifier)
     
@@ -30,7 +25,6 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Somente ADMIN pode disparar WhatsApp — impede open relay para phishing/spam.
     const user = await getAuthenticatedUser()
     if (!user || !isAdmin(user)) {
       return NextResponse.json(
@@ -40,48 +34,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    
-    // Validate input
     const validatedData = whatsappSchema.parse(body)
 
-    let result
-
-    switch (validatedData.type) {
-      case 'welcome':
-        result = await sendWelcomeWhatsApp(validatedData.to, validatedData.data?.name || '')
-        break
-      case 'consultation':
-        result = await sendConsultationConfirmationWhatsApp(
-          validatedData.to,
-          validatedData.data?.name || '',
-          validatedData.data?.date || ''
-        )
-        break
-      case 'payment':
-        result = await sendPaymentConfirmationWhatsApp(
-          validatedData.to,
-          validatedData.data?.name || '',
-          validatedData.data?.amount || 0
-        )
-        break
-      case 'reminder':
-        result = await sendClassReminderWhatsApp(
-          validatedData.to,
-          validatedData.data?.name || '',
-          validatedData.data?.date || '',
-          validatedData.data?.teacher || ''
-        )
-        break
-      case 'custom':
-        if (!validatedData.customMessage) {
-          return NextResponse.json(
-            { error: 'Custom messages require message content' },
-            { status: 400 }
-          )
-        }
-        result = await sendWhatsAppMessage(validatedData.to, validatedData.customMessage)
-        break
-    }
+    const result = await whatsappService.sendMessage(validatedData)
 
     if (result?.success) {
       return NextResponse.json({ success: true })
@@ -94,6 +49,13 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error('Error sending WhatsApp message:', error)
     
+    if (error.message === 'CUSTOM_MESSAGE_REQUIRED') {
+      return NextResponse.json(
+        { error: 'Custom messages require message content' },
+        { status: 400 }
+      )
+    }
+
     if (error.name === 'ZodError') {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },
