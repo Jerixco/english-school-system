@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { useState, useEffect, Suspense } from 'react'
-import { signIn } from 'next-auth/react'
+import { signIn, getSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { getDashboardUrl } from '@/lib/roles'
 
@@ -19,7 +19,6 @@ function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [twoFactorToken, setTwoFactorToken] = useState('')
-  const [userRole, setUserRole] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -28,83 +27,62 @@ function LoginForm() {
     if (searchParams.get('registered') === 'true') {
       setSuccess('Conta criada com sucesso! Faça login para continuar.')
     }
-  }, [searchParams])
+    // Pré-carrega as rotas de dashboard para transição de página instantânea
+    router.prefetch('/admin')
+    router.prefetch('/professor')
+    router.prefetch('/aluno')
+  }, [searchParams, router])
 
-  const completeLogin = async (token?: string) => {
-    const result = await signIn('credentials', {
-      email,
-      password,
-      twoFactorToken: token || undefined,
-      redirect: false,
-    })
-
-    if (result?.error) {
-      if (result.error === 'TWO_FACTOR_REQUIRED') {
-        setStep('twoFactor')
-        setError('')
-        return
-      }
-      setError(
-        result.error === 'CredentialsSignin'
-          ? 'Email ou senha inválidos'
-          : result.error
-      )
-      return
-    }
-
-    if (result?.ok) {
-      router.push(getDashboardUrl(userRole))
-      router.refresh()
-    }
-  }
-
-  const handleCredentialsSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const executeLogin = async (token?: string) => {
     setLoading(true)
     setError('')
     setSuccess('')
 
     try {
-      const response = await fetch('/api/auth/verify-credentials', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn('credentials', {
+        email: email.trim().toLowerCase(),
+        password,
+        twoFactorToken: token || undefined,
+        redirect: false,
       })
 
-      const data = await response.json()
+      if (result?.error) {
+        if (result.error === 'TWO_FACTOR_REQUIRED') {
+          setStep('twoFactor')
+          setLoading(false)
+          return
+        }
 
-      if (!response.ok) {
-        setError(data.error || 'Email ou senha inválidos')
+        setError(
+          result.error === 'CredentialsSignin'
+            ? 'Email ou senha inválidos'
+            : result.error
+        )
+        setLoading(false)
         return
       }
 
-      setUserRole(data.user.role)
-
-      if (data.twoFactorRequired) {
-        setStep('twoFactor')
-        return
+      if (result?.ok) {
+        // Obtém a sessão diretamente para redirecionar de forma imediata à rota do perfil
+        const session = await getSession()
+        const targetUrl = getDashboardUrl(session?.user?.role || '')
+        router.push(targetUrl)
+        router.refresh()
       }
-
-      await completeLogin()
     } catch {
       setError('Erro ao fazer login. Tente novamente.')
-    } finally {
       setLoading(false)
     }
   }
 
+  const handleCredentialsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await executeLogin()
+  }
+
   const handleTwoFactorSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-    setError('')
-
-    try {
-      await completeLogin(twoFactorToken)
-    } catch {
-      setError('Erro ao verificar código. Tente novamente.')
-    } finally {
-      setLoading(false)
-    }
+    await executeLogin(twoFactorToken)
   }
 
   return (
@@ -162,7 +140,7 @@ function LoginForm() {
                 />
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? 'Verificando...' : 'Entrar'}
+                {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
           ) : (

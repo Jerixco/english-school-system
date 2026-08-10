@@ -95,11 +95,14 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      // No momento inicial de sign-in, os dados do usuário acabaram de ser validados
       if (user) {
         token.role = user.role
         token.id = user.id
+        return token
       }
 
+      // Em requisições subsequentes, valida se a conta continua ativa e se a senha não foi revogada
       if (token.email) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
