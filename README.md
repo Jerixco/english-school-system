@@ -1,12 +1,20 @@
-# 🏫 English School System — Enterprise SaaS Platform
+# 🏫 English School System
 
-> **Sistema Completo de Gestão Escolar & Plataforma de Estudos com Clean Architecture (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, Stripe & LGPD Compliance)**
+> **Projeto de Estudos & Laboratório Fullstack (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, Stripe & LGPD Compliance)**
 
 ---
 
-## 💎 Visão Geral do Produto
+## 📖 Sobre o Projeto
 
-O **English School System** é uma solução SaaS pronta para comercialização (*turnkey enterprise solution*), projetada para escolas de idiomas, professores particulares e edtechs. A plataforma combina gestão de leads (CRM), controle financeiro, agendamento de aulas integrável ao Calendly/Google Meet, segurança com autenticação 2FA, conformidade total com a LGPD e uma **arquitetura desacoplada baseada em Camada de Serviços (Service Layer)**.
+O **English School System** é um projeto fullstack desenvolvido para estudo e aplicação prática de **Clean Architecture**, segurança de autenticação e fluxos de negócio em aplicações SaaS modernas. 
+
+O sistema simula a gestão completa de uma escola de idiomas, abrangendo:
+- Gestão e funil de leads (CRM).
+- Controle de matrículas e planos de alunos.
+- Agendamento de aulas com integração ao Calendly/Google Meet.
+- Pagamentos e assinaturas com Stripe Webhooks.
+- Autenticação segura com 2FA (TOTP) e proteção contra ataques de força bruta.
+- Conformidade com a LGPD (anonimização e exclusão de dados PII).
 
 ---
 
@@ -40,7 +48,7 @@ O **English School System** é uma solução SaaS pronta para comercialização 
 - **Lógica de Negócio Isolada**: Toda a regra de negócio e mutações de banco residem em serviços dedicados em `src/services/`, facilitando manutenção e testes unitários.
 - **Idempotência de Pagamentos**: `StripeService` trata webhooks com proteção nativa contra cobranças duplicadas.
 
-### 2. 🔐 Autenticação, Autorização & Segurança Enterprise
+### 2. 🔐 Autenticação, Autorização & Segurança
 - **NextAuth.js v4** com estratégia JWT e hashing BCrypt (fator 12).
 - **Autenticação em Dois Fatores (2FA/TOTP)** com QR Code e segredos armazenados sob criptografia **AES-256-GCM**.
 - **Bloqueio Automático de Conta (Brute-Force Protection)** após 5 tentativas incorretas.
@@ -68,7 +76,7 @@ O **English School System** é uma solução SaaS pronta para comercialização 
 
 ## 🔑 Variáveis de Ambiente (`.env`)
 
-Para configurar o ambiente de desenvolvimento ou produção, **renomeie o arquivo `.env.example` para `.env` e preencha com suas chaves locais**:
+Para configurar o ambiente de desenvolvimento, copie o arquivo `.env.example` para `.env` e preencha com suas chaves locais:
 
 ```bash
 cp .env.example .env
@@ -104,30 +112,14 @@ npm run dev
 
 ---
 
-## 📑 Credenciais de Teste (Seed)
+## 📑 Credenciais de Teste (Ambiente de Desenvolvimento)
 
-Após rodar o comando de seed (`npx tsx prisma/seed.ts` ou `npx prisma db seed`), o sistema criará automaticamente as contas de teste locais (Administrador, Professor e Aluno). 
+Após rodar o comando de seed (`npx tsx prisma/seed.ts`), o sistema criará automaticamente as contas de teste locais (Administrador, Professor e Aluno). 
 
 > 💡 **Consulte o arquivo `prisma/seed.ts`** para verificar os e-mails e credenciais geradas para ambiente de desenvolvimento.
 
 ---
 
-## 🚀 Deploy em Produção (Vercel)
-
-### Deploy na Vercel (Recomendado)
-1. Conecte o repositório GitHub na [Vercel](https://vercel.com).
-2. Adicione todas as variáveis do arquivo `.env` no painel **Settings > Environment Variables**.
-3. O build utilizará o comando automático `npm run build`.
-
----
-
-## 🔒 Governança de Repositório & Transferência Comercial
-
-- **Repositório Privado:** Mantenha o repositório como **Privado** no GitHub durante as negociações comerciais, concedendo acesso via *Collaborators* com permissão de leitura apenas para potenciais compradores avaliarem o código.
-- **Transferência de Propriedade:** Assim que a venda for concluída, realize a transferência de propriedade total do repositório (*Transfer Ownership*) diretamente para a conta do comprador pelo painel de **Settings > Danger Zone** do GitHub.
-
----
-
 ## 📜 Licença
 
-Este software possui certificação de prontidão enterprise, com salvaguarda de propriedade intelectual para transferência exclusiva ao comprador.
+Projeto desenvolvido para fins de estudo e aprimoramento técnico. Distribuído sob a licença MIT.
