@@ -49,6 +49,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Perfil de aluno não encontrado' }, { status: 404 })
     }
 
+    // Busca se existe alguma aula ao vivo acontecendo agora
+    const activeLiveSession = await prisma.liveSession.findFirst({
+      where: {
+        status: 'LIVE',
+        OR: [
+          { studentId: student.id },
+          { studentId: null },
+        ],
+      },
+      include: {
+        teacher: {
+          include: {
+            user: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { startedAt: 'desc' },
+    })
+
+    // Contagem de gravações ativas disponíveis
+    const activeRecordingsCount = await prisma.recording.count({
+      where: {
+        expiresAt: { gt: new Date() },
+        OR: [
+          { studentId: student.id },
+          { studentId: null },
+        ],
+      },
+    })
+
     return NextResponse.json({
       student: {
         id: student.id,
@@ -57,6 +87,15 @@ export async function GET(req: NextRequest) {
         startDate: student.startDate,
         nextPaymentDate: student.nextPaymentDate,
         user: student.user,
+        activeRecordingsCount,
+        activeLiveSession: activeLiveSession ? {
+          id: activeLiveSession.id,
+          title: activeLiveSession.title,
+          description: activeLiveSession.description,
+          meetLink: activeLiveSession.meetLink,
+          teacherName: activeLiveSession.teacher.user.name,
+          startedAt: activeLiveSession.startedAt,
+        } : null,
         upcomingClasses: student.classes.map((c) => ({
           id: c.id,
           scheduledAt: c.scheduledAt,
@@ -66,7 +105,7 @@ export async function GET(req: NextRequest) {
         })),
         recentPayments: student.payments.map((p) => ({
           id: p.id,
-          amount: p.amount,
+          amount: p.amount / 100, // Converte centavos para Reais (ex: 49700 -> 497.00)
           status: p.status,
           dueDate: p.dueDate,
         })),

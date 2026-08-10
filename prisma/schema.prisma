@@ -167,6 +167,8 @@ model Student {
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   classes         Class[]
   payments        Payment[]
+  liveSessions    LiveSession[]
+  recordings      Recording[]
 
   @@index([status])
   @@index([subscriptionId])
@@ -200,6 +202,8 @@ model Teacher {
 
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   classes     Class[]
+  liveSessions LiveSession[]
+  recordings  Recording[]
 
   @@index([isActive])
 }
@@ -233,6 +237,60 @@ enum ClassStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+}
+
+model LiveSession {
+  id          String            @id @default(cuid())
+  title       String
+  description String?           @db.Text
+  roomName    String            @unique
+  status      LiveSessionStatus @default(SCHEDULED)
+  scheduledFor DateTime
+  duration    Int               @default(60)
+  startedAt   DateTime?
+  endedAt     DateTime?
+  meetLink    String?
+  teacherId   String
+  studentId   String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  teacher     Teacher           @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student     Student?          @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([teacherId])
+  @@index([studentId])
+  @@index([status])
+  @@index([scheduledFor])
+}
+
+enum LiveSessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+model Recording {
+  id              String    @id @default(cuid())
+  title           String
+  description     String?   @db.Text
+  videoUrl        String
+  thumbnailUrl    String?
+  durationMinutes Int?
+  recordedAt      DateTime  @default(now())
+  expiresAt       DateTime  // Data exata de expiração após retenção
+  teacherId       String
+  studentId       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  teacher         Teacher   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  student         Student?  @relation(fields: [studentId], references: [id], onDelete: SetNull)
+
+  @@index([expiresAt])
+  @@index([studentId])
+  @@index([teacherId])
 }
 
 model Payment {
