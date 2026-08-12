@@ -1,0 +1,4 @@
+# Gitleaks ignore list
+# Commits históricos que já foram tratados e revogados
+ed77bf79b2bba11a5b478e03ae4ece3f2a5007dc:.env.example:gcp-api-key:40
+ed77bf79b2bba11a5b478e03ae4ece3f2a5007dc:src/app/api/ai/tutor/route.ts:gcp-api-key:8
