@@ -1,9 +1,28 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser } from '@/lib/security'
+import { getAuthenticatedUser, isAdmin } from '@/lib/security'
 import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { AiTutorService } from '@/services/ai-tutor.service'
+import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
+
+const aiMessageSchema = z.object({
+  message: z
+    .string()
+    .trim()
+    .min(1, 'A mensagem não pode estar vazia.')
+    .max(1000, 'Mensagem muito longa. O limite é de 1.000 caracteres por envio.'),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(['user', 'model']),
+        parts: z.array(z.object({ text: z.string().max(2000) })),
+      })
+    )
+    .max(10, 'Histórico de contexto excedeu o limite máximo.')
+    .optional(),
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,6 +39,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Sessão expirada. Por favor, faça login novamente.' }, { status: 401 })
     }
 
+    // Validação de autorização: Aluno precisa estar com status ACTIVE ou TRIAL
+    if (user.role === 'STUDENT' && !isAdmin(user)) {
+      const student = await prisma.student.findUnique({
+        where: { userId: user.id },
+        select: { status: true },
+      })
+
+      if (student && student.status !== 'ACTIVE' && student.status !== 'TRIAL') {
+        return NextResponse.json(
+          { error: 'Seu plano de estudos precisa estar ativo para utilizar o Tutor IA.' },
+          { status: 403 }
+        )
+      }
+    }
+
     const rateLimit = await checkRateLimit(aiRateLimiter, getClientIdentifier(req))
     if (!rateLimit.success) {
       return NextResponse.json(
@@ -28,10 +62,8 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { message, history } = await req.json()
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json({ error: 'Mensagem inválida.' }, { status: 400 })
-    }
+    const body = await req.json()
+    const { message, history } = aiMessageSchema.parse(body)
 
     const aiTutor = new AiTutorService(apiKey)
     const { text, isQuotaExceeded } = await aiTutor.getReply(message, history)
@@ -52,6 +84,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ reply: text })
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0]?.message || 'Dados inválidos.' },
+        { status: 400 }
+      )
+    }
+
     console.error('Gemini AI Tutor error:', error)
     return NextResponse.json(
       { error: 'Ocorreu um erro temporário ao conectar com a IA. Tente novamente.' },

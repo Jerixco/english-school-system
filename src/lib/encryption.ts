@@ -34,7 +34,7 @@ export const decrypt = (encryptedData: string): string => {
   const authTag = Buffer.from(authTagHex, 'hex')
   const key = getSecretKey()
   
-  const decipher = createDecipheriv('aes-256-gcm', key, iv)
+  const decipher = createDecipheriv('aes-256-gcm', key, iv, { authTagLength: 16 })
   decipher.setAuthTag(authTag)
   
   let decrypted = decipher.update(encryptedHex, 'hex', 'utf8')
