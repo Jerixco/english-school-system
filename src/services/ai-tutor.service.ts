@@ -14,7 +14,7 @@ const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b']
 
 export interface ChatMessage {
   role: 'user' | 'model'
-  parts: string
+  parts: string | Array<{ text: string }>
 }
 
 export class AiTutorService {
@@ -28,13 +28,22 @@ export class AiTutorService {
    * Formata o histórico para o formato exigido pelo SDK do Gemini.
    * Garante que a primeira mensagem seja sempre 'user' e que não haja roles repetidos seguidos.
    */
-  private formatHistory(history: ChatMessage[]) {
+  private formatHistory(history: ChatMessage[] = []) {
     const formatted: Array<{ role: 'user' | 'model'; parts: Array<{ text: string }> }> = []
     
     if (!Array.isArray(history)) return formatted
 
     for (const item of history) {
-      if (!item.parts || typeof item.parts !== 'string') continue
+      if (!item) continue
+      
+      let text = ''
+      if (typeof item.parts === 'string') {
+        text = item.parts
+      } else if (Array.isArray(item.parts) && item.parts.length > 0) {
+        text = item.parts[0]?.text || ''
+      }
+
+      if (!text.trim()) continue
       
       const role = item.role === 'user' ? 'user' : 'model'
       
@@ -44,7 +53,7 @@ export class AiTutorService {
       // Regra 2: Alternar roles (não pode ter user/user ou model/model seguidos)
       if (formatted.length > 0 && formatted[formatted.length - 1].role === role) continue
 
-      formatted.push({ role, parts: [{ text: item.parts }] })
+      formatted.push({ role, parts: [{ text }] })
     }
 
     return formatted
@@ -54,7 +63,10 @@ export class AiTutorService {
    * Envia uma mensagem para o Tutor IA e retorna a resposta.
    * Implementa fallback automático entre modelos disponíveis.
    */
-  async getReply(message: string, history: ChatMessage[]): Promise<{ text: string; isQuotaExceeded: boolean }> {
+  async getReply(
+    message: string, 
+    history: ChatMessage[] = []
+  ): Promise<{ text: string; isQuotaExceeded: boolean }> {
     const formattedHistory = this.formatHistory(history)
     let isQuotaExceeded = false
     let replyText = ''

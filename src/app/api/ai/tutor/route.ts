@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
 import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { AiTutorService } from '@/services/ai-tutor.service'
+import { AiTutorService, ChatMessage } from '@/services/ai-tutor.service'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -17,11 +17,15 @@ const aiMessageSchema = z.object({
     .array(
       z.object({
         role: z.enum(['user', 'model']),
-        parts: z.array(z.object({ text: z.string().max(2000) })),
+        parts: z.union([
+          z.string(),
+          z.array(z.object({ text: z.string().max(2000) })),
+        ]),
       })
     )
     .max(10, 'Histórico de contexto excedeu o limite máximo.')
-    .optional(),
+    .optional()
+    .default([]),
 })
 
 export async function POST(req: NextRequest) {
@@ -66,7 +70,7 @@ export async function POST(req: NextRequest) {
     const { message, history } = aiMessageSchema.parse(body)
 
     const aiTutor = new AiTutorService(apiKey)
-    const { text, isQuotaExceeded } = await aiTutor.getReply(message, history)
+    const { text, isQuotaExceeded } = await aiTutor.getReply(message, (history || []) as ChatMessage[])
 
     if (!text) {
       if (isQuotaExceeded) {
