@@ -4,30 +4,40 @@ import bcrypt from 'bcryptjs'
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Iniciando população do banco de dados (Seed)...')
+  // Trava de segurança: impede execução acidental em produção
+  if (process.env.NODE_ENV === 'production' && !process.env.FORCE_SEED) {
+    console.error('🚫 ERRO DE SEGURANÇA: A execução do script de seed está bloqueada em ambiente de produção.')
+    console.error('Para forçar a execução em ambiente controlado, defina FORCE_SEED=true.')
+    process.exit(1)
+  }
 
-  const defaultPassword = await bcrypt.hash('Senha123!', 10)
+  console.log('🌱 Iniciando população controlada do banco de dados (Seed)...')
+
+  const seedPassword = process.env.SEED_DEFAULT_PASSWORD || 'DevPass@English2026!'
+  const defaultPassword = await bcrypt.hash(seedPassword, 12)
 
   // 1. Criar Usuário Admin
+  const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@englishschool.com'
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@englishschool.com' },
+    where: { email: adminEmail },
     update: {},
     create: {
-      email: 'admin@englishschool.com',
+      email: adminEmail,
       name: 'Diretoria Executiva',
       password: defaultPassword,
       role: 'ADMIN',
       emailVerified: new Date(),
     },
   })
-  console.log('✅ Usuário Admin criado:', adminUser.email)
+  console.log('✅ Usuário Admin preparado:', adminUser.email)
 
   // 2. Criar Usuário Professor
+  const teacherEmail = process.env.SEED_TEACHER_EMAIL || 'teacher@englishschool.com'
   const teacherUser = await prisma.user.upsert({
-    where: { email: 'teacher@englishschool.com' },
+    where: { email: teacherEmail },
     update: {},
     create: {
-      email: 'teacher@englishschool.com',
+      email: teacherEmail,
       name: 'Prof. Sarah Jenkins',
       password: defaultPassword,
       role: 'TEACHER',
@@ -46,14 +56,15 @@ async function main() {
       availability: ['Mon 09:00-18:00', 'Wed 09:00-18:00', 'Fri 09:00-18:00'],
     },
   })
-  console.log('✅ Perfil de Professor criado:', teacherUser.email)
+  console.log('✅ Perfil de Professor preparado:', teacherUser.email)
 
   // 3. Criar Usuário Aluno
+  const studentEmail = process.env.SEED_STUDENT_EMAIL || 'student@englishschool.com'
   const studentUser = await prisma.user.upsert({
-    where: { email: 'student@englishschool.com' },
+    where: { email: studentEmail },
     update: {},
     create: {
-      email: 'student@englishschool.com',
+      email: studentEmail,
       name: 'Lucas Silva',
       password: defaultPassword,
       role: 'STUDENT',
@@ -71,7 +82,7 @@ async function main() {
       startDate: new Date(),
     },
   })
-  console.log('✅ Perfil de Aluno criado:', studentUser.email)
+  console.log('✅ Perfil de Aluno preparado:', studentUser.email)
 
   // 4. Criar Aula de Exemplo (Idempotente)
   const existingClass = await prisma.class.findFirst({
@@ -192,13 +203,7 @@ async function main() {
     sampleRecording3.id,
   ])
 
-  console.log('\n🎉 Seed concluído com sucesso!')
-  console.log('--------------------------------------------------')
-  console.log('🔑 Credenciais de Teste:')
-  console.log('Admin:   admin@englishschool.com   / Senha123!')
-  console.log('Teacher: teacher@englishschool.com / Senha123!')
-  console.log('Student: student@englishschool.com / Senha123!')
-  console.log('--------------------------------------------------')
+  console.log('\n🎉 População inicial (Seed) concluída com sucesso!')
 }
 
 main()

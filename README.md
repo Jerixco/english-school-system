@@ -125,7 +125,7 @@ npm install
 # 4. Sincronizar o Banco de Dados (Prisma Push)
 npx prisma db push
 
-# 5. Popular o Banco com Dados Iniciais (Seeding)
+# 5. Popular o Banco com Dados Iniciais (Seeding Local)
 npx tsx prisma/seed.ts
 
 # 6. Executar os Testes Unitários
@@ -137,12 +137,11 @@ npm run dev
 
 ---
 
-## 📑 Credenciais de Teste (Ambiente de Desenvolvimento)
+## 📑 Dados Iniciais & Contas de Teste Local
 
-Após rodar o comando de seed (`npx tsx prisma/seed.ts`), o sistema criará automaticamente as contas de teste locais:
-- 👑 **Administrador:** `admin@englishschool.com` / `Senha123!` (Painel `/admin`)
-- 👨‍🏫 **Professor:** `teacher@englishschool.com` / `Senha123!` (Painel `/professor`)
-- 🎓 **Aluno:** `student@englishschool.com` / `Senha123!` (Painel `/aluno`)
+Ao executar o script de população local (`npx tsx prisma/seed.ts`), o sistema cria perfis base para validação em ambiente de desenvolvimento (Administrador, Professor e Aluno).
+
+> 🔒 **Segurança:** As credenciais e parâmetros das contas de teste local são definidos exclusivamente no arquivo `prisma/seed.ts` e protegidos por variáveis de ambiente, nunca sendo expostos publicamente. O script de seed possui bloqueio automático para impedir execução acidental em ambientes de produção.
 
 ---
 
