@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Check } from 'lucide-react'
+import { Check, Loader2, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 
 interface PlanCardProps {
@@ -16,12 +16,14 @@ interface PlanCardProps {
 
 export default function PlanCard({ name, description, price, plan, features, popular }: PlanCardProps) {
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSubscribe = async () => {
     setLoading(true)
+    setError('')
 
     try {
-      const response = await fetch('/api/stripe/create-checkout-session', {
+      const response = await fetch('/api/payments/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
@@ -32,53 +34,78 @@ export default function PlanCard({ name, description, price, plan, features, pop
         return
       }
 
-      const { url } = await response.json()
+      const data = await response.json()
 
-      if (url) {
-        window.location.href = url
-      } else {
-        throw new Error('Failed to create checkout session')
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao gerar sessão de pagamento')
       }
-    } catch (error) {
+
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error('URL de redirecionamento não retornada pelo servidor')
+      }
+    } catch (error: any) {
       console.error('Checkout error:', error)
-      alert('Erro ao iniciar checkout. Tente novamente.')
+      setError(error.message || 'Erro ao iniciar checkout. Tente novamente.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className={`relative ${popular ? 'border-purple-500 shadow-lg' : ''}`}>
+    <Card className={`relative flex flex-col justify-between transition-all hover:shadow-xl ${popular ? 'border-2 border-indigo-600 shadow-indigo-100 shadow-lg' : 'border border-gray-200'}`}>
       {popular && (
-        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-          <span className="bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-            Mais Popular
+        <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
+          <span className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
+            Mais Escolhido
           </span>
         </div>
       )}
-      <CardHeader>
-        <CardTitle className="text-2xl">{name}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-        <div className="mt-4">
-          <span className="text-4xl font-bold">{price}</span>
-          <span className="text-gray-600">/mês</span>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <ul className="space-y-3 mb-6">
-          {features.map((feature, index) => (
-            <li key={index} className="flex items-start">
-              <Check className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
-              <span className="text-sm">{feature}</span>
-            </li>
-          ))}
-        </ul>
+      <div>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-2xl font-extrabold text-gray-900">{name}</CardTitle>
+          <CardDescription className="text-gray-500">{description}</CardDescription>
+          <div className="mt-4 flex items-baseline">
+            <span className="text-4xl font-black text-gray-900">{price}</span>
+            <span className="text-gray-500 text-sm font-medium ml-1.5">/mês</span>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <ul className="space-y-3 mb-6">
+            {features.map((feature, index) => (
+              <li key={index} className="flex items-start">
+                <Check className="h-5 w-5 text-emerald-600 mr-2.5 flex-shrink-0 mt-0.5" />
+                <span className="text-sm text-gray-700">{feature}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </div>
+
+      <CardContent className="pt-0">
+        {error && (
+          <p className="text-xs text-red-600 mb-3 bg-red-50 p-2 rounded border border-red-200">
+            {error}
+          </p>
+        )}
         <Button
           onClick={handleSubscribe}
-          className={`w-full ${popular ? 'bg-purple-600 hover:bg-purple-700' : ''}`}
+          className={`w-full h-11 font-bold shadow-sm transition-all ${
+            popular
+              ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
+              : 'bg-gray-900 hover:bg-gray-800 text-white'
+          }`}
           disabled={loading}
         >
-          {loading ? 'Processando...' : 'Assinar Agora'}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Iniciando Pagamento...
+            </>
+          ) : (
+            'Matricular-se Agora'
+          )}
         </Button>
       </CardContent>
     </Card>

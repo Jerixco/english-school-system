@@ -1,16 +1,17 @@
 # 🏫 English School System
 
-> **Projeto de Estudos & Laboratório Fullstack (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, WebRTC, Stripe & Hardening OWASP)**
+> **Projeto de Estudos & Laboratório Fullstack (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, WebRTC, Multi-Provider Payments & Hardening OWASP)**
 
 ---
 
 ## 📖 Sobre o Projeto
 
-O **English School System** é uma aplicação fullstack desenvolvida como laboratório de arquitetura de software para estudo e aplicação prática de **Clean Architecture**, segurança em camadas (OWASP), WebRTC e fluxos de negócio SaaS modernos.
+O **English School System** é uma aplicação fullstack desenvolvida como laboratório de engenharia de software para estudo e aplicação prática de **Clean Architecture**, segurança em camadas (OWASP), WebRTC e fluxos de negócio SaaS modernos.
 
 O sistema simula a gestão completa de uma escola de idiomas:
 - 📊 **CRM de Leads:** Funil visual (Kanban) para qualificação e conversão de novos alunos.
-- 🎓 **Matrículas & Planos:** Gestão de planos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) com assinaturas e webhooks idempotentes do Stripe.
+- 🎓 **Matrículas & Planos:** Gestão de planos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) com assinaturas e catálogo de preços no servidor.
+- 💳 **Subsistema de Pagamentos Flexível:** Padrão *Adapter* com suporte a provedores externos (Stripe) e **Modo Sandbox Seguro** para validação e testes integrados.
 - 🔴 **Aulas Ao Vivo (WebRTC):** Salas de transmissão ao vivo integradas via Jitsi Meet com isolamento de permissões de mídia.
 - 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática temporária.
 - 🤖 **Alex AI Tutor:** Tutor conversacional para prática de inglês com guardrails de contexto e rate limiting.
@@ -31,9 +32,10 @@ O sistema simula a gestão completa de uma escola de idiomas:
   ├── LeadService         (Gestão e funil de leads do CRM)
   ├── StudentService      (Gestão de matrículas, status e alunos)
   ├── TeacherService      (Disponibilidade e grade de horários docentes)
+  ├── PaymentService      (Orquestrador de pagamentos, idempotência e Sandbox)
   ├── LiveSessionService  (Gestão de salas e transmissões WebRTC ao vivo)
   ├── RecordingService    (Processamento de VOD e retenção de aulas)
-  ├── StripeService       (Processamento idempotente de checkout e webhooks)
+  ├── StripeService       (Integração de checkout e webhooks de pagamento)
   ├── WhatsAppService     (Automação de mensagens e notificações)
   └── AiTutorService      (Tutor inteligente com guardrails de contexto)
           │                                     │
@@ -63,7 +65,8 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
 ### 3. Sanitização de Entradas & Prevenção Contra Injeções
 - **Imunidade contra SQL Injection:** Uso exclusivo de consultas parametrizadas via ORM na camada de persistência.
 - **Prevenção contra XSS:** Sanitização em duas fases de conteúdos ricos antes de armazenamento e renderização.
-- **Sanitização de Strings:** Expurgo de caracteres de controle e marcações potencialmente executáveis.
+- **Resolução Canônica de Preços:** Preços e moedas resolvidos exclusivamente no servidor, impedindo adulteração de valores pelo cliente.
+- **Idempotência de Pagamentos:** Registro e validação de identificadores únicos para impedir transações e cobranças duplicadas.
 - **Guardrails de Inteligência Artificial:** Delimitação de contexto e defesas ativas contra injeção de instruções e evasão de personas.
 
 ---
@@ -86,6 +89,7 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
 - **Backend:** Next.js Route Handlers, Service Layer Pattern, Zod Validation, Upstash Redis Rate Limiting.
 - **Banco de Dados:** Neon PostgreSQL (Cloud Serverless) via Prisma ORM v5.
 - **Comunicação em Tempo Real:** WebRTC / Jitsi Meet Integration.
+- **Pagamentos & Assinaturas:** Adapter Pattern (Stripe & Sandbox Mode com HMAC session tokens).
 - **Segurança & Criptografia:** AES-256-GCM, BCrypt.js, TOTP, CSP, DOMPurify, Rate Limiting.
 - **Testes & Qualidade:** Vitest, TypeScript Strict Mode, Playwright E2E.
 
@@ -103,7 +107,7 @@ O projeto possui fallbacks inteligentes caso alguns serviços externos não este
 | `KV_REST_API_URL` | Upstash Redis REST URL | *Opcional* | Fallback automático para limiter em memória |
 | `KV_REST_API_TOKEN` | Upstash Redis Token | *Opcional* | Fallback automático para limiter em memória |
 | `GEMINI_API_KEY` | Google Gemini API (Alex Tutor) | *Opcional* | Mensagem de aviso caso não configurado |
-| `STRIPE_SECRET_KEY` | Checkout e Assinaturas | *Opcional* | Simulação de fluxo financeiro local |
+| `STRIPE_SECRET_KEY` | Checkout e Assinaturas | *Opcional* | Fallback automático para Sandbox Mode local |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Elements / Frontend | *Opcional* | Renderização condicional no checkout |
 | `SMTP_*` | Servidor SMTP para E-mails | *Opcional* | Logs em console de disparo |
 
