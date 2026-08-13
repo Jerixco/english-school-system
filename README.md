@@ -14,7 +14,6 @@ O sistema simula a gestão completa de uma escola de idiomas:
 - 💳 **Subsistema de Pagamentos Flexível:** Padrão *Adapter* com suporte a provedores externos (Stripe) e **Modo Sandbox Seguro** para validação e testes integrados.
 - 🔴 **Aulas Ao Vivo (WebRTC):** Salas de transmissão ao vivo integradas via Jitsi Meet com isolamento de permissões de mídia.
 - 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática temporária.
-- 🤖 **Alex AI Tutor:** Tutor conversacional para prática de inglês com guardrails de contexto e rate limiting.
 - 🔒 **Hardening & LGPD:** Proteção contra força bruta, autenticação 2FA (TOTP), criptografia simétrica de ponta a ponta, cabeçalhos HTTP estritos e direito ao esquecimento.
 
 ---
@@ -37,7 +36,7 @@ O sistema simula a gestão completa de uma escola de idiomas:
   ├── RecordingService    (Processamento de VOD e retenção de aulas)
   ├── StripeService       (Integração de checkout e webhooks de pagamento)
   ├── WhatsAppService     (Automação de mensagens e notificações)
-  └── AiTutorService      (Tutor inteligente com guardrails de contexto)
+  └── AiTutorService      (Módulo do Tutor IA - reservado para roadmap futuro)
           │                                     │
           ▼                                     ▼
 [ Neon PostgreSQL (Prisma ORM) ]       [ Provedores Externos / Sentry / Redis ]
@@ -67,7 +66,7 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
 - **Prevenção contra XSS:** Sanitização em duas fases de conteúdos ricos antes de armazenamento e renderização.
 - **Resolução Canônica de Preços:** Preços e moedas resolvidos exclusivamente no servidor, impedindo adulteração de valores pelo cliente.
 - **Idempotência de Pagamentos:** Registro e validação de identificadores únicos para impedir transações e cobranças duplicadas.
-- **Guardrails de Inteligência Artificial:** Delimitação de contexto e defesas ativas contra injeção de instruções e evasão de personas.
+- **Sanitização de Strings:** Expurgo de caracteres de controle e marcações potencialmente executáveis.
 
 ---
 
@@ -77,9 +76,9 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
 - **Diferenciação Cromática Contextual:**
   - 🏢 **Administrador:** Paleta Slate / Dark Blue para gestão analítica, KPIs e CRM.
   - 🎓 **Professor:** Paleta Índigo / Violeta com foco em salas de aula virtuais e materiais VOD.
-  - 📚 **Aluno:** Paleta Esmeralda / Sky com foco em progresso de estudos, frequência e Tutor Alex.
+  - 📚 **Aluno:** Paleta Esmeralda / Sky com foco em progresso pedagógico, agendamentos e frequência.
 - **Empty States Ilustrados:** Componente `EmptyState` com ícones temáticos e botões de ação contextual para listas sem registros.
-- **Quick Prompt Pills:** Sugestões rápidas de conversação para prática ágil de inglês com o Tutor Alex.
+- **Feedback Visual Aprimorado:** Indicadores de carregamento animados e bloqueio de botões durante requisições assíncronas.
 
 ---
 
@@ -106,7 +105,7 @@ O projeto possui fallbacks inteligentes caso alguns serviços externos não este
 | `ENCRYPTION_KEY` | Criptografia AES-256-GCM | **Sim** (32 chars) | Proteção de segredos 2FA e dados sensíveis |
 | `KV_REST_API_URL` | Upstash Redis REST URL | *Opcional* | Fallback automático para limiter em memória |
 | `KV_REST_API_TOKEN` | Upstash Redis Token | *Opcional* | Fallback automático para limiter em memória |
-| `GEMINI_API_KEY` | Google Gemini API (Alex Tutor) | *Opcional* | Mensagem de aviso caso não configurado |
+| `GEMINI_API_KEY` | Google Gemini API (IA Tutor) | *Opcional* | Módulo reservado para roadmap futuro |
 | `STRIPE_SECRET_KEY` | Checkout e Assinaturas | *Opcional* | Fallback automático para Sandbox Mode local |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Elements / Frontend | *Opcional* | Renderização condicional no checkout |
 | `SMTP_*` | Servidor SMTP para E-mails | *Opcional* | Logs em console de disparo |
