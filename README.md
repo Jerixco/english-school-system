@@ -12,9 +12,9 @@ O sistema simula a gestão completa de uma escola de idiomas:
 - 📊 **CRM de Leads:** Funil visual (Kanban) para qualificação e conversão de novos alunos.
 - 🎓 **Matrículas & Planos:** Gestão de planos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) com assinaturas e webhooks idempotentes do Stripe.
 - 🔴 **Aulas Ao Vivo (WebRTC):** Salas de transmissão ao vivo integradas via Jitsi Meet com isolamento de permissões de mídia.
-- 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática de 30 dias.
-- 🤖 **Alex AI Tutor:** Tutor conversacional para prática de conversação com defesas anti-jailbreak e rate limiting.
-- 🔒 **Hardening & LGPD:** Proteção contra força bruta, autenticação 2FA (TOTP), criptografia AES-256-GCM, cabeçalhos de segurança HTTP estritos e direito ao esquecimento.
+- 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática temporária.
+- 🤖 **Alex AI Tutor:** Tutor conversacional para prática de inglês com guardrails de contexto e rate limiting.
+- 🔒 **Hardening & LGPD:** Proteção contra força bruta, autenticação 2FA (TOTP), criptografia simétrica de ponta a ponta, cabeçalhos HTTP estritos e direito ao esquecimento.
 
 ---
 
@@ -32,10 +32,10 @@ O sistema simula a gestão completa de uma escola de idiomas:
   ├── StudentService      (Gestão de matrículas, status e alunos)
   ├── TeacherService      (Disponibilidade e grade de horários docentes)
   ├── LiveSessionService  (Gestão de salas e transmissões WebRTC ao vivo)
-  ├── RecordingService    (Processamento de VOD e retenção de 30 dias)
+  ├── RecordingService    (Processamento de VOD e retenção de aulas)
   ├── StripeService       (Processamento idempotente de checkout e webhooks)
   ├── WhatsAppService     (Automação de mensagens e notificações)
-  └── AiTutorService      (Tutor inteligente com guardrails anti-injection)
+  └── AiTutorService      (Tutor inteligente com guardrails de contexto)
           │                                     │
           ▼                                     ▼
 [ Neon PostgreSQL (Prisma ORM) ]       [ Provedores Externos / Sentry / Redis ]
@@ -43,26 +43,28 @@ O sistema simula a gestão completa de uma escola de idiomas:
 
 ---
 
-## 🛡️ Camadas de Segurança & Hardening (OWASP Compliance)
+## 🛡️ Arquitetura de Segurança & Proteção de Dados (OWASP Guidelines)
 
-### 1. Segurança HTTP & Cabeçalhos Estritos (`next.config.js`)
-- **Content-Security-Policy (CSP):** Delimitação rígida de origens permitidas (Stripe, Calendly, Jitsi WebRTC, Sentry, Google Fonts e Unsplash), bloqueando `object-src`, `frame-ancestors` externos e forçando `upgrade-insecure-requests`.
-- **Remoção de Metadados do Servidor:** `poweredByHeader: false` eliminando o cabeçalho `X-Powered-By: Next.js` (mitigação da vulnerabilidade CWE-497).
-- **Permissions-Policy:** Restrição de acesso a microfone e câmera estritamente ao domínio da aplicação e às salas WebRTC integradas.
-- **HSTS:** `Strict-Transport-Security` configurado com `max-age=63072000; includeSubDomains; preload`.
+O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Defense in Depth)** e **Confiança Zero (Zero Trust)**:
 
-### 2. Autenticação & Controle de Acesso (RBAC)
-- **NextAuth.js v4** com estratégia JWT em cookies seguros `HttpOnly; SameSite=Lax; Secure`.
-- **2FA/TOTP com AES-256-GCM:** Segredos de duplo fator criptografados com chave simétrica de 256 bits (`speakeasy` + vetor de inicialização aleatório).
-- **Proteção Anti-Brute Force:** Bloqueio automático temporário de 15 minutos após 5 tentativas consecutivas de login incorreto.
-- **Proteção Anti-IDOR (Insecure Direct Object Reference):** 100% das rotas de API com identificador verificam rigorosamente a propriedade do recurso (`userId === ownerId`) ou privilégio de `ADMIN` no servidor.
-- **Conformidade LGPD (Art. 18):** Módulo de anonimização irreversível PII (*Direito ao Esquecimento*).
+### 1. Hardening de Infraestrutura & Cabeçalhos HTTP
+- **Políticas de Origem Estritas (CSP):** Restrição estrita de carregamento de scripts, conexões e frames a serviços oficiais autorizados.
+- **Ocultação de Metadados do Servidor:** Supressão de cabeçalhos de identificação de framework para dificultar o reconhecimento e enumeração de tecnologia.
+- **Isolamento de Recursos de Hardware:** Políticas de permissão restritivas para acesso a dispositivos de mídia (câmera e microfone).
+- **Comunicação Criptografada:** Imposição de transporte estritamente seguro via HSTS de longa duração com suporte a preload.
 
-### 3. Validação de Inputs & Proteção Anti-Injeção
-- **Consultas Parametrizadas (Prisma ORM):** Imunidade nativa contra SQL Injection (nenhuma query SQL dinâmica por concatenação).
-- **DOMPurify Anti-XSS:** Sanitização rigorosa em duas etapas (gravação e renderização) para conteúdos ricos do Blog.
-- **Sanitização de Strings:** Expurgo de tags `<>` e caracteres de controle ASCII não-imprimíveis (`\x00-\x1F\x7F`).
-- **AI Prompt Injection & Jailbreak Defense:** Guardrails no `AiTutorService` que impedem simulação de terminais, evasão de persona ou execução de código.
+### 2. Autenticação, Controle de Acesso & Proteção de Identidade
+- **Gestão Segura de Sessão:** Autenticação baseada em tokens JWT transmitidos exclusivamente via cookies protegidos (`HttpOnly`, `SameSite` e `Secure`).
+- **Autenticação em Dois Fatores (2FA):** Suporte nativo a TOTP com armazenamento de chaves sob criptografia forte simétrica no banco de dados.
+- **Mitigação de Ataques de Força Bruta:** Rate limiting distribuído e mecanismos adaptativos de bloqueio temporário de credenciais.
+- **Controle Rígido de Propriedade (Anti-IDOR):** Validação server-side de posse de dados em todas as rotas parametrizadas.
+- **Privacidade & Conformidade LGPD:** Rotinas de anonimização e direito ao esquecimento de dados pessoais sensíveis.
+
+### 3. Sanitização de Entradas & Prevenção Contra Injeções
+- **Imunidade contra SQL Injection:** Uso exclusivo de consultas parametrizadas via ORM na camada de persistência.
+- **Prevenção contra XSS:** Sanitização em duas fases de conteúdos ricos antes de armazenamento e renderização.
+- **Sanitização de Strings:** Expurgo de caracteres de controle e marcações potencialmente executáveis.
+- **Guardrails de Inteligência Artificial:** Delimitação de contexto e defesas ativas contra injeção de instruções e evasão de personas.
 
 ---
 
@@ -84,7 +86,7 @@ O sistema simula a gestão completa de uma escola de idiomas:
 - **Backend:** Next.js Route Handlers, Service Layer Pattern, Zod Validation, Upstash Redis Rate Limiting.
 - **Banco de Dados:** Neon PostgreSQL (Cloud Serverless) via Prisma ORM v5.
 - **Comunicação em Tempo Real:** WebRTC / Jitsi Meet Integration.
-- **Segurança & Criptografia:** AES-256-GCM, BCrypt.js, TOTP (`speakeasy`), CSP, DOMPurify, Rate Limiting.
+- **Segurança & Criptografia:** AES-256-GCM, BCrypt.js, TOTP, CSP, DOMPurify, Rate Limiting.
 - **Testes & Qualidade:** Vitest, TypeScript Strict Mode, Playwright E2E.
 
 ---
