@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Users,
   DollarSign,
@@ -23,6 +24,10 @@ import {
   ArrowRight,
   UserCheck,
   Shield,
+  Loader2,
+  FolderSearch,
+  UserX,
+  CreditCard,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -180,7 +185,7 @@ export default function AdminDashboard() {
     return (
       <DashboardShell title="Painel Administrativo" subtitle="Carregando métricas e dados...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto mb-4"></div>
           <p className="text-gray-500">Conectando aos serviços da escola...</p>
         </div>
       </DashboardShell>
@@ -215,7 +220,7 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('overview')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'overview'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
@@ -227,13 +232,13 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('leads')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'leads'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <Users className="h-4 w-4" />
           CRM & Funil de Leads
-          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold">
             {data.metrics.totalLeads}
           </span>
         </button>
@@ -242,13 +247,13 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('students')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'students'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <UserCheck className="h-4 w-4" />
           Alunos & Matrículas
-          <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
             {data.metrics.activeStudents}
           </span>
         </button>
@@ -257,7 +262,7 @@ export default function AdminDashboard() {
           onClick={() => setActiveTab('classes')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'classes'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-slate-900 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
@@ -278,7 +283,7 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           {/* Grid de Métricas Principais */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-purple-600 shadow-sm">
+            <Card className="border-l-4 border-l-slate-800 shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -288,7 +293,7 @@ export default function AdminDashboard() {
                     </h3>
                     <small className="text-gray-500">de {data.metrics.totalStudents} total</small>
                   </div>
-                  <div className="bg-purple-100 p-3 rounded-full text-purple-600">
+                  <div className="bg-slate-100 p-3 rounded-full text-slate-800">
                     <Users className="h-6 w-6" />
                   </div>
                 </div>
@@ -369,7 +374,12 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   {data.recentPayments.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4">Nenhum pagamento registrado.</p>
+                    <EmptyState
+                      icon={CreditCard}
+                      title="Nenhum pagamento registrado"
+                      description="Assim que os alunos realizarem pagamentos via Stripe ou Pix, as faturas aparecerão aqui automaticamente."
+                      compact
+                    />
                   ) : (
                     <div className="space-y-3">
                       {data.recentPayments.map((p) => (
@@ -400,14 +410,19 @@ export default function AdminDashboard() {
               <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <UserCheck className="h-5 w-5 text-purple-600" />
+                    <UserCheck className="h-5 w-5 text-slate-800" />
                     Últimos Alunos Cadastrados
                   </CardTitle>
                   <CardDescription>Matrículas ativas na plataforma</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {data.students.length === 0 ? (
-                    <p className="text-gray-500 text-sm py-4">Nenhum aluno cadastrado.</p>
+                    <EmptyState
+                      icon={UserX}
+                      title="Nenhum aluno cadastrado"
+                      description="Quando novos interessados concluírem o cadastro ou matrícula, eles serão listados nesta área."
+                      compact
+                    />
                   ) : (
                     <div className="space-y-3">
                       {data.students.slice(0, 4).map((s) => (
@@ -416,7 +431,7 @@ export default function AdminDashboard() {
                             <div className="font-semibold text-gray-900">{s.name}</div>
                             <small className="text-gray-500">Plano {s.plan}</small>
                           </div>
-                          <Badge className="bg-green-600 text-xs">{s.status}</Badge>
+                          <Badge className="bg-emerald-600 text-xs text-white">{s.status}</Badge>
                         </div>
                       ))}
                     </div>
@@ -452,28 +467,32 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.leads
-                  .filter((l) => l.status === 'NEW')
-                  .map((lead) => (
-                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
-                      <div className="font-bold text-gray-900">{lead.name}</div>
-                      <div className="text-gray-600 flex items-center gap-1 truncate">
-                        <Mail className="h-3 w-3" /> {lead.email}
-                      </div>
-                      {lead.phone && (
-                        <div className="text-gray-600 flex items-center gap-1">
-                          <Phone className="h-3 w-3" /> {lead.phone}
+                {data.leads.filter((l) => l.status === 'NEW').length === 0 ? (
+                  <p className="text-gray-400 text-xs py-4 text-center">Nenhum novo lead</p>
+                ) : (
+                  data.leads
+                    .filter((l) => l.status === 'NEW')
+                    .map((lead) => (
+                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                        <div className="font-bold text-gray-900">{lead.name}</div>
+                        <div className="text-gray-600 flex items-center gap-1 truncate">
+                          <Mail className="h-3 w-3" /> {lead.email}
                         </div>
-                      )}
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONTACTED')}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
-                      >
-                        Marcar Contatado →
-                      </Button>
-                    </div>
-                  ))}
+                        {lead.phone && (
+                          <div className="text-gray-600 flex items-center gap-1">
+                            <Phone className="h-3 w-3" /> {lead.phone}
+                          </div>
+                        )}
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateLeadStatus(lead.id, 'CONTACTED')}
+                          className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs h-7"
+                        >
+                          Marcar Contatado →
+                        </Button>
+                      </div>
+                    ))
+                )}
               </CardContent>
             </Card>
 
@@ -486,73 +505,85 @@ export default function AdminDashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.leads
-                  .filter((l) => l.status === 'CONTACTED')
-                  .map((lead) => (
-                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
-                      <div className="font-bold text-gray-900">{lead.name}</div>
-                      <div className="text-gray-600 truncate">{lead.email}</div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONSULTATION_SCHEDULED')}
-                        className="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs h-7"
-                      >
-                        Agendar Consulta →
-                      </Button>
-                    </div>
-                  ))}
+                {data.leads.filter((l) => l.status === 'CONTACTED').length === 0 ? (
+                  <p className="text-gray-400 text-xs py-4 text-center">Nenhum lead em contato</p>
+                ) : (
+                  data.leads
+                    .filter((l) => l.status === 'CONTACTED')
+                    .map((lead) => (
+                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                        <div className="font-bold text-gray-900">{lead.name}</div>
+                        <div className="text-gray-600 truncate">{lead.email}</div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateLeadStatus(lead.id, 'CONSULTATION_SCHEDULED')}
+                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-7"
+                        >
+                          Agendar Consulta →
+                        </Button>
+                      </div>
+                    ))
+                )}
               </CardContent>
             </Card>
 
             {/* Coluna 3: Consulta Agendada */}
-            <Card className="border-t-4 border-t-purple-600">
+            <Card className="border-t-4 border-t-indigo-600">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex justify-between">
                   <span>Consulta Agendada</span>
-                  <Badge className="bg-purple-600">
+                  <Badge className="bg-indigo-600">
                     {data.metrics.leadsByStatus['CONSULTATION_SCHEDULED'] || 0}
                   </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.leads
-                  .filter((l) => l.status === 'CONSULTATION_SCHEDULED')
-                  .map((lead) => (
-                    <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
-                      <div className="font-bold text-gray-900">{lead.name}</div>
-                      <div className="text-gray-600 truncate">{lead.email}</div>
-                      <Button
-                        size="sm"
-                        onClick={() => handleUpdateLeadStatus(lead.id, 'CONVERTED')}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white text-xs h-7"
-                      >
-                        Converter em Aluno 🎓
-                      </Button>
-                    </div>
-                  ))}
+                {data.leads.filter((l) => l.status === 'CONSULTATION_SCHEDULED').length === 0 ? (
+                  <p className="text-gray-400 text-xs py-4 text-center">Nenhuma consulta pendente</p>
+                ) : (
+                  data.leads
+                    .filter((l) => l.status === 'CONSULTATION_SCHEDULED')
+                    .map((lead) => (
+                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                        <div className="font-bold text-gray-900">{lead.name}</div>
+                        <div className="text-gray-600 truncate">{lead.email}</div>
+                        <Button
+                          size="sm"
+                          onClick={() => handleUpdateLeadStatus(lead.id, 'CONVERTED')}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7"
+                        >
+                          Converter em Aluno 🎓
+                        </Button>
+                      </div>
+                    ))
+                )}
               </CardContent>
             </Card>
 
             {/* Coluna 4: Convertidos */}
-            <Card className="border-t-4 border-t-green-600">
+            <Card className="border-t-4 border-t-emerald-600">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex justify-between">
                   <span>Convertidos</span>
-                  <Badge className="bg-green-600">{data.metrics.leadsByStatus['CONVERTED'] || 0}</Badge>
+                  <Badge className="bg-emerald-600">{data.metrics.leadsByStatus['CONVERTED'] || 0}</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {data.leads
-                  .filter((l) => l.status === 'CONVERTED')
-                  .map((lead) => (
-                    <div key={lead.id} className="p-3 bg-green-50 rounded-lg border border-green-200 text-xs space-y-1">
-                      <div className="font-bold text-green-900">{lead.name}</div>
-                      <div className="text-green-700 truncate">{lead.email}</div>
-                      <div className="text-green-600 font-semibold flex items-center gap-1">
-                        <CheckCircle2 className="h-3.5 w-3.5" /> Matrícula Realizada
+                {data.leads.filter((l) => l.status === 'CONVERTED').length === 0 ? (
+                  <p className="text-gray-400 text-xs py-4 text-center">Nenhum aluno convertido ainda</p>
+                ) : (
+                  data.leads
+                    .filter((l) => l.status === 'CONVERTED')
+                    .map((lead) => (
+                      <div key={lead.id} className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-xs space-y-1">
+                        <div className="font-bold text-emerald-900">{lead.name}</div>
+                        <div className="text-emerald-700 truncate">{lead.email}</div>
+                        <div className="text-emerald-600 font-semibold flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5" /> Matrícula Realizada
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                )}
               </CardContent>
             </Card>
           </div>
@@ -568,7 +599,7 @@ export default function AdminDashboard() {
             <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-purple-600" />
+                  <UserCheck className="h-5 w-5 text-slate-800" />
                   Alunos Matriculados
                 </CardTitle>
                 <CardDescription>
@@ -587,26 +618,30 @@ export default function AdminDashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-100 text-xs text-gray-600 uppercase">
-                    <tr>
-                      <th className="p-3">Nome / E-mail</th>
-                      <th className="p-3">Plano</th>
-                      <th className="p-3">Data Matrícula</th>
-                      <th className="p-3">Último Pagamento</th>
-                      <th className="p-3 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredStudents.length === 0 ? (
+              {filteredStudents.length === 0 ? (
+                <EmptyState
+                  icon={FolderSearch}
+                  title="Nenhum aluno encontrado"
+                  description={
+                    searchTerm
+                      ? `Não encontramos alunos com o termo "${searchTerm}". Tente buscar por outro nome ou plano.`
+                      : "Ainda não há alunos cadastrados na plataforma."
+                  }
+                />
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full text-left text-sm">
+                    <thead className="bg-gray-100 text-xs text-gray-600 uppercase">
                       <tr>
-                        <td colSpan={5} className="text-center py-8 text-gray-500">
-                          Nenhum aluno encontrado com o filtro aplicado.
-                        </td>
+                        <th className="p-3">Nome / E-mail</th>
+                        <th className="p-3">Plano</th>
+                        <th className="p-3">Data Matrícula</th>
+                        <th className="p-3">Último Pagamento</th>
+                        <th className="p-3 text-right">Status</th>
                       </tr>
-                    ) : (
-                      filteredStudents.map((s) => (
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {filteredStudents.map((s) => (
                         <tr key={s.id} className="hover:bg-gray-50 transition-colors">
                           <td className="p-3">
                             <div className="font-semibold text-gray-900">{s.name}</div>
@@ -629,14 +664,14 @@ export default function AdminDashboard() {
                               : '—'}
                           </td>
                           <td className="p-3 text-right">
-                            <Badge className="bg-green-600">{s.status}</Badge>
+                            <Badge className="bg-emerald-600 text-white">{s.status}</Badge>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -648,10 +683,10 @@ export default function AdminDashboard() {
       {activeTab === 'classes' && (
         <div className="space-y-6">
           {/* Card para Criar Nova Transmissão Instantânea */}
-          <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+          <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200">
             <CardHeader>
-              <CardTitle className="text-base text-purple-950 flex items-center gap-2">
-                <Radio className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-base text-slate-950 flex items-center gap-2">
+                <Radio className="h-5 w-5 text-blue-600" />
                 Criar Nova Sala de Aula Ao Vivo
               </CardTitle>
               <CardDescription>
@@ -667,9 +702,18 @@ export default function AdminDashboard() {
                   className="bg-white"
                   required
                 />
-                <Button type="submit" disabled={isCreatingLive} className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  {isCreatingLive ? 'Criando Sala...' : 'Iniciar Sala Ao Vivo'}
+                <Button type="submit" disabled={isCreatingLive} className="bg-slate-900 hover:bg-slate-800 text-white whitespace-nowrap gap-2">
+                  {isCreatingLive ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Criando Sala...
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="h-4 w-4" />
+                      Iniciar Sala Ao Vivo
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -679,13 +723,18 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-600" />
+                <Calendar className="h-5 w-5 text-blue-600" />
                 Transmissões Cadastradas
               </CardTitle>
             </CardHeader>
             <CardContent>
               {data.liveSessions.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4">Nenhuma sessão agendada.</p>
+                <EmptyState
+                  icon={Radio}
+                  title="Nenhuma sessão ao vivo ativa"
+                  description="Crie uma nova sala acima ou aguarde o agendamento de uma aula pelos professores."
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.liveSessions.map((session) => (
@@ -702,7 +751,7 @@ export default function AdminDashboard() {
                         </small>
                       </div>
                       {session.meetLink && (
-                        <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 text-white">
                           <a href={session.meetLink} target="_blank" rel="noopener noreferrer">
                             <PlayCircle className="h-4 w-4 mr-2" />
                             Acessar Sala
@@ -720,13 +769,18 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-5 w-5 text-purple-600" />
+                <Video className="h-5 w-5 text-indigo-600" />
                 Gravações Salvas com Tempo de Retenção (VOD)
               </CardTitle>
             </CardHeader>
             <CardContent>
               {data.recordings.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4">Nenhuma gravação ativa.</p>
+                <EmptyState
+                  icon={Video}
+                  title="Nenhuma gravação arquivada"
+                  description="Aulas gravadas com thumbnails Canva e prazo de expiração de 30 dias serão listadas aqui."
+                  compact
+                />
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {data.recordings.map((rec) => (

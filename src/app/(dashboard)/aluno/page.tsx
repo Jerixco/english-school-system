@@ -2,10 +2,24 @@
 
 import { useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, CreditCard, Bookmark, ShieldAlert, Radio, Video, PlayCircle, Clock } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import AiTutorCard from '@/components/dashboard/AiTutorCard'
+import {
+  Calendar,
+  CreditCard,
+  Bookmark,
+  ShieldAlert,
+  Radio,
+  Video,
+  PlayCircle,
+  Clock,
+  Sparkles,
+  ArrowRight,
+  GraduationCap,
+} from 'lucide-react'
 import Link from 'next/link'
 
 interface StudentData {
@@ -70,9 +84,10 @@ export default function AlunoDashboardPage() {
 
   if (loading) {
     return (
-      <DashboardShell title="Portal do Aluno" subtitle="Carregando...">
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto"></div>
+      <DashboardShell title="Portal do Aluno" subtitle="Carregando seu ambiente de estudos...">
+        <div className="text-center py-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Preparando suas aulas e materiais...</p>
         </div>
       </DashboardShell>
     )
@@ -90,43 +105,45 @@ export default function AlunoDashboardPage() {
 
   return (
     <DashboardShell
-      title={`Olá, ${data.user.name?.split(' ')[0] || 'Aluno'}!`}
-      subtitle="Bem-vindo ao seu portal de estudos"
+      title={`Olá, ${data.user.name?.split(' ')[0] || 'Aluno'}! 👋`}
+      subtitle="Bem-vindo ao seu portal de aprendizado. Pratique com seu tutor, acesse aulas ao vivo e acompanhe seu plano."
     >
+      {/* Alerta de 2FA opcional */}
       {!data.user.twoFactorEnabled && (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-md mb-4 flex items-center gap-3">
-          <ShieldAlert className="h-5 w-5 flex-shrink-0" />
-          <div>
-            Proteja sua conta ativando a{' '}
-            <Link href="/seguranca" className="underline font-medium">
-              autenticação em duas etapas (2FA)
-            </Link>
-            .
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl mb-6 flex items-center justify-between gap-3 text-sm shadow-sm">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0" />
+            <div>
+              <span className="font-semibold">Aumente a segurança:</span> Ative a autenticação em 2 etapas para proteger seu progresso.
+            </div>
           </div>
+          <Button asChild size="sm" variant="outline" className="border-amber-300 hover:bg-amber-100 text-amber-900 whitespace-nowrap">
+            <Link href="/seguranca">Ativar 2FA →</Link>
+          </Button>
         </div>
       )}
 
       {/* Banner de Aula Ao Vivo Transmitindo Agora */}
       {data.activeLiveSession && (
-        <div className="bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl p-5 mb-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
+        <div className="bg-gradient-to-r from-red-600 via-rose-600 to-purple-700 text-white rounded-xl p-5 mb-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="bg-white text-red-600 p-3 rounded-full">
-              <Radio className="h-6 w-6 animate-bounce" />
+              <Radio className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="bg-red-500 text-white text-xs font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">
-                  Ao Vivo Agora
+                <span className="bg-red-500 text-white text-xs font-bold uppercase px-2.5 py-0.5 rounded-full tracking-wider">
+                  Aula Ao Vivo Agora
                 </span>
-                <span className="text-xs text-red-100">
-                  Prof. {data.activeLiveSession.teacherName || 'Alex'}
+                <span className="text-xs text-red-100 font-medium">
+                  Prof. {data.activeLiveSession.teacherName || 'Sarah'}
                 </span>
               </div>
-              <h4 className="text-lg font-bold mt-0.5">{data.activeLiveSession.title}</h4>
-              <p className="text-sm text-purple-100 line-clamp-1">{data.activeLiveSession.description}</p>
+              <h4 className="text-lg font-bold mt-1">{data.activeLiveSession.title}</h4>
+              <p className="text-sm text-purple-100 line-clamp-1">{data.activeLiveSession.description || 'Sala de conversação WebRTC em andamento'}</p>
             </div>
           </div>
-          <Button asChild className="bg-white text-purple-700 hover:bg-purple-50 font-semibold shadow-md whitespace-nowrap">
+          <Button asChild className="bg-white text-purple-900 hover:bg-purple-50 font-semibold shadow-md whitespace-nowrap">
             <Link href="/aluno/aulas?tab=live">
               <PlayCircle className="h-4 w-4 mr-2" />
               Entrar na Aula Ao Vivo
@@ -135,69 +152,104 @@ export default function AlunoDashboardPage() {
         </div>
       )}
 
+      {/* Grid de KPIs do Aluno (Paleta Esmeralda & Sky) */}
       <div className="grid md:grid-cols-3 gap-4 mb-6">
-        <Card>
+        <Card className="border-l-4 border-l-emerald-600 shadow-sm">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Bookmark className="h-5 w-5 text-purple-600" />
-              <h6 className="font-semibold text-gray-600">Plano Atual</h6>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Meu Plano</p>
+                <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">
+                  {PLAN_LABELS[data.plan] || data.plan}
+                </h3>
+                <Badge className="bg-emerald-600 text-white mt-1.5 font-semibold">
+                  {STATUS_LABELS[data.status] || data.status}
+                </Badge>
+              </div>
+              <div className="bg-emerald-100 p-3 rounded-full text-emerald-600">
+                <Bookmark className="h-6 w-6" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold">{PLAN_LABELS[data.plan] || data.plan}</h3>
-            <Badge className="bg-green-600 mt-1">{STATUS_LABELS[data.status] || data.status}</Badge>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-sky-600 shadow-sm">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-5 w-5 text-purple-600" />
-              <h6 className="font-semibold text-gray-600">Próximas Aulas</h6>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Aulas Agendadas</p>
+                <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">
+                  {data.upcomingClasses.length}
+                </h3>
+                <small className="text-sky-600 font-medium">Nesta semana</small>
+              </div>
+              <div className="bg-sky-100 p-3 rounded-full text-sky-600">
+                <Calendar className="h-6 w-6" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold">{data.upcomingClasses.length}</h3>
-            <small className="text-gray-500">Agendadas nesta semana</small>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-indigo-600 shadow-sm">
           <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-2">
-              <Video className="h-5 w-5 text-purple-600" />
-              <h6 className="font-semibold text-gray-600">Gravações Salvas</h6>
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-sm font-medium text-gray-500">Biblioteca VOD</p>
+                <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">
+                  {data.activeRecordingsCount}
+                </h3>
+                <small className="text-indigo-600 font-medium">
+                  <Link href="/aluno/aulas?tab=recordings" className="hover:underline flex items-center gap-1 mt-0.5">
+                    Assistir gravações <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </small>
+              </div>
+              <div className="bg-indigo-100 p-3 rounded-full text-indigo-600">
+                <Video className="h-6 w-6" />
+              </div>
             </div>
-            <h3 className="text-2xl font-bold">{data.activeRecordingsCount}</h3>
-            <small className="text-gray-500">
-              <Link href="/aluno/aulas?tab=recordings" className="text-purple-600 hover:underline">
-                Acessar biblioteca VOD →
-              </Link>
-            </small>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-7 gap-4">
+      {/* Tutor IA Interativo Alex em Destaque */}
+      <div className="mb-6">
+        <AiTutorCard />
+      </div>
+
+      {/* Grid: Aulas Agendadas & Pagamentos */}
+      <div className="grid lg:grid-cols-7 gap-6">
+        {/* Próximas Aulas */}
         <div className="lg:col-span-4">
           <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-600" />
-                Próximas Aulas Agendadas
-              </CardTitle>
-              <Link href="/aluno/aulas" className="text-xs text-purple-600 hover:underline">
-                Ver todas →
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-sky-600" />
+                  Minhas Aulas Agendadas
+                </CardTitle>
+                <CardDescription>Horários marcados com os professores</CardDescription>
+              </div>
+              <Link href="/aluno/aulas" className="text-xs text-sky-600 hover:underline flex items-center gap-1 font-medium">
+                Ver todas <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent>
               {data.upcomingClasses.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Clock className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                  <p>Nenhuma aula agendada para os próximos dias.</p>
-                </div>
+                <EmptyState
+                  icon={Calendar}
+                  title="Nenhuma aula agendada no momento"
+                  description="Agende horários individuais de conversação ou participe das aulas ao vivo para acelerar sua fluência."
+                  actionLabel="Agendar com Professor"
+                  actionHref="/agendar"
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.upcomingClasses.map((cls) => (
-                    <div key={cls.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                    <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-sky-50/50 transition-colors border border-gray-100">
                       <div>
-                        <div className="font-medium text-gray-900">
+                        <div className="font-semibold text-gray-900 capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             day: 'numeric',
@@ -207,11 +259,11 @@ export default function AlunoDashboardPage() {
                           })}
                         </div>
                         <small className="text-gray-500">
-                          Prof. {cls.teacherName || 'Alex'} · {cls.duration} min
+                          Prof. {cls.teacherName || 'Sarah'} · {cls.duration} min
                         </small>
                       </div>
                       {cls.meetLink && (
-                        <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700">
+                        <Button asChild size="sm" className="bg-sky-600 hover:bg-sky-700 text-white">
                           <a href={cls.meetLink} target="_blank" rel="noopener noreferrer">
                             Entrar
                           </a>
@@ -225,20 +277,26 @@ export default function AlunoDashboardPage() {
           </Card>
         </div>
 
+        {/* Histórico Financeiro */}
         <div className="lg:col-span-3">
           <Card className="h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <CreditCard className="h-5 w-5 text-purple-600" />
-                Pagamentos Recentes
-              </CardTitle>
+              <div>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-emerald-600" />
+                  Minhas Mensalidades
+                </CardTitle>
+                <CardDescription>Comprovantes e faturas Stripe</CardDescription>
+              </div>
             </CardHeader>
             <CardContent>
               {data.recentPayments.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <CreditCard className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                  <p>Nenhum pagamento registrado.</p>
-                </div>
+                <EmptyState
+                  icon={CreditCard}
+                  title="Nenhum pagamento registrado"
+                  description="Suas faturas e recibos de pagamento serão gerados e arquivados nesta área com download de comprovantes."
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.recentPayments.map((payment) => (
@@ -257,10 +315,10 @@ export default function AlunoDashboardPage() {
                       <Badge
                         className={
                           payment.status === 'COMPLETED'
-                            ? 'bg-green-600'
+                            ? 'bg-emerald-600 text-white'
                             : payment.status === 'PENDING'
-                              ? 'bg-yellow-600'
-                              : 'bg-red-600'
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-red-600 text-white'
                         }
                       >
                         {payment.status === 'COMPLETED'

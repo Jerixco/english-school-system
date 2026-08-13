@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Radio,
   Video,
@@ -17,6 +18,8 @@ import {
   Users,
   CheckCircle2,
   StopCircle,
+  Loader2,
+  Film,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -110,28 +113,15 @@ export default function ProfessorAulasPage() {
         }),
       })
       if (res.ok) {
+        const newSession = await res.json()
         setLiveTitle('')
+        setActiveBroadcast(newSession)
         loadDashboard()
       }
-    } catch (err) {
-      console.error('Erro ao agendar aula ao vivo:', err)
+    } catch (e) {
+      console.error('Erro ao criar sala:', e)
     } finally {
       setIsCreatingLive(false)
-    }
-  }
-
-  const handleUpdateStatus = async (sessionId: string, action: 'start' | 'end') => {
-    try {
-      const res = await fetch(`/api/live-sessions/${sessionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }),
-      })
-      if (res.ok) {
-        loadDashboard()
-      }
-    } catch (err) {
-      console.error('Erro ao alterar status da transmissão:', err)
     }
   }
 
@@ -146,7 +136,7 @@ export default function ProfessorAulasPage() {
         body: JSON.stringify({
           title: recTitle,
           videoUrl: recVideoUrl,
-          durationMinutes: parseInt(recDuration) || 45,
+          durationMinutes: parseInt(recDuration, 10) || 45,
           retentionDays: 30,
         }),
       })
@@ -155,10 +145,28 @@ export default function ProfessorAulasPage() {
         setRecVideoUrl('')
         loadDashboard()
       }
-    } catch (err) {
-      console.error('Erro ao cadastrar gravação:', err)
+    } catch (e) {
+      console.error('Erro ao cadastrar gravação:', e)
     } finally {
       setIsCreatingRec(false)
+    }
+  }
+
+  const handleUpdateStatus = async (sessionId: string, action: 'start' | 'end') => {
+    try {
+      const res = await fetch(`/api/live-sessions/${sessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      if (res.ok) {
+        if (action === 'end') {
+          setActiveBroadcast(null)
+        }
+        loadDashboard()
+      }
+    } catch (e) {
+      console.error('Erro ao atualizar status:', e)
     }
   }
 
@@ -166,8 +174,8 @@ export default function ProfessorAulasPage() {
     return (
       <DashboardShell title="Gestão de Aulas & Transmissões" subtitle="Carregando...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Acessando grade de aulas do professor...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Conectando ao sistema de salas...</p>
         </div>
       </DashboardShell>
     )
@@ -175,7 +183,7 @@ export default function ProfessorAulasPage() {
 
   if (error || !data) {
     return (
-      <DashboardShell title="Gestão de Aulas">
+      <DashboardShell title="Gestão de Aulas & Transmissões">
         <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
           {error || 'Não foi possível carregar as informações'}
         </div>
@@ -186,15 +194,15 @@ export default function ProfessorAulasPage() {
   return (
     <DashboardShell
       title="Gestão de Aulas & Transmissões"
-      subtitle="Inicie transmissões ao vivo, disponibilize gravações para os alunos e gerencie seus horários."
+      subtitle="Controle suas aulas ao vivo WebRTC, envie gravações e organize sua grade de atendimento."
     >
-      {/* Navegação por Abas */}
+      {/* Navegação por Abas com acento Índigo */}
       <div className="flex border-b border-gray-200 mb-6 gap-2 overflow-x-auto pb-1">
         <button
           onClick={() => setActiveTab('live')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'live'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
@@ -211,13 +219,13 @@ export default function ProfessorAulasPage() {
           onClick={() => setActiveTab('recordings')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'recordings'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <Video className="h-4 w-4" />
           Gravações VOD
-          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full font-bold">
             {data.recordings.length}
           </span>
         </button>
@@ -226,75 +234,69 @@ export default function ProfessorAulasPage() {
           onClick={() => setActiveTab('schedule')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'schedule'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-indigo-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <Calendar className="h-4 w-4" />
-          Grade de Aulas Agendadas
-          <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          Grade de Horários
+          <span className="bg-violet-100 text-violet-800 text-xs px-2 py-0.5 rounded-full font-bold">
             {data.upcomingClasses.length}
           </span>
         </button>
       </div>
 
       {/* ========================================================================= */}
-      {/* ABA 1: AULAS AO VIVO & TRANSMISSÃO                                       */}
+      {/* ABA 1: TRANSMISSÕES AO VIVO & SALA JITSI WEBRTC                           */}
       {/* ========================================================================= */}
       {activeTab === 'live' && (
         <div className="space-y-6">
-          {/* Sala Virtual de Transmissão Aberta */}
+          {/* Iframe Jitsi WebRTC Incorporado se houver transmissão ativa */}
           {activeBroadcast && (
-            <Card className="border-2 border-purple-500 shadow-xl overflow-hidden mb-6">
-              <CardHeader className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white flex flex-row items-center justify-between">
+            <Card className="border-2 border-indigo-500 shadow-xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-indigo-700 via-indigo-800 to-violet-900 text-white flex flex-row items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Badge className="bg-red-500 text-white animate-pulse">TRANSMITINDO AO VIVO</Badge>
-                    <span className="text-xs text-purple-200">Sala: {activeBroadcast.roomName}</span>
+                    <span className="bg-red-500 text-white text-xs font-bold uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
+                      🔴 Transmitindo Ao Vivo
+                    </span>
+                    <CardTitle className="text-lg text-white">{activeBroadcast.title}</CardTitle>
                   </div>
-                  <CardTitle className="text-xl text-white">{activeBroadcast.title}</CardTitle>
+                  <CardDescription className="text-indigo-200 text-xs">
+                    Sala: {activeBroadcast.roomName} · Transmissão WebRTC criptografada de alta definição
+                  </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
+                    variant="outline"
                     onClick={() => handleUpdateStatus(activeBroadcast.id, 'end')}
-                    className="bg-red-600 hover:bg-red-700 text-white"
+                    className="bg-red-600 hover:bg-red-700 text-white border-0"
                   >
                     <StopCircle className="h-4 w-4 mr-1.5" />
-                    Encerrar Aula
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setActiveBroadcast(null)}
-                    className="bg-white/10 hover:bg-white/20 text-white border-white/30"
-                  >
-                    Minimizar
+                    Finalizar Aula
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="p-0 bg-black">
-                <div className="relative w-full h-[600px]">
-                  <iframe
-                    src={`${activeBroadcast.meetLink}#userInfo.displayName="${data.teacher.name} (Professor)"&config.prejoinPageEnabled=false`}
-                    allow="camera; microphone; fullscreen; display-capture; autoplay"
-                    className="w-full h-full border-0"
-                    title="Sala de Aula Ao Vivo"
-                  />
-                </div>
+              <CardContent className="p-0 bg-black aspect-video max-h-[580px]">
+                <iframe
+                  src={`https://meet.jit.si/${activeBroadcast.roomName}#config.startWithAudioMuted=false&config.startWithVideoMuted=false`}
+                  allow="camera; microphone; fullscreen; display-capture; autoplay"
+                  className="w-full h-full min-h-[500px] border-0"
+                />
               </CardContent>
             </Card>
           )}
 
-          {/* Card para Criar Nova Transmissão */}
-          <Card className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200">
+          {/* Card para Criar Nova Sala Instantânea */}
+          <Card className="bg-gradient-to-r from-indigo-50 to-violet-50 border-indigo-200">
             <CardHeader>
-              <CardTitle className="text-base text-purple-950 flex items-center gap-2">
-                <Radio className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-base text-indigo-950 flex items-center gap-2">
+                <Radio className="h-5 w-5 text-indigo-600" />
                 Criar Nova Sala de Aula Ao Vivo
               </CardTitle>
               <CardDescription>
-                Gere uma sala WebRTC com chat, compartilhamento de tela e áudio/vídeo para seus alunos.
+                Abra uma sala de transmissão WebRTC instantânea para seus alunos.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -303,12 +305,21 @@ export default function ProfessorAulasPage() {
                   placeholder="Título da Aula (ex: Masterclass de Conversação B2)..."
                   value={liveTitle}
                   onChange={(e) => setLiveTitle(e.target.value)}
-                  className="bg-white"
+                  className="bg-white text-sm"
                   required
                 />
-                <Button type="submit" disabled={isCreatingLive} className="bg-purple-600 hover:bg-purple-700 text-white whitespace-nowrap">
-                  <PlusCircle className="h-4 w-4 mr-2" />
-                  {isCreatingLive ? 'Criando Sala...' : 'Abrir Sala Virtual'}
+                <Button type="submit" disabled={isCreatingLive} className="bg-indigo-600 hover:bg-indigo-700 text-white whitespace-nowrap gap-2 shadow-sm">
+                  {isCreatingLive ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Criando Sala...
+                    </>
+                  ) : (
+                    <>
+                      <PlusCircle className="h-4 w-4" />
+                      Abrir Sala Virtual
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -318,13 +329,18 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-600" />
+                <Calendar className="h-5 w-5 text-indigo-600" />
                 Minhas Sessões Ao Vivo
               </CardTitle>
             </CardHeader>
             <CardContent>
               {data.liveSessions.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4">Nenhuma sessão cadastrada.</p>
+                <EmptyState
+                  icon={Radio}
+                  title="Nenhuma sessão ao vivo cadastrada"
+                  description="Crie uma sala virtual acima para dar aulas com transmissão WebRTC integrada."
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.liveSessions.map((session) => {
@@ -333,7 +349,7 @@ export default function ProfessorAulasPage() {
                       <div
                         key={session.id}
                         className={`p-4 bg-gray-50 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3 ${
-                          isLive ? 'border-2 border-red-500 bg-red-50/40' : ''
+                          isLive ? 'border-2 border-red-500 bg-red-50/40' : 'border border-gray-200'
                         }`}
                       >
                         <div>
@@ -343,7 +359,7 @@ export default function ProfessorAulasPage() {
                                 isLive
                                   ? 'bg-red-600 text-white animate-pulse'
                                   : session.status === 'SCHEDULED'
-                                  ? 'bg-blue-600 text-white'
+                                  ? 'bg-indigo-600 text-white'
                                   : 'bg-gray-500 text-white'
                               }
                             >
@@ -367,9 +383,9 @@ export default function ProfessorAulasPage() {
                           <Button
                             size="sm"
                             onClick={() => setActiveBroadcast(session)}
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
                           >
-                            <PlayCircle className="h-4 w-4 mr-1.5" />
+                            <PlayCircle className="h-4 w-4" />
                             Entrar na Sala
                           </Button>
                           {session.status === 'SCHEDULED' && (
@@ -411,11 +427,11 @@ export default function ProfessorAulasPage() {
           <Card className="bg-gray-50 border-gray-200">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-5 w-5 text-purple-600" />
+                <Film className="h-5 w-5 text-indigo-600" />
                 Cadastrar Nova Aula Gravada
               </CardTitle>
               <CardDescription>
-                Disponibilize a gravação para os alunos assistirem durante o período de retenção.
+                Disponibilize a gravação para os alunos assistirem durante o período de retenção (30 dias).
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -442,9 +458,18 @@ export default function ProfessorAulasPage() {
                   />
                 </div>
                 <div className="space-y-1 flex items-end">
-                  <Button type="submit" disabled={isCreatingRec} className="w-full bg-purple-600 hover:bg-purple-700 text-white">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    {isCreatingRec ? 'Publicando...' : 'Publicar Gravação'}
+                  <Button type="submit" disabled={isCreatingRec} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-sm">
+                    {isCreatingRec ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Publicando...
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircle className="h-4 w-4" />
+                        Publicar Gravação
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -454,17 +479,22 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-5 w-5 text-purple-600" />
+                <Video className="h-5 w-5 text-indigo-600" />
                 Aulas Gravadas Ativas
               </CardTitle>
             </CardHeader>
             <CardContent>
               {data.recordings.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4">Nenhuma gravação ativa no momento.</p>
+                <EmptyState
+                  icon={Video}
+                  title="Nenhuma gravação cadastrada"
+                  description="Use o formulário acima para disponibilizar aulas gravadas e materiais VOD para seus alunos."
+                  compact
+                />
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {data.recordings.map((rec) => (
-                    <div key={rec.id} className="p-4 bg-gray-50 rounded-lg border flex justify-between items-center">
+                    <div key={rec.id} className="p-4 bg-gray-50 rounded-lg border flex justify-between items-center hover:bg-indigo-50/30 transition-colors">
                       <div>
                         <h4 className="font-bold text-gray-900">{rec.title}</h4>
                         <small className="text-gray-500">
@@ -492,20 +522,25 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-600" />
+                <Calendar className="h-5 w-5 text-indigo-600" />
                 Aulas Agendadas com Alunos
               </CardTitle>
               <CardDescription>Horários e links de atendimento individual ou em grupo</CardDescription>
             </CardHeader>
             <CardContent>
               {data.upcomingClasses.length === 0 ? (
-                <p className="text-gray-500 text-sm py-4">Nenhuma aula agendada para os próximos dias.</p>
+                <EmptyState
+                  icon={Calendar}
+                  title="Nenhuma aula agendada na grade"
+                  description="Quando alunos realizarem agendamentos, eles aparecerão organizados nesta grade com botão direto de acesso à sala."
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.upcomingClasses.map((cls) => (
-                    <div key={cls.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                    <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-indigo-50/50 transition-colors border border-gray-100">
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             day: '2-digit',
@@ -519,9 +554,9 @@ export default function ProfessorAulasPage() {
                         </small>
                       </div>
                       {cls.meetLink && (
-                        <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                           <a href={cls.meetLink} target="_blank" rel="noopener noreferrer">
-                            Entrar
+                            Entrar na Sala
                           </a>
                         </Button>
                       )}

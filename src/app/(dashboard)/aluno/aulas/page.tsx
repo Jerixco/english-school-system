@@ -5,6 +5,7 @@ import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
 import {
   Radio,
   Video,
@@ -17,6 +18,8 @@ import {
   BookOpen,
   User,
   Sparkles,
+  Film,
+  Award,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -95,20 +98,20 @@ export default function AlunoAulasPage() {
   return (
     <DashboardShell
       title="Minhas Aulas & Transmissões"
-      subtitle="Acesse suas aulas ao vivo, assista às gravações com retenção e acompanhe seu histórico."
+      subtitle="Acesse suas aulas ao vivo, assista às gravações com retenção e acompanhe seu histórico de estudos."
     >
-      {/* Navegação por Abas */}
+      {/* Navegação por Abas com acento Esmeralda / Sky */}
       <div className="flex border-b border-gray-200 mb-6 gap-2 overflow-x-auto pb-1">
         <button
           onClick={() => setActiveTab('live')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'live'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-sky-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <Radio className="h-4 w-4" />
-          Aulas Ao Vivo & Agendadas
+          Aulas Ao Vivo
           {liveSessions.some((s) => s.status === 'LIVE') && (
             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
               AO VIVO
@@ -120,13 +123,13 @@ export default function AlunoAulasPage() {
           onClick={() => setActiveTab('recordings')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'recordings'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-sky-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           <Video className="h-4 w-4" />
-          Aulas Gravadas (VOD)
-          <span className="bg-purple-100 text-purple-700 text-xs px-2 py-0.5 rounded-full font-bold">
+          Biblioteca de Gravações (VOD)
+          <span className="bg-sky-100 text-sky-800 text-xs px-2 py-0.5 rounded-full font-bold">
             {recordings.length}
           </span>
         </button>
@@ -135,39 +138,41 @@ export default function AlunoAulasPage() {
           onClick={() => setActiveTab('history')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'history'
-              ? 'bg-purple-600 text-white shadow-sm'
+              ? 'bg-sky-600 text-white shadow-sm'
               : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
-          <Clock className="h-4 w-4" />
-          Histórico & Presença
+          <Award className="h-4 w-4" />
+          Histórico de Frequência
         </button>
       </div>
 
       {loading ? (
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando aulas e transmissões...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-600 mx-auto mb-4"></div>
+          <p className="text-gray-500">Carregando aulas e vídeos disponíveis...</p>
         </div>
       ) : (
         <>
           {/* ========================================================================= */}
-          {/* ABA 1: AULAS AO VIVO & TRANSMISSÃO WEBRTC                                */}
+          {/* ABA 1: AULAS AO VIVO (JITSI WEBRTC INCORPORADO)                          */}
           {/* ========================================================================= */}
           {activeTab === 'live' && (
             <div className="space-y-6">
-              {/* Se o aluno abriu a sala de aula ao vivo */}
-              {activeLiveStream ? (
-                <Card className="border-2 border-purple-500 shadow-xl overflow-hidden">
-                  <CardHeader className="bg-gradient-to-r from-purple-700 to-indigo-800 text-white flex flex-row items-center justify-between">
+              {/* Player do Iframe WebRTC se aluno selecionou uma sala */}
+              {activeLiveStream && (
+                <Card className="border-2 border-sky-500 shadow-xl overflow-hidden mb-6">
+                  <CardHeader className="bg-gradient-to-r from-sky-700 via-teal-700 to-emerald-800 text-white flex flex-row items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge className="bg-red-500 text-white animate-pulse">AO VIVO</Badge>
-                        <span className="text-xs text-purple-200">
-                          Prof. {activeLiveStream.teacher.name || 'Alex'}
+                        <span className="bg-red-500 text-white text-xs font-bold uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
+                          🔴 Sala Conectada
                         </span>
+                        <CardTitle className="text-lg text-white">{activeLiveStream.title}</CardTitle>
                       </div>
-                      <CardTitle className="text-xl text-white">{activeLiveStream.title}</CardTitle>
+                      <CardDescription className="text-sky-100 text-xs">
+                        Prof. {activeLiveStream.teacher.name || 'Sarah'} · Sala WebRTC criptografada em alta definição
+                      </CardDescription>
                     </div>
                     <Button
                       variant="outline"
@@ -175,30 +180,29 @@ export default function AlunoAulasPage() {
                       onClick={() => setActiveLiveStream(null)}
                       className="bg-white/10 hover:bg-white/20 text-white border-white/30"
                     >
-                      Minimizar Sala
+                      Sair da Sala
                     </Button>
                   </CardHeader>
-                  <CardContent className="p-0 bg-black">
-                    <div className="relative w-full h-[600px]">
-                      <iframe
-                        src={`${activeLiveStream.meetLink}#userInfo.displayName="Aluno"&config.prejoinPageEnabled=false`}
-                        allow="camera; microphone; fullscreen; display-capture; autoplay"
-                        className="w-full h-full border-0"
-                        title="Sala de Aula Ao Vivo"
-                      />
-                    </div>
+                  <CardContent className="p-0 bg-black aspect-video max-h-[580px]">
+                    <iframe
+                      src={`https://meet.jit.si/${activeLiveStream.roomName}#config.startWithAudioMuted=true&config.startWithVideoMuted=false`}
+                      allow="camera; microphone; fullscreen; display-capture; autoplay"
+                      className="w-full h-full min-h-[500px] border-0"
+                    />
                   </CardContent>
                 </Card>
-              ) : null}
+              )}
 
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid md:grid-cols-2 gap-4">
                 {liveSessions.length === 0 ? (
-                  <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <Radio className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <h4 className="text-lg font-semibold text-gray-700">Nenhuma transmissão ao vivo agendada</h4>
-                    <p className="text-sm text-gray-500 max-w-md mx-auto mt-1">
-                      Quando o seu professor iniciar uma aula ao vivo ou agendar uma mentoria, ela aparecerá automaticamente aqui.
-                    </p>
+                  <div className="col-span-full">
+                    <EmptyState
+                      icon={Radio}
+                      title="Nenhuma aula ao vivo no momento"
+                      description="As sessões de conversação ao vivo com os professores serão transmitidas aqui. Você também pode agendar um horário individual."
+                      actionLabel="Agendar Atendimento Individual"
+                      actionHref="/agendar"
+                    />
                   </div>
                 ) : (
                   liveSessions.map((session) => {
@@ -207,60 +211,55 @@ export default function AlunoAulasPage() {
                       <Card
                         key={session.id}
                         className={`transition-all hover:shadow-md ${
-                          isLive ? 'border-2 border-red-500 ring-2 ring-red-100' : ''
+                          isLive ? 'border-2 border-red-500 bg-red-50/20' : 'border border-gray-200'
                         }`}
                       >
-                        <CardHeader className="pb-3">
-                          <div className="flex justify-between items-start gap-2 mb-2">
+                        <CardHeader className="pb-2">
+                          <div className="flex justify-between items-start gap-2">
                             <Badge
                               className={
                                 isLive
-                                  ? 'bg-red-600 animate-pulse text-white'
+                                  ? 'bg-red-600 text-white animate-pulse'
                                   : session.status === 'SCHEDULED'
-                                  ? 'bg-blue-600 text-white'
+                                  ? 'bg-sky-600 text-white'
                                   : 'bg-gray-500 text-white'
                               }
                             >
-                              {isLive
-                                ? 'Transmitindo Agora'
-                                : session.status === 'SCHEDULED'
-                                ? 'Agendada'
-                                : 'Concluída'}
+                              {isLive ? 'Ao Vivo Agora' : session.status === 'SCHEDULED' ? 'Agendada' : 'Finalizada'}
                             </Badge>
-                            <span className="text-xs text-gray-500 flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5" />
+                            <span className="text-xs text-gray-500 font-medium">
                               {session.duration} min
                             </span>
                           </div>
-                          <CardTitle className="text-base line-clamp-2">{session.title}</CardTitle>
+                          <CardTitle className="text-base mt-2">{session.title}</CardTitle>
                           <CardDescription className="text-xs line-clamp-2">
-                            {session.description || 'Aula prática de conversação e pronúncia com feedback em tempo real.'}
+                            {session.description || 'Prática de conversação interativa em tempo real.'}
                           </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="text-xs space-y-1.5 bg-gray-50 p-3 rounded-lg">
+                        <CardContent>
+                          <div className="text-xs space-y-1 mb-4">
                             <div className="flex items-center gap-2 text-gray-700">
-                              <Calendar className="h-4 w-4 text-purple-600" />
+                              <Calendar className="h-4 w-4 text-sky-600" />
                               <span>
                                 {new Date(session.scheduledFor).toLocaleDateString('pt-BR', {
-                                  weekday: 'short',
+                                  weekday: 'long',
                                   day: '2-digit',
-                                  month: 'short',
+                                  month: 'long',
                                   hour: '2-digit',
                                   minute: '2-digit',
                                 })}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-gray-700">
-                              <User className="h-4 w-4 text-purple-600" />
-                              <span>Professor: {session.teacher.name || 'Alex'}</span>
+                              <User className="h-4 w-4 text-sky-600" />
+                              <span>Professor: {session.teacher.name || 'Sarah'}</span>
                             </div>
                           </div>
 
                           {isLive ? (
                             <Button
                               onClick={() => setActiveLiveStream(session)}
-                              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-md animate-bounce"
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-md"
                             >
                               <PlayCircle className="h-4 w-4 mr-2" />
                               Entrar na Transmissão
@@ -269,7 +268,7 @@ export default function AlunoAulasPage() {
                             <Button
                               onClick={() => setActiveLiveStream(session)}
                               variant="outline"
-                              className="w-full text-purple-700 border-purple-300 hover:bg-purple-50"
+                              className="w-full text-sky-700 border-sky-300 hover:bg-sky-50"
                             >
                               <PlayCircle className="h-4 w-4 mr-2" />
                               Testar Sala Virtual
@@ -295,11 +294,11 @@ export default function AlunoAulasPage() {
             <div className="space-y-6">
               {/* Player Modal / Inline quando o aluno clica para assistir */}
               {selectedVideo && (
-                <Card className="border-2 border-purple-500 shadow-xl overflow-hidden mb-6">
-                  <CardHeader className="bg-gradient-to-r from-gray-900 to-purple-900 text-white flex flex-row items-center justify-between">
+                <Card className="border-2 border-sky-500 shadow-xl overflow-hidden mb-6">
+                  <CardHeader className="bg-gradient-to-r from-gray-900 to-sky-950 text-white flex flex-row items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <Badge className="bg-purple-600 text-white">GRAVAÇÃO VOD</Badge>
+                        <Badge className="bg-sky-600 text-white">GRAVAÇÃO VOD</Badge>
                         <Badge variant="outline" className="text-yellow-300 border-yellow-300/50">
                           Expira em {selectedVideo.daysRemaining} dias
                         </Badge>
@@ -332,16 +331,16 @@ export default function AlunoAulasPage() {
 
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {recordings.length === 0 ? (
-                  <div className="col-span-full text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                    <Video className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <h4 className="text-lg font-semibold text-gray-700">Nenhuma gravação disponível</h4>
-                    <p className="text-sm text-gray-500 max-w-md mx-auto mt-1">
-                      As aulas gravadas ficam disponíveis temporariamente para revisão de acordo com o seu plano de estudos.
-                    </p>
+                  <div className="col-span-full">
+                    <EmptyState
+                      icon={Film}
+                      title="Nenhuma gravação arquivada"
+                      description="As aulas gravadas ficam disponíveis temporariamente para revisão durante o período de retenção de 30 dias."
+                    />
                   </div>
                 ) : (
                   recordings.map((rec) => (
-                    <Card key={rec.id} className="overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between">
+                    <Card key={rec.id} className="overflow-hidden hover:shadow-lg transition-all flex flex-col justify-between border border-gray-200">
                       <div>
                         <div className="relative aspect-video bg-gray-900 overflow-hidden group cursor-pointer" onClick={() => setSelectedVideo(rec)}>
                           <img
@@ -350,7 +349,7 @@ export default function AlunoAulasPage() {
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80"
                           />
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
-                            <div className="bg-purple-600 text-white p-3 rounded-full shadow-lg group-hover:scale-110 transition-transform">
+                            <div className="bg-sky-600 text-white p-3 rounded-full shadow-lg group-hover:scale-110 transition-transform">
                               <PlayCircle className="h-8 w-8" />
                             </div>
                           </div>
@@ -377,11 +376,11 @@ export default function AlunoAulasPage() {
                       <CardContent className="pt-2">
                         <div className="text-xs text-gray-500 flex justify-between items-center mb-3">
                           <span>Gravada em: {new Date(rec.recordedAt).toLocaleDateString('pt-BR')}</span>
-                          <span>Prof. {rec.teacher.name || 'Alex'}</span>
+                          <span>Prof. {rec.teacher.name || 'Sarah'}</span>
                         </div>
                         <Button
                           onClick={() => setSelectedVideo(rec)}
-                          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                          className="w-full bg-sky-600 hover:bg-sky-700 text-white shadow-sm"
                         >
                           <PlayCircle className="h-4 w-4 mr-2" />
                           Assistir Gravação
@@ -402,7 +401,7 @@ export default function AlunoAulasPage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     Relatório de Presença e Aulas Concluídas
                   </CardTitle>
                   <CardDescription>
@@ -412,17 +411,17 @@ export default function AlunoAulasPage() {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="grid md:grid-cols-3 gap-4 mb-4">
-                      <div className="bg-purple-50 p-4 rounded-xl text-center">
-                        <span className="text-sm text-purple-700 font-medium">Taxa de Presença</span>
-                        <h3 className="text-2xl font-bold text-purple-900 mt-1">100%</h3>
+                      <div className="bg-emerald-50 p-4 rounded-xl text-center border border-emerald-100">
+                        <span className="text-sm text-emerald-700 font-medium">Taxa de Presença</span>
+                        <h3 className="text-2xl font-bold text-emerald-900 mt-1">100%</h3>
                       </div>
-                      <div className="bg-green-50 p-4 rounded-xl text-center">
-                        <span className="text-sm text-green-700 font-medium">Aulas Concluídas</span>
-                        <h3 className="text-2xl font-bold text-green-900 mt-1">12</h3>
+                      <div className="bg-sky-50 p-4 rounded-xl text-center border border-sky-100">
+                        <span className="text-sm text-sky-700 font-medium">Aulas Concluídas</span>
+                        <h3 className="text-2xl font-bold text-sky-900 mt-1">12</h3>
                       </div>
-                      <div className="bg-blue-50 p-4 rounded-xl text-center">
-                        <span className="text-sm text-blue-700 font-medium">Nível Atual</span>
-                        <h3 className="text-2xl font-bold text-blue-900 mt-1">B2 (Upper-Int)</h3>
+                      <div className="bg-indigo-50 p-4 rounded-xl text-center border border-indigo-100">
+                        <span className="text-sm text-indigo-700 font-medium">Nível Atual</span>
+                        <h3 className="text-2xl font-bold text-indigo-900 mt-1">B2 (Upper-Int)</h3>
                       </div>
                     </div>
 
@@ -445,7 +444,7 @@ export default function AlunoAulasPage() {
                             Prof. Alex
                           </div>
                           <div className="col-span-2 text-right">
-                            <Badge className="bg-green-600">Presente</Badge>
+                            <Badge className="bg-emerald-600 text-white">Presente</Badge>
                           </div>
                         </div>
 
@@ -460,7 +459,7 @@ export default function AlunoAulasPage() {
                             Prof. Alex
                           </div>
                           <div className="col-span-2 text-right">
-                            <Badge className="bg-green-600">Presente</Badge>
+                            <Badge className="bg-emerald-600 text-white">Presente</Badge>
                           </div>
                         </div>
                       </div>

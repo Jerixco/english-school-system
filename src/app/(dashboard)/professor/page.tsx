@@ -5,7 +5,8 @@ import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Users, Radio, Video, PlayCircle, Clock, ArrowRight } from 'lucide-react'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Calendar, Users, Radio, Video, PlayCircle, Clock, ArrowRight, Sparkles, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 
 interface ProfessorDashboardData {
@@ -55,7 +56,7 @@ export default function ProfessorDashboardPage() {
     return (
       <DashboardShell title="Portal do Professor" subtitle="Carregando informações...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
           <p className="text-gray-500">Conectando à sua área docente...</p>
         </div>
       </DashboardShell>
@@ -81,7 +82,7 @@ export default function ProfessorDashboardPage() {
     >
       {/* Banner se houver aula ao vivo */}
       {activeLive && (
-        <div className="bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl p-5 mb-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
+        <div className="bg-gradient-to-r from-red-600 via-rose-600 to-indigo-700 text-white rounded-xl p-5 mb-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
             <div className="bg-white text-red-600 p-3 rounded-full">
               <Radio className="h-6 w-6" />
@@ -93,7 +94,7 @@ export default function ProfessorDashboardPage() {
               <h4 className="text-lg font-bold mt-1">{activeLive.title}</h4>
             </div>
           </div>
-          <Button asChild className="bg-white text-purple-700 hover:bg-purple-50 font-semibold shadow-md">
+          <Button asChild className="bg-white text-indigo-900 hover:bg-indigo-50 font-semibold shadow-md">
             <Link href="/professor/aulas?tab=live">
               <PlayCircle className="h-4 w-4 mr-2" />
               Retornar à Transmissão
@@ -102,9 +103,9 @@ export default function ProfessorDashboardPage() {
         </div>
       )}
 
-      {/* Grid de KPIs */}
+      {/* Grid de KPIs com acentos Índigo & Violeta */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="border-l-4 border-l-purple-600 shadow-sm">
+        <Card className="border-l-4 border-l-indigo-600 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
@@ -112,16 +113,16 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.totalClasses}
                 </h3>
-                <small className="text-gray-500">Próximos atendimentos</small>
+                <small className="text-indigo-600 font-medium">Próximos atendimentos</small>
               </div>
-              <div className="bg-purple-100 p-3 rounded-full text-purple-600">
+              <div className="bg-indigo-100 p-3 rounded-full text-indigo-600">
                 <Calendar className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-blue-600 shadow-sm">
+        <Card className="border-l-4 border-l-violet-600 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
@@ -129,16 +130,16 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.totalStudents}
                 </h3>
-                <small className="text-blue-600 font-semibold">Matrículas ativas</small>
+                <small className="text-violet-600 font-medium">Matrículas ativas</small>
               </div>
-              <div className="bg-blue-100 p-3 rounded-full text-blue-600">
+              <div className="bg-violet-100 p-3 rounded-full text-violet-600">
                 <Users className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-red-600 shadow-sm">
+        <Card className="border-l-4 border-l-rose-600 shadow-sm">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
@@ -146,11 +147,11 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.activeLiveCount} <span className="text-sm font-normal text-gray-500">ao vivo</span>
                 </h3>
-                <small className="text-purple-600 font-semibold">
+                <small className="text-rose-600 font-medium">
                   {data.metrics.totalRecordings} gravações ativas
                 </small>
               </div>
-              <div className="bg-red-100 p-3 rounded-full text-red-600">
+              <div className="bg-rose-100 p-3 rounded-full text-rose-600">
                 <Radio className="h-6 w-6" />
               </div>
             </div>
@@ -165,27 +166,32 @@ export default function ProfessorDashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-purple-600" />
+                  <Calendar className="h-5 w-5 text-indigo-600" />
                   Próximas Aulas Agendadas
                 </CardTitle>
                 <CardDescription>Atendimentos e mentorias desta semana</CardDescription>
               </div>
-              <Link href="/professor/aulas?tab=schedule" className="text-xs text-purple-600 hover:underline flex items-center gap-1">
-                Ver todas <ArrowRight className="h-3 w-3" />
+              <Link href="/professor/aulas?tab=schedule" className="text-xs text-indigo-600 hover:underline flex items-center gap-1 font-medium">
+                Ver grade completa <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
             <CardContent>
               {data.upcomingClasses.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <Clock className="h-8 w-8 mx-auto text-gray-300 mb-2" />
-                  <p>Nenhuma aula agendada para os próximos dias.</p>
-                </div>
+                <EmptyState
+                  icon={Clock}
+                  title="Nenhuma aula agendada no momento"
+                  description="Assim que novos alunos agendarem horários pela plataforma ou Calendly, os atendimentos serão sincronizados aqui."
+                  actionLabel="Abrir Sala Ao Vivo Instantânea"
+                  actionHref="/professor/aulas?tab=live"
+                  actionIcon={Radio}
+                  compact
+                />
               ) : (
                 <div className="space-y-3">
                   {data.upcomingClasses.slice(0, 4).map((cls) => (
-                    <div key={cls.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                    <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-indigo-50/50 transition-colors border border-gray-100">
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             day: '2-digit',
@@ -199,9 +205,9 @@ export default function ProfessorDashboardPage() {
                         </small>
                       </div>
                       {cls.meetLink && (
-                        <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
                           <a href={cls.meetLink} target="_blank" rel="noopener noreferrer">
-                            Entrar
+                            Entrar na Sala
                           </a>
                         </Button>
                       )}
@@ -218,38 +224,38 @@ export default function ProfessorDashboardPage() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Radio className="h-5 w-5 text-purple-600" />
+                <Radio className="h-5 w-5 text-indigo-600" />
                 Ações Rápidas
               </CardTitle>
               <CardDescription>Ferramentas de transmissão e material de apoio</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Button asChild className="w-full bg-purple-600 hover:bg-purple-700 text-white justify-start h-12">
+              <Button asChild className="w-full bg-gradient-to-r from-indigo-600 to-violet-700 hover:from-indigo-700 hover:to-violet-800 text-white justify-start h-12 shadow-sm">
                 <Link href="/professor/aulas?tab=live">
                   <Radio className="h-5 w-5 mr-3" />
                   <div>
                     <div className="font-bold text-sm">Abrir Sala de Aula Ao Vivo</div>
-                    <div className="text-xs text-purple-200 font-normal">Iniciar transmissão WebRTC</div>
+                    <div className="text-xs text-indigo-100 font-normal">Iniciar transmissão WebRTC integrada</div>
                   </div>
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full justify-start h-12 border-purple-200 hover:bg-purple-50 text-purple-900">
+              <Button asChild variant="outline" className="w-full justify-start h-12 border-indigo-200 hover:bg-indigo-50 text-indigo-900">
                 <Link href="/professor/aulas?tab=recordings">
-                  <Video className="h-5 w-5 mr-3 text-purple-600" />
+                  <Video className="h-5 w-5 mr-3 text-indigo-600" />
                   <div>
                     <div className="font-bold text-sm">Disponibilizar Gravação (VOD)</div>
-                    <div className="text-xs text-gray-500 font-normal">Upload com política de expiração</div>
+                    <div className="text-xs text-gray-500 font-normal">Cadastrar thumbnail Canva e expiração</div>
                   </div>
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full justify-start h-12 border-purple-200 hover:bg-purple-50 text-purple-900">
+              <Button asChild variant="outline" className="w-full justify-start h-12 border-indigo-200 hover:bg-indigo-50 text-indigo-900">
                 <Link href="/seguranca">
-                  <Clock className="h-5 w-5 mr-3 text-purple-600" />
+                  <ShieldCheck className="h-5 w-5 mr-3 text-indigo-600" />
                   <div>
                     <div className="font-bold text-sm">Segurança da Conta & 2FA</div>
-                    <div className="text-xs text-gray-500 font-normal">Configurar autenticador TOTP</div>
+                    <div className="text-xs text-gray-500 font-normal">Configurar autenticação em 2 fatores</div>
                   </div>
                 </Link>
               </Button>
