@@ -27,6 +27,16 @@ function LoginForm() {
     if (searchParams.get('registered') === 'true') {
       setSuccess('Conta criada com sucesso! Faça login para continuar.')
     }
+    const errorParam = searchParams.get('error')
+    if (errorParam === 'Configuration') {
+      setError(
+        'Erro de configuração do servidor de autenticação. Certifique-se de que NEXTAUTH_SECRET esteja cadastrada na Vercel.'
+      )
+    } else if (errorParam === 'CredentialsSignin') {
+      setError('Email ou senha inválidos.')
+    } else if (errorParam) {
+      setError(`Erro na autenticação: ${errorParam}`)
+    }
     // Pré-carrega as rotas de dashboard para transição de página instantânea
     router.prefetch('/admin')
     router.prefetch('/professor')

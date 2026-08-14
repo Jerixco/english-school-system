@@ -2,12 +2,13 @@ const { withSentryConfig } = require('@sentry/nextjs')
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://assets.calendly.com https://js.stripe.com https://meet.jit.si;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://assets.calendly.com https://js.stripe.com https://meet.jit.si https://vercel.com;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://images.unsplash.com https://avatars.githubusercontent.com;
+  img-src 'self' blob: data: https://images.unsplash.com https://avatars.githubusercontent.com https://vercel.com;
   font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://api.stripe.com https://*.sentry.io https://calendly.com https://meet.jit.si;
-  frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si;
+  connect-src 'self' https://api.stripe.com https://*.sentry.io https://calendly.com https://meet.jit.si https://vercel.com;
+  frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si https://vercel.com;
+  manifest-src 'self' https://vercel.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';
