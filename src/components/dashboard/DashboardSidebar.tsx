@@ -5,7 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation'
 import { signOut, useSession } from 'next-auth/react'
 import { ROLE_LABELS } from '@/lib/roles'
 import { Button } from '@/components/ui/button'
-import { Home, Calendar, Shield, LayoutDashboard, LogOut, Users, UserCheck, Radio } from 'lucide-react'
+import { Home, Calendar, Shield, LayoutDashboard, LogOut, Users, UserCheck, Radio, CreditCard } from 'lucide-react'
 
 export default function DashboardSidebar() {
   const pathname = usePathname()
@@ -27,25 +27,42 @@ export default function DashboardSidebar() {
             <Link
               href="/aluno"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/aluno' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/aluno' && (!currentTab || currentTab === 'overview')
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Home className="h-4 w-4" />
-              Início
+              Início & Aulas
             </Link>
             <Link
               href="/aluno/aulas"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/aluno/aulas' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/aluno/aulas'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Calendar className="h-4 w-4" />
               Minhas Aulas
             </Link>
             <Link
+              href="/aluno?tab=financeiro"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === '/aluno' && currentTab === 'financeiro'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
+              }`}
+            >
+              <CreditCard className="h-4 w-4 text-emerald-400" />
+              Controle Financeiro
+            </Link>
+            <Link
               href="/seguranca"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/seguranca' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/seguranca'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Shield className="h-4 w-4" />
@@ -59,7 +76,9 @@ export default function DashboardSidebar() {
             <Link
               href="/professor"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/professor' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/professor'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Home className="h-4 w-4" />
@@ -68,7 +87,9 @@ export default function DashboardSidebar() {
             <Link
               href="/professor/aulas"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/professor/aulas' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/professor/aulas'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Calendar className="h-4 w-4" />
@@ -77,7 +98,9 @@ export default function DashboardSidebar() {
             <Link
               href="/seguranca"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/seguranca' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/seguranca'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Shield className="h-4 w-4" />
@@ -91,7 +114,9 @@ export default function DashboardSidebar() {
             <Link
               href="/admin"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/admin' && !currentTab ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/admin' && (!currentTab || currentTab === 'overview')
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <LayoutDashboard className="h-4 w-4" />
@@ -100,7 +125,9 @@ export default function DashboardSidebar() {
             <Link
               href="/admin?tab=leads"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/admin' && currentTab === 'leads' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/admin' && currentTab === 'leads'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Users className="h-4 w-4" />
@@ -109,7 +136,9 @@ export default function DashboardSidebar() {
             <Link
               href="/admin?tab=students"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/admin' && currentTab === 'students' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/admin' && currentTab === 'students'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <UserCheck className="h-4 w-4" />
@@ -118,16 +147,31 @@ export default function DashboardSidebar() {
             <Link
               href="/admin?tab=classes"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/admin' && currentTab === 'classes' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/admin' && currentTab === 'classes'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Radio className="h-4 w-4" />
               Aulas & VOD
             </Link>
             <Link
+              href="/admin?tab=financial"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+                pathname === '/admin' && currentTab === 'financial'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
+              }`}
+            >
+              <CreditCard className="h-4 w-4 text-emerald-400" />
+              Financeiro & Faturamento
+            </Link>
+            <Link
               href="/seguranca"
               className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                pathname === '/seguranca' ? 'bg-white/15 text-white font-medium' : 'text-white/85 hover:bg-white/10'
+                pathname === '/seguranca'
+                  ? 'bg-white/15 text-white font-medium shadow-xs'
+                  : 'text-white/85 hover:bg-white/10'
               }`}
             >
               <Shield className="h-4 w-4" />

@@ -145,6 +145,11 @@ export default function AdminDashboard() {
   const [newLiveTitle, setNewLiveTitle] = useState('')
   const [isCreatingLive, setIsCreatingLive] = useState(false)
 
+  useEffect(() => {
+    const tab = (searchParams.get('tab') as 'overview' | 'leads' | 'students' | 'classes' | 'financial') || 'overview'
+    setActiveTab(tab)
+  }, [searchParams])
+
   const fetchDashboardData = () => {
     setLoading(true)
     fetch('/api/admin/dashboard')
@@ -238,89 +243,6 @@ export default function AdminDashboard() {
       title="Painel Administrativo"
       subtitle="Controle central de matrículas, receita, CRM de leads e transmissões ao vivo."
     >
-      {/* Navegação por Abas */}
-      <div className="flex border-b border-gray-200 mb-6 gap-2 overflow-x-auto pb-1">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'overview'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <TrendingUp className="h-4 w-4" />
-          Visão Geral & KPIs
-        </button>
-
-        <button
-          onClick={() => setActiveTab('leads')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'leads'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <Users className="h-4 w-4" />
-          CRM & Funil de Leads
-          <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full font-bold">
-            {data.metrics.totalLeads}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('students')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'students'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <UserCheck className="h-4 w-4" />
-          Alunos & Matrículas
-          <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
-            {data.metrics.activeStudents}
-          </span>
-        </button>
-
-        <button
-          onClick={() => setActiveTab('classes')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'classes'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <Radio className="h-4 w-4" />
-          Aulas Ao Vivo & VOD
-          {data.metrics.activeLiveCount > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
-              AO VIVO
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('financial')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'financial'
-              ? 'bg-slate-900 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <CreditCard className="h-4 w-4 text-emerald-500" />
-          Financeiro & Faturamento
-          {(data.metrics.failedTransactions || 0) > 0 ? (
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
-              {data.metrics.failedTransactions} atrasado
-            </span>
-          ) : (
-            <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
-              R$ {data.metrics.totalRevenue.toLocaleString('pt-BR')}
-            </span>
-          )}
-        </button>
-      </div>
-
       {/* ========================================================================= */}
       {/* ABA 1: VISÃO GERAL & KPIS                                                */}
       {/* ========================================================================= */}

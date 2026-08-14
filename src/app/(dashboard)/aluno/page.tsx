@@ -78,12 +78,17 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function AlunoDashboardPage() {
   const searchParams = useSearchParams()
-  const initialTab = searchParams.get('tab') === 'financeiro' ? 'financeiro' : 'overview'
-  const [activeTab, setActiveTab] = useState<'overview' | 'financeiro'>(initialTab)
+  const tabFromUrl = searchParams.get('tab') === 'financeiro' ? 'financeiro' : 'overview'
+  const [activeTab, setActiveTab] = useState<'overview' | 'financeiro'>(tabFromUrl)
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING' | 'FAILED'>('ALL')
   const [data, setData] = useState<StudentData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    const tab = searchParams.get('tab') === 'financeiro' ? 'financeiro' : 'overview'
+    setActiveTab(tab)
+  }, [searchParams])
 
   useEffect(() => {
     fetch('/api/aluno/dashboard')
@@ -147,42 +152,6 @@ export default function AlunoDashboardPage() {
           </Button>
         </div>
       )}
-
-      {/* Navegação de Abas do Aluno */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-3 mb-6">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'overview'
-              ? 'bg-emerald-700 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <GraduationCap className="h-4 w-4" />
-          Aulas & Aprendizado
-        </button>
-
-        <button
-          onClick={() => setActiveTab('financeiro')}
-          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
-            activeTab === 'financeiro'
-              ? 'bg-emerald-700 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
-          }`}
-        >
-          <CreditCard className="h-4 w-4" />
-          Controle Financeiro & Parcelas
-          {failedPayments.length > 0 ? (
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
-              {failedPayments.length} em atraso
-            </span>
-          ) : pendingPayments.length > 0 ? (
-            <span className="bg-amber-100 text-amber-900 text-xs px-2 py-0.5 rounded-full font-bold">
-              {pendingPayments.length} pendente
-            </span>
-          ) : null}
-        </button>
-      </div>
 
       {/* ========================================================================= */}
       {/* ABA 1: AULAS & APRENDIZADO                                               */}
