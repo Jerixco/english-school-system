@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { headers } from 'next/headers'
 import './globals.css'
 import Providers from '@/components/providers'
+import CookieConsentBanner from '@/components/CookieConsentBanner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -106,7 +107,10 @@ export default async function RootLayout({
         )}
       </head>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <CookieConsentBanner />
+        </Providers>
       </body>
     </html>
   )

@@ -1,6 +1,6 @@
 # 🏫 English School System
 
-> **Projeto de Estudos & Laboratório Fullstack (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, WebRTC, Multi-Provider Payments & Hardening OWASP)**
+> **Projeto de Estudos & Laboratório Fullstack (Next.js 16+, PostgreSQL/Neon, Prisma, Service Layer, NextAuth, WebRTC, Multi-Provider Payments & Hardening OWASP/LGPD)**
 
 ---
 
@@ -14,7 +14,8 @@ O sistema simula a gestão completa de uma escola de idiomas:
 - 💳 **Subsistema de Pagamentos Flexível:** Padrão *Adapter* com suporte a provedores externos (Stripe) e **Modo Sandbox Seguro** para validação e testes integrados.
 - 🔴 **Aulas Ao Vivo (WebRTC):** Salas de transmissão ao vivo integradas via Jitsi Meet com isolamento de permissões de mídia.
 - 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática temporária.
-- 🔒 **Hardening & LGPD:** Proteção contra força bruta, autenticação 2FA (TOTP), criptografia simétrica de ponta a ponta, cabeçalhos HTTP estritos e direito ao esquecimento.
+- 🛡️ **Conformidade LGPD & Gestão de Consentimento:** Política de Privacidade formal ([`/privacidade`](/privacidade)), banner de consentimento de cookies e direito ao esquecimento (Art. 18).
+- 🔒 **Hardening & Defesa em Camadas:** Proteção contra força bruta, autenticação 2FA (TOTP), criptografia simétrica de ponta a ponta e cabeçalhos HTTP estritos.
 
 ---
 
@@ -44,7 +45,7 @@ O sistema simula a gestão completa de uma escola de idiomas:
 
 ---
 
-## 🛡️ Arquitetura de Segurança & Proteção de Dados (OWASP Guidelines)
+## 🛡️ Arquitetura de Segurança & Proteção de Dados (OWASP & LGPD)
 
 O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Defense in Depth)** e **Confiança Zero (Zero Trust)**:
 
@@ -59,7 +60,7 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
 - **Autenticação em Dois Fatores (2FA):** Suporte nativo a TOTP com armazenamento de chaves sob criptografia forte simétrica no banco de dados.
 - **Mitigação de Ataques de Força Bruta:** Rate limiting distribuído e mecanismos adaptativos de bloqueio temporário de credenciais.
 - **Controle Rígido de Propriedade (Anti-IDOR):** Validação server-side de posse de dados em todas as rotas parametrizadas.
-- **Privacidade & Conformidade LGPD:** Rotinas de anonimização e direito ao esquecimento de dados pessoais sensíveis.
+- **Privacidade & Conformidade LGPD:** Política de Privacidade formal, gestão de consentimento de cookies e rotinas de anonimização irreversível PII (*Direito ao Esquecimento*).
 
 ### 3. Sanitização de Entradas & Prevenção Contra Injeções
 - **Imunidade contra SQL Injection:** Uso exclusivo de consultas parametrizadas via ORM na camada de persistência.
@@ -78,6 +79,7 @@ O sistema foi projetado seguindo os princípios de **Defesa em Profundidade (Def
   - 🎓 **Professor:** Paleta Índigo / Violeta com foco em salas de aula virtuais e materiais VOD.
   - 📚 **Aluno:** Paleta Esmeralda / Sky com foco em progresso pedagógico, agendamentos e frequência.
 - **Empty States Ilustrados:** Componente `EmptyState` com ícones temáticos e botões de ação contextual para listas sem registros.
+- **Transparência de Cookies:** Banner de consentimento com opções de preferências essenciais e analíticas.
 - **Feedback Visual Aprimorado:** Indicadores de carregamento animados e bloqueio de botões durante requisições assíncronas.
 
 ---

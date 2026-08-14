@@ -383,6 +383,7 @@ export default function HomePage() {
                 <li><Link href="/faq" className="text-gray-600 hover:text-purple-600">FAQ</Link></li>
                 <li><Link href="/contato" className="text-gray-600 hover:text-purple-600">Contato</Link></li>
                 <li><Link href="/blog" className="text-gray-600 hover:text-purple-600">Blog</Link></li>
+                <li><Link href="/privacidade" className="text-gray-600 hover:text-purple-600 font-medium">Privacidade & LGPD</Link></li>
               </ul>
             </div>
             <div>
@@ -393,8 +394,12 @@ export default function HomePage() {
               </ul>
             </div>
           </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600">
-            <p>© 2026 English School. Todos os direitos reservados.</p>
+          <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© {new Date().getFullYear()} English School. Todos os direitos reservados.</p>
+            <div className="flex items-center gap-4 text-xs">
+              <Link href="/privacidade" className="hover:text-purple-600 underline">Política de Privacidade (LGPD)</Link>
+              <Link href="/contato" className="hover:text-purple-600">Fale Conosco</Link>
+            </div>
           </div>
         </div>
       </footer>

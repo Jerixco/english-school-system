@@ -148,8 +148,13 @@ export default function PlanosPage() {
 
       {/* Footer */}
       <footer className="border-t py-10 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl text-center text-sm text-gray-500">
+        <div className="container mx-auto max-w-6xl text-center text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>© {new Date().getFullYear()} English School. Todos os direitos reservados.</p>
+          <div className="flex items-center gap-4 text-xs">
+            <Link href="/" className="hover:text-indigo-600">Início</Link>
+            <Link href="/privacidade" className="hover:text-indigo-600 underline">Política de Privacidade (LGPD)</Link>
+            <Link href="/contato" className="hover:text-indigo-600">Contato</Link>
+          </div>
         </div>
       </footer>
     </div>
