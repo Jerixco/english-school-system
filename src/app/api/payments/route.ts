@@ -9,6 +9,7 @@ import {
   createErrorResponse,
   logAuditAction,
   sanitizePaymentData,
+  blockDemoMutations,
 } from '@/lib/security'
 import { paymentFilterSchema, createPaymentSchema } from '@/lib/validations'
 
@@ -196,6 +197,9 @@ export async function POST(req: NextRequest) {
         { status: 403 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     // Validar dados
     const body = await req.json()

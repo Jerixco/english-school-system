@@ -10,6 +10,7 @@ import {
   isTeacherAvailable,
   createErrorResponse,
   logAuditAction,
+  blockDemoMutations,
 } from '@/lib/security'
 import { classFilterSchema, createClassSchema } from '@/lib/validations'
 
@@ -209,6 +210,9 @@ export async function POST(req: NextRequest) {
         { status: 401 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     // Validar dados
     const body = await req.json()

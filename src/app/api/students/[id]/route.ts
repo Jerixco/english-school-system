@@ -10,6 +10,7 @@ import {
   createErrorResponse,
   logAuditAction,
   sanitizeUserData,
+  blockDemoMutations,
 } from '@/lib/security'
 import { idSchema, updateStudentSchema } from '@/lib/validations'
 
@@ -189,6 +190,9 @@ export async function PATCH(
       )
     }
 
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
+
     // Validar ID
     const validatedId = idSchema.parse(id)
 
@@ -340,6 +344,9 @@ export async function DELETE(
         { status: 403 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     // Validar ID
     const validatedId = idSchema.parse(id)

@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { getAuthenticatedUser, isAdmin, blockDemoMutations } from '@/lib/security'
 import { idSchema } from '@/lib/validations'
 import { LeadService } from '@/services/lead.service'
 import { z } from 'zod'
@@ -47,6 +47,9 @@ export async function PATCH(
         { status: user ? 403 : 401 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     const { id } = await params
     idSchema.parse(id)
@@ -97,6 +100,9 @@ export async function DELETE(
         { status: user ? 403 : 401 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     const { id } = await params
     idSchema.parse(id)

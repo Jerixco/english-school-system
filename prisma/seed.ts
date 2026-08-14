@@ -84,6 +84,26 @@ async function main() {
   })
   console.log('✅ Perfil de Aluno preparado:', studentUser.email)
 
+  // 3.5. Criar Usuário Avaliador / Demonstração (Read-Only)
+  const demoEmail = process.env.DEMO_USER_EMAIL || 'preview.demo@englishschool.com'
+  const demoPassword = await bcrypt.hash(process.env.DEMO_USER_PASSWORD || 'EnglishDemo@2026!#', 12)
+  const demoUser = await prisma.user.upsert({
+    where: { email: demoEmail },
+    update: {
+      password: demoPassword,
+      role: 'ADMIN',
+      name: 'Avaliador Demonstração',
+    },
+    create: {
+      email: demoEmail,
+      name: 'Avaliador Demonstração',
+      password: demoPassword,
+      role: 'ADMIN',
+      emailVerified: new Date(),
+    },
+  })
+  console.log('✅ Usuário Avaliador Demo preparado:', demoUser.email)
+
   // 4. Criar Aula de Exemplo (Idempotente)
   const existingClass = await prisma.class.findFirst({
     where: { studentId: student.id, teacherId: teacher.id },

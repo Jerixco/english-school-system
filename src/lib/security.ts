@@ -95,6 +95,28 @@ export function isOwnerOrAdmin(user: AuthenticatedUser, resourceOwnerId: string)
   return user.id === resourceOwnerId || isAdmin(user)
 }
 
+/**
+ * Identifica se a conta pertence ao perfil de Avaliador / Demonstração (Read-Only)
+ */
+export function isDemoUser(user: { email?: string | null } | null | undefined): boolean {
+  if (!user?.email) return false
+  const demoEmail = process.env.DEMO_USER_EMAIL || 'preview.demo@englishschool.com'
+  return user.email.toLowerCase().trim() === demoEmail.toLowerCase().trim()
+}
+
+/**
+ * Bloqueia qualquer tentativa de mutação (POST/PUT/DELETE/PATCH) se for usuário Demo
+ */
+export function blockDemoMutations(user: AuthenticatedUser | { email?: string | null } | null | undefined): NextResponse | null {
+  if (isDemoUser(user)) {
+    return NextResponse.json(
+      { error: 'Modo Demonstração: Esta conta possui acesso estritamente ilustrativo (somente leitura).' },
+      { status: 403 }
+    )
+  }
+  return null
+}
+
 // ============================================
 // RESPOSTA SEGURA
 // ============================================

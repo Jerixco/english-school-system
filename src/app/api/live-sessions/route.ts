@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { getAuthenticatedUser, isAdmin, blockDemoMutations } from '@/lib/security'
 import { LiveSessionService } from '@/services/live-session.service'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -54,6 +54,9 @@ export async function POST(req: NextRequest) {
     if (!user || (user.role !== 'TEACHER' && !isAdmin(user))) {
       return NextResponse.json({ error: 'Apenas professores e administradores podem agendar aulas ao vivo' }, { status: 403 })
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     let teacherId = ''
     if (user.role === 'TEACHER') {
