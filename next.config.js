@@ -2,13 +2,13 @@ const { withSentryConfig } = require('@sentry/nextjs')
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://assets.calendly.com https://js.stripe.com https://meet.jit.si https://vercel.com;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://images.unsplash.com https://avatars.githubusercontent.com https://vercel.com;
-  font-src 'self' https://fonts.gstatic.com;
-  connect-src 'self' https://api.stripe.com https://*.sentry.io https://calendly.com https://meet.jit.si https://vercel.com;
-  frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si https://vercel.com;
-  manifest-src 'self' https://vercel.com;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://assets.calendly.com https://js.stripe.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vercel.live https://*.vercel.live;
+  img-src 'self' blob: data: https://www.googletagmanager.com https://www.google-analytics.com https://images.unsplash.com https://avatars.githubusercontent.com https://vercel.com https://vercel.live https://*.vercel.live;
+  font-src 'self' https://fonts.gstatic.com https://vercel.live https://assets.vercel.com;
+  connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://api.stripe.com https://*.sentry.io https://calendly.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live https://*.pusher.com wss://*.pusher.com;
+  frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live;
+  manifest-src 'self' https://vercel.com https://vercel.live https://*.vercel.live;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

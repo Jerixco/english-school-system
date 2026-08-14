@@ -11,7 +11,10 @@ O **English School System** é uma aplicação fullstack desenvolvida como labor
 O sistema simula a gestão completa de uma escola de idiomas:
 - 📊 **CRM de Leads:** Funil visual (Kanban) para qualificação e conversão de novos alunos.
 - 🎓 **Matrículas & Planos:** Gestão de planos (`BASIC`, `STANDARD`, `PREMIUM`, `CUSTOM`) com assinaturas e catálogo de preços no servidor.
-- 💳 **Subsistema de Pagamentos Flexível:** Padrão *Adapter* com suporte a provedores externos (Stripe) e **Modo Sandbox Seguro** para validação e testes integrados.
+- 💳 **Subsistema de Pagamentos & Controle Financeiro:**
+  - **Portal do Aluno:** Extrato completo de parcelas pagas, parcelas a vencer, identificação de faturas em atraso e botão de pagamento/renovação de plano.
+  - **Painel Administrativo:** Livro-razão financeiro global com KPIs de receita liquidada, receita prevista, inadimplência e filtros por status e aluno.
+  - **Padrão Adapter:** Suporte a múltiplos provedores (Stripe) e **Modo Sandbox Seguro** para simulações e testes integrados.
 - 🔴 **Aulas Ao Vivo (WebRTC):** Salas de transmissão ao vivo integradas via Jitsi Meet com isolamento de permissões de mídia.
 - 📼 **Biblioteca VOD:** Gravações de aulas com thumbnails e política de retenção automática temporária.
 - 🛡️ **Conformidade LGPD & Gestão de Consentimento:** Política de Privacidade formal ([`/privacidade`](/privacidade)), banner de consentimento de cookies e direito ao esquecimento (Art. 18).

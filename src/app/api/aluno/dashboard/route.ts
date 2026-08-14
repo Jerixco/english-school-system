@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
         },
         payments: {
           orderBy: { dueDate: 'desc' },
-          take: 3,
+          take: 20,
         },
       },
     })
@@ -108,6 +108,8 @@ export async function GET(req: NextRequest) {
           amount: p.amount / 100, // Converte centavos para Reais (ex: 49700 -> 497.00)
           status: p.status,
           dueDate: p.dueDate,
+          paidAt: p.paidAt,
+          stripePaymentId: p.stripePaymentId,
         })),
       },
     })

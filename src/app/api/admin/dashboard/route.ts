@@ -25,7 +25,9 @@ export async function GET(req: NextRequest) {
       totalLeads,
       leadsByStatus,
       completedPayments,
-      recentPayments,
+      pendingPayments,
+      failedPayments,
+      allPaymentsList,
       liveSessions,
       recordings,
       recentStudents,
@@ -48,10 +50,23 @@ export async function GET(req: NextRequest) {
       prisma.payment.aggregate({
         where: { status: 'COMPLETED' },
         _sum: { amount: true },
+        _count: { id: true },
       }),
-      // 7. Pagamentos recentes
+      // 7. Pagamentos pendentes
+      prisma.payment.aggregate({
+        where: { status: 'PENDING' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      // 8. Pagamentos falhos / em atraso
+      prisma.payment.aggregate({
+        where: { status: 'FAILED' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      // 9. Todos os pagamentos (Livro razão financeiro)
       prisma.payment.findMany({
-        take: 5,
+        take: 100,
         orderBy: { createdAt: 'desc' },
         include: {
           student: {
@@ -61,7 +76,7 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-      // 8. Sessões ao vivo (ativas e agendadas)
+      // 10. Sessões ao vivo (ativas e agendadas)
       prisma.liveSession.findMany({
         take: 10,
         orderBy: { scheduledFor: 'asc' },
@@ -73,7 +88,7 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-      // 9. Gravações ativas (não expiradas)
+      // 11. Gravações ativas (não expiradas)
       prisma.recording.findMany({
         where: { expiresAt: { gt: new Date() } },
         take: 10,
@@ -86,7 +101,7 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-      // 10. Alunos recentes
+      // 12. Alunos recentes
       prisma.student.findMany({
         take: 10,
         orderBy: { createdAt: 'desc' },
@@ -99,7 +114,7 @@ export async function GET(req: NextRequest) {
           },
         },
       }),
-      // 11. Todos os leads recentes
+      // 13. Todos os leads recentes
       prisma.lead.findMany({
         take: 50,
         orderBy: { createdAt: 'desc' },
@@ -108,6 +123,8 @@ export async function GET(req: NextRequest) {
 
     const totalRevenueCents = completedPayments._sum.amount || 0
     const totalRevenueReais = totalRevenueCents / 100
+    const pendingRevenueReais = (pendingPayments._sum.amount || 0) / 100
+    const failedRevenueReais = (failedPayments._sum.amount || 0) / 100
 
     return NextResponse.json({
       metrics: {
@@ -116,6 +133,12 @@ export async function GET(req: NextRequest) {
         totalTeachers,
         totalLeads,
         totalRevenue: totalRevenueReais,
+        pendingRevenue: pendingRevenueReais,
+        failedRevenue: failedRevenueReais,
+        completedTransactions: completedPayments._count.id || 0,
+        pendingTransactions: pendingPayments._count.id || 0,
+        failedTransactions: failedPayments._count.id || 0,
+        totalTransactions: allPaymentsList.length,
         activeLiveCount: liveSessions.filter((s) => s.status === 'LIVE').length,
         scheduledLiveCount: liveSessions.filter((s) => s.status === 'SCHEDULED').length,
         activeRecordingsCount: recordings.length,
@@ -124,7 +147,19 @@ export async function GET(req: NextRequest) {
           return acc
         }, {} as Record<string, number>),
       },
-      recentPayments: recentPayments.map((p) => ({
+      allPayments: allPaymentsList.map((p) => ({
+        id: p.id,
+        amount: p.amount / 100,
+        status: p.status,
+        dueDate: p.dueDate,
+        paidAt: p.paidAt,
+        stripePaymentId: p.stripePaymentId,
+        studentName: p.student.user.name || 'Aluno',
+        studentEmail: p.student.user.email,
+        studentPlan: p.student.plan,
+        createdAt: p.createdAt,
+      })),
+      recentPayments: allPaymentsList.slice(0, 5).map((p) => ({
         id: p.id,
         amount: p.amount / 100,
         status: p.status,

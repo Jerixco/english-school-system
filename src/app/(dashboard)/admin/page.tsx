@@ -28,6 +28,10 @@ import {
   FolderSearch,
   UserX,
   CreditCard,
+  Receipt,
+  AlertTriangle,
+  FileText,
+  ExternalLink,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
 
@@ -38,11 +42,29 @@ interface AdminData {
     totalTeachers: number
     totalLeads: number
     totalRevenue: number
+    pendingRevenue?: number
+    failedRevenue?: number
+    totalTransactions?: number
+    completedTransactions?: number
+    pendingTransactions?: number
+    failedTransactions?: number
     activeLiveCount: number
     scheduledLiveCount: number
     activeRecordingsCount: number
     leadsByStatus: Record<string, number>
   }
+  allPayments?: Array<{
+    id: string
+    amount: number
+    status: string
+    dueDate: string
+    paidAt: string | null
+    stripePaymentId: string | null
+    studentName: string
+    studentEmail: string
+    studentPlan: string
+    createdAt: string
+  }>
   recentPayments: Array<{
     id: string
     amount: number
@@ -111,13 +133,15 @@ export default function AdminDashboard() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') || 'overview'
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'students' | 'classes'>(
+  const [activeTab, setActiveTab] = useState<'overview' | 'leads' | 'students' | 'classes' | 'financial'>(
     tabFromUrl as any
   )
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [financialSearch, setFinancialSearch] = useState('')
+  const [financialStatusFilter, setFinancialStatusFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING' | 'FAILED'>('ALL')
   const [newLiveTitle, setNewLiveTitle] = useState('')
   const [isCreatingLive, setIsCreatingLive] = useState(false)
 
@@ -271,6 +295,27 @@ export default function AdminDashboard() {
           {data.metrics.activeLiveCount > 0 && (
             <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
               AO VIVO
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={() => setActiveTab('financial')}
+          className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
+            activeTab === 'financial'
+              ? 'bg-slate-900 text-white shadow-sm'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <CreditCard className="h-4 w-4 text-emerald-500" />
+          Financeiro & Faturamento
+          {(data.metrics.failedTransactions || 0) > 0 ? (
+            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
+              {data.metrics.failedTransactions} atrasado
+            </span>
+          ) : (
+            <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-bold">
+              R$ {data.metrics.totalRevenue.toLocaleString('pt-BR')}
             </span>
           )}
         </button>
@@ -799,6 +844,255 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* ABA 5: GESTÃO FINANCEIRA & FATURAMENTO GLOBAL                            */}
+      {/* ========================================================================= */}
+      {activeTab === 'financial' && (
+        <div className="space-y-6">
+          {/* Top 4 KPI Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Card className="border-l-4 border-l-emerald-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Receita Total Liquidada</p>
+                    <h3 className="text-2xl font-black text-gray-900 mt-1">
+                      {data.metrics.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </h3>
+                    <small className="text-emerald-600 font-semibold">{data.metrics.completedTransactions || 0} faturas pagas</small>
+                  </div>
+                  <div className="bg-emerald-100 p-3 rounded-full text-emerald-700">
+                    <DollarSign className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-amber-500 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Receita Prevista / A Vencer</p>
+                    <h3 className="text-2xl font-black text-gray-900 mt-1">
+                      {(data.metrics.pendingRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </h3>
+                    <small className="text-amber-600 font-semibold">{data.metrics.pendingTransactions || 0} faturas aguardando</small>
+                  </div>
+                  <div className="bg-amber-100 p-3 rounded-full text-amber-700">
+                    <Clock className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-rose-600 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Inadimplência / Em Atraso</p>
+                    <h3 className="text-2xl font-black text-gray-900 mt-1">
+                      {(data.metrics.failedRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    </h3>
+                    <small className="text-rose-600 font-semibold">{data.metrics.failedTransactions || 0} faturas pendentes</small>
+                  </div>
+                  <div className="bg-rose-100 p-3 rounded-full text-rose-700">
+                    <AlertTriangle className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-slate-800 shadow-sm">
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Volume de Transações</p>
+                    <h3 className="text-2xl font-black text-gray-900 mt-1">
+                      {data.metrics.totalTransactions || 0}
+                    </h3>
+                    <small className="text-slate-600 font-semibold">Total de registros</small>
+                  </div>
+                  <div className="bg-slate-100 p-3 rounded-full text-slate-800">
+                    <Receipt className="h-6 w-6" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Filtros e Busca */}
+          <Card className="shadow-sm">
+            <CardHeader className="border-b border-gray-100 pb-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Receipt className="h-5 w-5 text-slate-900" />
+                    Livro-Razão Financeiro Global
+                  </CardTitle>
+                  <CardDescription>
+                    Audite todas as transações, parcelas pagas, pendentes e inadimplências do sistema.
+                  </CardDescription>
+                </div>
+
+                {/* Filtros por status */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="relative w-full md:w-64">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                    <Input
+                      placeholder="Buscar por aluno ou email..."
+                      value={financialSearch}
+                      onChange={(e) => setFinancialSearch(e.target.value)}
+                      className="pl-9 text-xs h-9"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg text-xs font-semibold">
+                    <button
+                      onClick={() => setFinancialStatusFilter('ALL')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${
+                        financialStatusFilter === 'ALL' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Todos
+                    </button>
+                    <button
+                      onClick={() => setFinancialStatusFilter('COMPLETED')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${
+                        financialStatusFilter === 'COMPLETED' ? 'bg-white text-emerald-700 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Pagos
+                    </button>
+                    <button
+                      onClick={() => setFinancialStatusFilter('PENDING')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${
+                        financialStatusFilter === 'PENDING' ? 'bg-white text-amber-700 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      A Vencer
+                    </button>
+                    <button
+                      onClick={() => setFinancialStatusFilter('FAILED')}
+                      className={`px-3 py-1.5 rounded-md transition-colors ${
+                        financialStatusFilter === 'FAILED' ? 'bg-white text-rose-700 shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Atrasados
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-0">
+              {(() => {
+                const payments = (data.allPayments || []).filter((p) => {
+                  const matchesFilter =
+                    financialStatusFilter === 'ALL' ? true : p.status === financialStatusFilter
+                  const matchesSearch =
+                    !financialSearch.trim() ||
+                    p.studentName.toLowerCase().includes(financialSearch.toLowerCase()) ||
+                    p.studentEmail.toLowerCase().includes(financialSearch.toLowerCase()) ||
+                    p.id.toLowerCase().includes(financialSearch.toLowerCase())
+                  return matchesFilter && matchesSearch
+                })
+
+                if (payments.length === 0) {
+                  return (
+                    <div className="p-8">
+                      <EmptyState
+                        icon={Receipt}
+                        title="Nenhuma transação encontrada"
+                        description="Nenhum registro corresponde aos filtros de busca aplicados."
+                        actionLabel="Limpar Filtros"
+                        onAction={() => {
+                          setFinancialStatusFilter('ALL')
+                          setFinancialSearch('')
+                        }}
+                        compact
+                      />
+                    </div>
+                  )
+                }
+
+                return (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-gray-700">
+                      <thead className="bg-gray-50/75 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                        <tr>
+                          <th className="px-6 py-3.5">ID / Transação</th>
+                          <th className="px-6 py-3.5">Aluno & Contato</th>
+                          <th className="px-6 py-3.5">Plano</th>
+                          <th className="px-6 py-3.5">Valor</th>
+                          <th className="px-6 py-3.5">Vencimento</th>
+                          <th className="px-6 py-3.5">Liquidação</th>
+                          <th className="px-6 py-3.5">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {payments.map((p) => (
+                          <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                            <td className="px-6 py-4 font-mono text-xs text-gray-500">
+                              <span className="font-semibold text-gray-900 block font-sans text-sm">
+                                {p.stripePaymentId ? 'Stripe Gateway' : 'Fatura Direta'}
+                              </span>
+                              #{p.id.slice(-8)}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="font-semibold text-gray-900">{p.studentName}</div>
+                              <div className="text-xs text-gray-500">{p.studentEmail}</div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="outline" className="text-xs font-medium">
+                                {p.studentPlan}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 font-bold text-gray-900">
+                              {p.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                            </td>
+                            <td className="px-6 py-4 text-xs text-gray-600">
+                              {new Date(p.dueDate).toLocaleDateString('pt-BR')}
+                            </td>
+                            <td className="px-6 py-4 text-xs text-gray-600">
+                              {p.paidAt
+                                ? new Date(p.paidAt).toLocaleDateString('pt-BR', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })
+                                : '—'}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge
+                                className={
+                                  p.status === 'COMPLETED'
+                                    ? 'bg-emerald-600 text-white font-semibold'
+                                    : p.status === 'PENDING'
+                                      ? 'bg-amber-600 text-white font-semibold'
+                                      : 'bg-rose-600 text-white font-semibold'
+                                }
+                              >
+                                {p.status === 'COMPLETED'
+                                  ? 'Liquidado'
+                                  : p.status === 'PENDING'
+                                    ? 'A Vencer'
+                                    : 'Em Atraso'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              })()}
             </CardContent>
           </Card>
         </div>
