@@ -90,10 +90,16 @@ export const createStudentSchema = z.object({
   plan: studentPlanEnum.default('BASIC'),
 })
 
+export const updateStudentSelfSchema = z.object({
+  name: nameSchema.optional(),
+  phone: phoneSchema.optional(),
+})
+
 export const updateStudentSchema = z.object({
   name: nameSchema.optional(),
-  phone: phoneSchema,
+  phone: phoneSchema.optional(),
   plan: studentPlanEnum.optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'TRIAL']).optional(),
 })
 
 export const studentFilterSchema = z.object({

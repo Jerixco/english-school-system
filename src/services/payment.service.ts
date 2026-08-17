@@ -49,13 +49,84 @@ export interface PaymentGateway {
 }
 
 /**
+ * Adapter do Stripe: Criação e orquestração de sessões de checkout em produção.
+ */
+export class StripePaymentAdapter implements PaymentGateway {
+  name = 'stripe' as const
+
+  async createCheckout(req: CheckoutRequest): Promise<CheckoutResponse> {
+    const planInfo = SERVER_PLAN_PRICES[req.plan]
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+    const { stripe, getStripeCustomerId } = await import('@/lib/stripe')
+    const customerId = await getStripeCustomerId(req.userEmail, req.userName)
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: planInfo.currency.toLowerCase(),
+            product_data: {
+              name: planInfo.name,
+              description: `Assinatura ${planInfo.name} - English School`,
+            },
+            unit_amount: planInfo.amount,
+            recurring: {
+              interval: 'month',
+            },
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: req.successUrl || `${appUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: req.cancelUrl || `${appUrl}/planos`,
+      metadata: {
+        userId: req.userId,
+        plan: req.plan,
+      },
+      subscription_data: {
+        metadata: {
+          userId: req.userId,
+          plan: req.plan,
+        },
+      },
+    })
+
+    if (!session.url) {
+      throw new Error('Falha ao gerar URL de checkout do Stripe')
+    }
+
+    return {
+      url: session.url,
+      sessionId: session.id,
+      provider: 'stripe',
+    }
+  }
+
+  async processWebhook(payload: any): Promise<{ processed: boolean; paymentId?: string }> {
+    return { processed: true }
+  }
+}
+
+/**
  * Adapter do Sandbox: Permite testes e validações completas sem necessidade de credenciais de produção.
  */
 export class SandboxPaymentAdapter implements PaymentGateway {
   name = 'sandbox' as const
 
+  private static getSecret(): string {
+    const secret = process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === 'test' ? 'sandbox-test-secret-key-32chars' : '')
+    if (!secret) {
+      throw new Error('NEXTAUTH_SECRET não configurado para assinatura do sandbox de pagamentos.')
+    }
+    return secret
+  }
+
   private signSession(data: any): string {
-    const secret = process.env.NEXTAUTH_SECRET || 'sandbox-secret-fallback-key'
+    const secret = SandboxPaymentAdapter.getSecret()
     const payload = Buffer.from(JSON.stringify(data)).toString('base64url')
     const signature = crypto.createHmac('sha256', secret).update(payload).digest('base64url')
     return `${payload}.${signature}`
@@ -66,7 +137,7 @@ export class SandboxPaymentAdapter implements PaymentGateway {
       const [payload, signature] = token.split('.')
       if (!payload || !signature) return null
 
-      const secret = process.env.NEXTAUTH_SECRET || 'sandbox-secret-fallback-key'
+      const secret = SandboxPaymentAdapter.getSecret()
       const expectedSignature = crypto.createHmac('sha256', secret).update(payload).digest('base64url')
 
       if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature))) {
@@ -130,11 +201,12 @@ export class PaymentService {
     } else {
       // Se STRIPE_SECRET_KEY estiver presente e não for placeholder, usa Stripe; senão, usa Sandbox Seguro
       const hasRealStripeKey = 
-        process.env.STRIPE_SECRET_KEY && 
-        process.env.STRIPE_SECRET_KEY.startsWith('sk_') &&
-        !process.env.STRIPE_SECRET_KEY.includes('mock')
+        Boolean(process.env.STRIPE_SECRET_KEY) && 
+        process.env.STRIPE_SECRET_KEY!.startsWith('sk_') &&
+        !process.env.STRIPE_SECRET_KEY!.includes('mock') &&
+        !process.env.STRIPE_SECRET_KEY!.includes('your_stripe')
 
-      this.gateway = hasRealStripeKey ? new SandboxPaymentAdapter() : new SandboxPaymentAdapter()
+      this.gateway = hasRealStripeKey ? new StripePaymentAdapter() : new SandboxPaymentAdapter()
     }
   }
 

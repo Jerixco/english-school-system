@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail, sendWelcomeEmail, sendConsultationConfirmationEmail, sendPaymentConfirmationEmail, sendPaymentReminderEmail } from '@/lib/email'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { getAuthenticatedUser, isAdmin, blockDemoMutations } from '@/lib/security'
+import { sanitizeRichHtml } from '@/lib/sanitize-html'
 import { z } from 'zod'
 
 const emailSchema = z.object({
@@ -33,6 +34,9 @@ export async function POST(req: NextRequest) {
         { status: user ? 403 : 401 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     const body = await req.json()
     
@@ -75,7 +79,11 @@ export async function POST(req: NextRequest) {
             { status: 400 }
           )
         }
-        result = await sendEmail(validatedData.to, validatedData.customSubject, validatedData.customHtml)
+        result = await sendEmail(
+          validatedData.to, 
+          validatedData.customSubject, 
+          sanitizeRichHtml(validatedData.customHtml)
+        )
         break
     }
 

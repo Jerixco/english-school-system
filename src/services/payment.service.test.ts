@@ -137,4 +137,21 @@ describe('PaymentService & Security Controls', () => {
     const expiredResult = SandboxPaymentAdapter.verifySessionToken(expiredToken)
     expect(expiredResult).toBeNull()
   })
+
+  it('should instantiate StripePaymentAdapter when real STRIPE_SECRET_KEY is present and Sandbox when absent', () => {
+    const originalKey = process.env.STRIPE_SECRET_KEY
+
+    // Sem chave: Sandbox
+    delete process.env.STRIPE_SECRET_KEY
+    const serviceWithoutKey = new PaymentService()
+    expect((serviceWithoutKey as any).gateway.name).toBe('sandbox')
+
+    // Com chave real: Stripe
+    process.env.STRIPE_SECRET_KEY = 'sk_test_51MzAbcRealKey123'
+    const serviceWithKey = new PaymentService()
+    expect((serviceWithKey as any).gateway.name).toBe('stripe')
+
+    // Restaura chave original
+    process.env.STRIPE_SECRET_KEY = originalKey
+  })
 })
