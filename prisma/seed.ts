@@ -13,7 +13,7 @@ async function main() {
 
   console.log('🌱 Iniciando população controlada do banco de dados (Seed)...')
 
-  const seedPassword = process.env.SEED_DEFAULT_PASSWORD || 'DevPass@English2026!'
+  const seedPassword = process.env.SEED_DEFAULT_PASSWORD || crypto.randomUUID().slice(0, 16) + 'Aa1!'
   const defaultPassword = await bcrypt.hash(seedPassword, 12)
 
   // 1. Criar Usuário Admin
@@ -84,25 +84,24 @@ async function main() {
   })
   console.log('✅ Perfil de Aluno preparado:', studentUser.email)
 
-  // 3.5. Criar Usuário Avaliador / Demonstração (Read-Only)
+  // 3.5. Criar Usuário Avaliador / Demonstração (Read-Only STUDENT)
   const demoEmail = process.env.DEMO_USER_EMAIL || 'preview.demo@englishschool.com'
-  const demoPassword = await bcrypt.hash(process.env.DEMO_USER_PASSWORD || 'EnglishDemo@2026!#', 12)
+  const demoPassword = await bcrypt.hash(process.env.DEMO_USER_PASSWORD || defaultPassword, 12)
   const demoUser = await prisma.user.upsert({
     where: { email: demoEmail },
     update: {
-      password: demoPassword,
-      role: 'ADMIN',
-      name: 'Avaliador Demonstração',
+      role: 'STUDENT',
+      name: 'Aluno Demonstração (Preview)',
     },
     create: {
       email: demoEmail,
-      name: 'Avaliador Demonstração',
+      name: 'Aluno Demonstração (Preview)',
       password: demoPassword,
-      role: 'ADMIN',
+      role: 'STUDENT',
       emailVerified: new Date(),
     },
   })
-  console.log('✅ Usuário Avaliador Demo preparado:', demoUser.email)
+  console.log('✅ Usuário Avaliador Demo (STUDENT) preparado:', demoUser.email)
 
   // 4. Criar Aula de Exemplo (Idempotente)
   const existingClass = await prisma.class.findFirst({

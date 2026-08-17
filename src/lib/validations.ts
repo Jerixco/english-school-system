@@ -98,7 +98,6 @@ export const updateStudentSelfSchema = z.object({
 export const updateStudentSchema = z.object({
   name: nameSchema.optional(),
   phone: phoneSchema.optional(),
-  plan: studentPlanEnum.optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'TRIAL']).optional(),
 })
 

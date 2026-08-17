@@ -15,15 +15,17 @@ describe('Validation Schemas and Helpers', () => {
       expect(parsed.plan).toBeUndefined() // Campo plan não existe no schema do aluno
     })
 
-    it('updateStudentSchema should allow admin to update plan and status', () => {
-      const adminPayload = {
+    it('updateStudentSchema should allow updating status and personal details but strip plan', () => {
+      const payload = {
         name: 'Aluno João',
+        phone: '+5511999999999',
         plan: 'PREMIUM' as const,
         status: 'ACTIVE' as const,
       }
-      const parsed = updateStudentSchema.parse(adminPayload)
-      expect(parsed.plan).toBe('PREMIUM')
+      const parsed: any = updateStudentSchema.parse(payload)
       expect(parsed.status).toBe('ACTIVE')
+      expect(parsed.name).toBe('Aluno João')
+      expect(parsed.plan).toBeUndefined() // Alteração de plano é estritamente via gateway de pagamento
     })
   })
   describe('registerSchema', () => {

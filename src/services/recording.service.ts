@@ -46,10 +46,7 @@ export class RecordingService {
     if (role === 'STUDENT') {
       const student = await prisma.student.findUnique({ where: { userId } })
       if (!student) return []
-      where.OR = [
-        { studentId: student.id },
-        { studentId: null }, // Gravações gerais/abertas para toda a escola
-      ]
+      where.studentId = student.id
     } else if (role === 'TEACHER') {
       const teacher = await prisma.teacher.findUnique({ where: { userId } })
       if (!teacher) return []

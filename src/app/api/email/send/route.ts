@@ -6,11 +6,9 @@ import { sanitizeRichHtml } from '@/lib/sanitize-html'
 import { z } from 'zod'
 
 const emailSchema = z.object({
-  type: z.enum(['welcome', 'consultation', 'payment', 'reminder', 'custom']),
+  type: z.enum(['welcome', 'consultation', 'payment', 'reminder']),
   to: z.string().email(),
   data: z.record(z.any()).optional(),
-  customSubject: z.string().optional(),
-  customHtml: z.string().optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -26,7 +24,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Somente ADMIN pode disparar e-mails — impede open relay para phishing/spam.
+    // Somente ADMIN pode disparar e-mails transacionais
     const user = await getAuthenticatedUser()
     if (!user || !isAdmin(user)) {
       return NextResponse.json(
@@ -70,19 +68,6 @@ export async function POST(req: NextRequest) {
           validatedData.data?.name || '',
           validatedData.data?.dueDate || '',
           validatedData.data?.amount || 0
-        )
-        break
-      case 'custom':
-        if (!validatedData.customSubject || !validatedData.customHtml) {
-          return NextResponse.json(
-            { error: 'Custom emails require subject and html' },
-            { status: 400 }
-          )
-        }
-        result = await sendEmail(
-          validatedData.to, 
-          validatedData.customSubject, 
-          sanitizeRichHtml(validatedData.customHtml)
         )
         break
     }
