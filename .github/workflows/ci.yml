@@ -14,10 +14,8 @@ jobs:
     name: Lint and tests
     runs-on: ubuntu-latest
     env:
-      NEXTAUTH_SECRET: test-secret-key-must-be-32-chars-min
-      ENCRYPTION_KEY: test-encryption-key-32-characters
-      DATABASE_URL: postgresql://user:pass@localhost:5432/english_school?sslmode=disable
       NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/testdb
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

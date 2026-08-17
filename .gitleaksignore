@@ -2,3 +2,11 @@
 # Commits históricos que já foram tratados e revogados
 ed77bf79b2bba11a5b478e03ae4ece3f2a5007dc:.env.example:gcp-api-key:40
 ed77bf79b2bba11a5b478e03ae4ece3f2a5007dc:src/app/api/ai/tutor/route.ts:gcp-api-key:8
+181eb2faccffcf9067abf16132312df4f22bc8c6:src/services/payment.service.test.ts:stripe-access-token:150
+48886864b235529fb8d7528c7a8250f708f1c3fb:.github/workflows/ci.yml:generic-api-key:14
+48886864b235529fb8d7528c7a8250f708f1c3fb:.github/workflows/ci.yml:generic-api-key:15
+48886864b235529fb8d7528c7a8250f708f1c3fb:vitest.config.ts:generic-api-key:10
+ed4700436d87f6d961af596da57dd48e3ca8e0a4:.github/workflows/ci.yml:generic-api-key:17
+ed4700436d87f6d961af596da57dd48e3ca8e0a4:.github/workflows/ci.yml:generic-api-key:18
+ed4700436d87f6d961af596da57dd48e3ca8e0a4:vitest.config.ts:generic-api-key:9
+ed4700436d87f6d961af596da57dd48e3ca8e0a4:vitest.config.ts:generic-api-key:10
