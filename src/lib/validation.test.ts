@@ -1,7 +1,33 @@
 import { describe, it, expect } from 'vitest'
-import { registerSchema, loginSchema, leadSchema, sanitizeString, sanitizeEmail } from './validations'
+import { registerSchema, loginSchema, leadSchema, sanitizeString, sanitizeEmail, updateStudentSelfSchema, updateStudentSchema } from './validations'
 
 describe('Validation Schemas and Helpers', () => {
+  describe('updateStudentSelfSchema vs updateStudentSchema', () => {
+    it('updateStudentSelfSchema should ignore or strip plan field preventing privilege escalation', () => {
+      const studentPayload = {
+        name: 'Aluno João',
+        phone: '+5511999999999',
+        plan: 'PREMIUM', // Aluno tentando se autopromover
+      }
+      const parsed: any = updateStudentSelfSchema.parse(studentPayload)
+      expect(parsed.name).toBe('Aluno João')
+      expect(parsed.phone).toBe('+5511999999999')
+      expect(parsed.plan).toBeUndefined() // Campo plan não existe no schema do aluno
+    })
+
+    it('updateStudentSchema should allow updating status and personal details but strip plan', () => {
+      const payload = {
+        name: 'Aluno João',
+        phone: '+5511999999999',
+        plan: 'PREMIUM' as const,
+        status: 'ACTIVE' as const,
+      }
+      const parsed: any = updateStudentSchema.parse(payload)
+      expect(parsed.status).toBe('ACTIVE')
+      expect(parsed.name).toBe('Aluno João')
+      expect(parsed.plan).toBeUndefined() // Alteração de plano é estritamente via gateway de pagamento
+    })
+  })
   describe('registerSchema', () => {
     it('should validate correct registration data', () => {
       const validData = {

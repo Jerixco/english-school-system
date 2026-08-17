@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { getAuthenticatedUser, isAdmin } from '@/lib/security'
+import { getAuthenticatedUser, isAdmin, blockDemoMutations } from '@/lib/security'
 import { WhatsAppService } from '@/services/whatsapp.service'
 import { z } from 'zod'
 
@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
         { status: user ? 403 : 401 }
       )
     }
+
+    const demoBlock = blockDemoMutations(user)
+    if (demoBlock) return demoBlock
 
     const body = await req.json()
     const validatedData = whatsappSchema.parse(body)

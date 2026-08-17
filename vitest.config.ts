@@ -6,8 +6,9 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
     env: {
-      NODE_ENV: 'test',
       NEXTAUTH_SECRET: 'test-secret-key-must-be-32-chars-min',
+      ENCRYPTION_KEY: 'test-encryption-key-32-characters',
+      DATABASE_URL: 'postgresql://user:pass@localhost:5432/english_school?sslmode=disable',
     },
   },
   resolve: {

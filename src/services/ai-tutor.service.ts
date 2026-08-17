@@ -17,6 +17,11 @@ export interface ChatMessage {
   parts: string | Array<{ text: string }>
 }
 
+export interface AiTutorOptions {
+  temperature?: number
+  topP?: number
+}
+
 export class AiTutorService {
   private genAI: GoogleGenerativeAI
 
@@ -61,11 +66,12 @@ export class AiTutorService {
 
   /**
    * Envia uma mensagem para o Tutor IA e retorna a resposta.
-   * Implementa fallback automático entre modelos disponíveis.
+   * Implementa fallback automático entre modelos e suporte a entropia de conversação.
    */
   async getReply(
     message: string, 
-    history: ChatMessage[] = []
+    history: ChatMessage[] = [],
+    options?: AiTutorOptions
   ): Promise<{ text: string; isQuotaExceeded: boolean }> {
     const formattedHistory = this.formatHistory(history)
     let isQuotaExceeded = false
@@ -75,7 +81,11 @@ export class AiTutorService {
       try {
         const model = this.genAI.getGenerativeModel({ 
           model: modelName, 
-          systemInstruction: SYSTEM_INSTRUCTION 
+          systemInstruction: SYSTEM_INSTRUCTION,
+          generationConfig: {
+            temperature: options?.temperature ?? 0.7,
+            topP: options?.topP ?? 0.95,
+          }
         })
         
         const chat = model.startChat({ history: formattedHistory })

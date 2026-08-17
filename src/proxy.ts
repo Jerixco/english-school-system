@@ -38,16 +38,58 @@ export async function proxy(req: NextRequest) {
     ? "'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com"
     : `'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`
 
+  const connectSrc = [
+    "'self'",
+    'https://www.google-analytics.com',
+    'https://*.google-analytics.com',
+    'https://*.analytics.google.com',
+    'https://*.googletagmanager.com',
+    'https://api.stripe.com',
+    'https://*.sentry.io',
+    'https://calendly.com',
+    'https://meet.jit.si',
+    'https://vercel.com',
+    'https://vercel.live',
+    'https://*.vercel.live',
+    'https://*.pusher.com',
+    'wss://*.pusher.com',
+  ].join(' ')
+
+  const imgSrc = [
+    "'self'",
+    'blob:',
+    'data:',
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+    'https://images.unsplash.com',
+    'https://avatars.githubusercontent.com',
+    'https://vercel.com',
+    'https://vercel.live',
+    'https://*.vercel.live',
+  ].join(' ')
+
+  const fontSrc = [
+    "'self'",
+    'https://fonts.gstatic.com',
+    'https://vercel.live',
+    'https://assets.vercel.com',
+  ].join(' ')
+
   const csp = [
     "default-src 'self'",
     `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: https:",
-    "font-src 'self' data:",
-    "connect-src 'self' https:",
-    "frame-ancestors 'self'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vercel.live https://*.vercel.live",
+    `img-src ${imgSrc}`,
+    `font-src ${fontSrc}`,
+    `connect-src ${connectSrc}`,
+    "frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live",
+    "manifest-src 'self' https://vercel.com https://vercel.live https://*.vercel.live",
+    "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
+    "frame-ancestors 'none'",
+    "block-all-mixed-content",
+    "upgrade-insecure-requests",
   ].join('; ')
 
   // Propaga nonce + CSP nos headers do REQUEST: assim o Next aplica o nonce
@@ -67,7 +109,7 @@ export async function proxy(req: NextRequest) {
   response.headers.set('X-Content-Type-Options', 'nosniff')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Permissions-Policy', 'camera=(self "https://meet.jit.si"), microphone=(self "https://meet.jit.si"), geolocation=()')
   response.headers.set('Content-Security-Policy', csp)
 
   if (req.nextUrl.pathname.startsWith('/api/')) {

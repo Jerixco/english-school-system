@@ -25,10 +25,7 @@ export class LiveSessionService {
     if (role === 'STUDENT') {
       const student = await prisma.student.findUnique({ where: { userId } })
       if (!student) return []
-      where.OR = [
-        { studentId: student.id },
-        { studentId: null }, // Aulas gerais/abertas para todos os alunos
-      ]
+      where.studentId = student.id
     } else if (role === 'TEACHER') {
       const teacher = await prisma.teacher.findUnique({ where: { userId } })
       if (!teacher) return []

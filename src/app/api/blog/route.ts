@@ -23,8 +23,17 @@ export async function GET(req: NextRequest) {
     const published = searchParams.get('published')
     const tag = searchParams.get('tag')
 
+    // Checa se quem está chamando é admin para permitir visualização de rascunhos
+    const user = await getAuthenticatedUser()
+    const isUserAdmin = user && isAdmin(user)
+
     const where: any = {}
-    if (published !== null) where.published = published === 'true'
+    if (isUserAdmin && published !== null) {
+      where.published = published === 'true'
+    } else if (!isUserAdmin) {
+      // Visitantes e alunos comuns NUNCA veem rascunhos não publicados
+      where.published = true
+    }
     if (tag) where.tags = { has: tag }
 
     const posts = await prisma.blogPost.findMany({

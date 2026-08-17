@@ -12,7 +12,7 @@ import {
   sanitizeUserData,
   blockDemoMutations,
 } from '@/lib/security'
-import { idSchema, updateStudentSchema } from '@/lib/validations'
+import { idSchema, updateStudentSchema, updateStudentSelfSchema } from '@/lib/validations'
 
 /**
  * GET /api/students/[id]
@@ -231,14 +231,34 @@ export async function PATCH(
       )
     }
 
-    // Validar dados
+    // Validar dados: Alunos só podem atualizar dados pessoais (sem alterar plano ou status)
     const body = await req.json()
-    const validatedData = updateStudentSchema.parse(body)
+    const isUserAdmin = isAdmin(user)
+    const validatedData = isUserAdmin 
+      ? updateStudentSchema.parse(body)
+      : updateStudentSelfSchema.parse(body)
+
+    const studentData: any = {}
+    if (isUserAdmin) {
+      const adminData = validatedData as any
+      if (adminData.plan) studentData.plan = adminData.plan
+      if (adminData.status) studentData.status = adminData.status
+      if (adminData.nextPaymentDate) studentData.nextPaymentDate = adminData.nextPaymentDate
+      if (adminData.notes !== undefined) studentData.notes = adminData.notes
+    }
+
+    if (validatedData.name) {
+      studentData.user = {
+        update: {
+          name: validatedData.name,
+        },
+      }
+    }
 
     // Atualizar estudante
     const updatedStudent = await prisma.student.update({
       where: { id: validatedId },
-      data: validatedData,
+      data: studentData,
       include: {
         user: {
           select: {
