@@ -1,14 +1,26 @@
 import nodemailer from 'nodemailer'
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
-  },
-})
+let transporterInstance: nodemailer.Transporter | null = null
+
+function getTransporter() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
+    return null
+  }
+
+  if (!transporterInstance) {
+    transporterInstance = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    })
+  }
+
+  return transporterInstance
+}
 
 export const sendEmail = async (
   to: string,
@@ -16,8 +28,14 @@ export const sendEmail = async (
   html: string
 ) => {
   try {
+    const transporter = getTransporter()
+    if (!transporter) {
+      console.warn(`[EMAIL NOTICE]: SMTP não configurado. Email para ${to} registrado (Subject: "${subject}")`)
+      return { success: true, mocked: true }
+    }
+
     await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+      from: process.env.EMAIL_FROM || 'noreply@englishschool.com',
       to,
       subject,
       html,

@@ -14,6 +14,11 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   KV_REST_API_URL: z.string().optional(),
   KV_REST_API_TOKEN: z.string().optional(),
+  SANDBOX_SIGNING_KEY: z.string().min(32).optional(),
+  TRUSTED_PROXY_COUNT: z.string().optional(),
+  NEXT_PUBLIC_GA_ID: z.string().optional(),
+  NEXT_PUBLIC_GTM_ID: z.string().optional(),
+  GOOGLE_SITE_VERIFICATION: z.string().optional(),
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
 })
 

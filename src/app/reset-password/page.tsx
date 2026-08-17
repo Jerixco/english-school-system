@@ -12,7 +12,6 @@ function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token') || ''
-  const email = searchParams.get('email') || ''
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -40,7 +39,7 @@ function ResetPasswordForm() {
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token, password }),
+        body: JSON.stringify({ token, password }),
       })
 
       const data = await response.json()
@@ -61,7 +60,7 @@ function ResetPasswordForm() {
     }
   }
 
-  if (!token || !email) {
+  if (!token) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
         <Card className="w-full max-w-md">

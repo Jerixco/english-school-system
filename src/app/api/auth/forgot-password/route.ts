@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     })
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const resetUrl = `${appUrl}/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`
+    const resetUrl = `${appUrl}/reset-password?token=${rawToken}`
 
     await sendPasswordResetEmail(email, resetUrl)
 

@@ -2,7 +2,7 @@ const { withSentryConfig } = require('@sentry/nextjs')
 
 const cspHeader = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://assets.calendly.com https://js.stripe.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live;
+  script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://assets.calendly.com https://js.stripe.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live;
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vercel.live https://*.vercel.live;
   img-src 'self' blob: data: https://www.googletagmanager.com https://www.google-analytics.com https://images.unsplash.com https://avatars.githubusercontent.com https://vercel.com https://vercel.live https://*.vercel.live;
   font-src 'self' https://fonts.gstatic.com https://vercel.live https://assets.vercel.com;

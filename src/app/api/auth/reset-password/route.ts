@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const { email, token, password } = await req.json()
 
-    if (!email || !token || !password) {
+    if (!token || !password) {
       return NextResponse.json({ error: 'Dados incompletos' }, { status: 400 })
     }
 
@@ -35,14 +35,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const normalizedEmail = String(email).toLowerCase().trim()
-
     // Compara pelo hash: o link traz o token bruto, o banco guarda só o SHA-256.
     const tokenHash = crypto.createHash('sha256').update(String(token)).digest('hex')
 
     const resetRecord = await prisma.passwordResetToken.findFirst({
       where: {
-        email: normalizedEmail,
         token: tokenHash,
       },
     })
@@ -53,6 +50,8 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       )
     }
+
+    const normalizedEmail = (resetRecord.email || String(email || '')).toLowerCase().trim()
 
     if (resetRecord.expiresAt < new Date()) {
       await prisma.passwordResetToken.deleteMany({

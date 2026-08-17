@@ -118,9 +118,12 @@ export class SandboxPaymentAdapter implements PaymentGateway {
   name = 'sandbox' as const
 
   private static getSecret(): string {
-    const secret = process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === 'test' ? 'sandbox-test-secret-key-32chars' : '')
+    const secret = 
+      process.env.SANDBOX_SIGNING_KEY || 
+      process.env.NEXTAUTH_SECRET || 
+      (process.env.NODE_ENV === 'test' ? 'sandbox-test-secret-key-32chars' : '')
     if (!secret) {
-      throw new Error('NEXTAUTH_SECRET não configurado para assinatura do sandbox de pagamentos.')
+      throw new Error('SANDBOX_SIGNING_KEY ou NEXTAUTH_SECRET não configurado para assinatura do sandbox de pagamentos.')
     }
     return secret
   }
