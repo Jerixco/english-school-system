@@ -7,10 +7,9 @@ import {
 } from '@/lib/whatsapp'
 
 export interface WhatsAppSendParams {
-  type: 'welcome' | 'consultation' | 'payment' | 'reminder' | 'custom'
+  type: 'welcome' | 'consultation' | 'payment' | 'reminder'
   to: string
-  data?: Record<string, any>
-  customMessage?: string
+  data?: Record<string, string | number>
 }
 
 export class WhatsAppService {
@@ -18,7 +17,7 @@ export class WhatsAppService {
    * Envia uma mensagem via WhatsApp com base no tipo especificado.
    */
   async sendMessage(params: WhatsAppSendParams) {
-    const { type, to, data, customMessage } = params
+    const { type, to, data } = params
 
     switch (type) {
       case 'welcome':
@@ -41,16 +40,10 @@ export class WhatsAppService {
       case 'reminder':
         return sendClassReminderWhatsApp(
           to,
-          data?.name || '',
-          data?.date || '',
-          data?.teacher || ''
+          String(data?.name || ''),
+          String(data?.date || ''),
+          String(data?.teacher || '')
         )
-
-      case 'custom':
-        if (!customMessage) {
-          throw new Error('CUSTOM_MESSAGE_REQUIRED')
-        }
-        return sendWhatsAppMessage(to, customMessage)
 
       default:
         throw new Error('INVALID_MESSAGE_TYPE')
