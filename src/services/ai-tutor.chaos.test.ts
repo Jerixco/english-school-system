@@ -7,7 +7,7 @@ describe('AI Tutor Chaos & Resilience Testing (Injeção de Falhas e Entropia)',
 
     let callCount = 0
     // Mock interno da chamada do Gemini
-    vi.spyOn(service as any, 'getReply').mockImplementation(async (message: string) => {
+    vi.spyOn(service, 'getReply').mockImplementation(async () => {
       callCount++
       // Simula: Modelo 1 falhou com Quota 429, Modelo 2 respondeu com sucesso
       return {
@@ -24,7 +24,7 @@ describe('AI Tutor Chaos & Resilience Testing (Injeção de Falhas e Entropia)',
   it('suporta diferentes níveis de entropia/temperatura sem quebrar o contrato da API', async () => {
     const service = new AiTutorService('fake-test-api-key')
 
-    vi.spyOn(service as any, 'getReply').mockImplementation(async (msg, hist, options) => {
+    vi.spyOn(service, 'getReply').mockImplementation(async (_msg, _hist, options) => {
       const temp = options?.temperature ?? 0.7
       return {
         text: `Response with temperature ${temp}`,

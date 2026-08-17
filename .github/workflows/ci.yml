@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint and tests
+    runs-on: ubuntu-latest
+    env:
+      NEXTAUTH_SECRET: test-secret-key-must-be-32-chars-min
+      ENCRYPTION_KEY: test-encryption-key-32-characters
+      DATABASE_URL: postgresql://user:pass@localhost:5432/english_school?sslmode=disable
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm test
+      - run: npm run lint

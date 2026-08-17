@@ -238,10 +238,27 @@ export async function PATCH(
       ? updateStudentSchema.parse(body)
       : updateStudentSelfSchema.parse(body)
 
+    const studentData: any = {}
+    if (isUserAdmin) {
+      const adminData = validatedData as any
+      if (adminData.plan) studentData.plan = adminData.plan
+      if (adminData.status) studentData.status = adminData.status
+      if (adminData.nextPaymentDate) studentData.nextPaymentDate = adminData.nextPaymentDate
+      if (adminData.notes !== undefined) studentData.notes = adminData.notes
+    }
+
+    if (validatedData.name) {
+      studentData.user = {
+        update: {
+          name: validatedData.name,
+        },
+      }
+    }
+
     // Atualizar estudante
     const updatedStudent = await prisma.student.update({
       where: { id: validatedId },
-      data: validatedData,
+      data: studentData,
       include: {
         user: {
           select: {

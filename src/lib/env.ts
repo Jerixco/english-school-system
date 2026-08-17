@@ -6,7 +6,7 @@ import { z } from 'zod'
  */
 const envSchema = z.object({
   DATABASE_URL: z.string().min(1, 'DATABASE_URL é obrigatória'),
-  NEXTAUTH_SECRET: z.string().min(16, 'NEXTAUTH_SECRET deve ter no mínimo 16 caracteres'),
+  NEXTAUTH_SECRET: z.string().min(32, 'NEXTAUTH_SECRET deve ter no mínimo 32 caracteres'),
   NEXTAUTH_URL: z.string().url().optional(),
   ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY deve ter 32 caracteres para AES-256-GCM'),
   GEMINI_API_KEY: z.string().optional(),
