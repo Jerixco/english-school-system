@@ -174,7 +174,7 @@ export default function ProfessorAulasPage() {
     return (
       <DashboardShell title="Gestão de Aulas & Transmissões" subtitle="Carregando...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(25,85%,48%)] mx-auto mb-4"></div>
           <p className="text-gray-500">Conectando ao sistema de salas...</p>
         </div>
       </DashboardShell>
@@ -184,7 +184,7 @@ export default function ProfessorAulasPage() {
   if (error || !data) {
     return (
       <DashboardShell title="Gestão de Aulas & Transmissões">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+        <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md">
           {error || 'Não foi possível carregar as informações'}
         </div>
       </DashboardShell>
@@ -202,14 +202,14 @@ export default function ProfessorAulasPage() {
           onClick={() => setActiveTab('live')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'live'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
+              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Radio className="h-4 w-4" />
           Aulas Ao Vivo
           {data.liveSessions.some((s) => s.status === 'LIVE') && (
-            <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
+            <span className="bg-[hsl(0,70%,50%)]/100 text-white text-xs px-2 py-0.5 rounded-full animate-pulse">
               AO VIVO
             </span>
           )}
@@ -219,13 +219,13 @@ export default function ProfessorAulasPage() {
           onClick={() => setActiveTab('recordings')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'recordings'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
+              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Video className="h-4 w-4" />
           Gravações VOD
-          <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-[hsl(25,85%,48%)]/10 text-[hsl(25,85%,48%)] text-xs px-2 py-0.5 rounded-full font-bold">
             {data.recordings.length}
           </span>
         </button>
@@ -234,13 +234,13 @@ export default function ProfessorAulasPage() {
           onClick={() => setActiveTab('schedule')}
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'schedule'
-              ? 'bg-indigo-600 text-white shadow-sm'
-              : 'text-gray-600 hover:bg-gray-100'
+              ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
+              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Calendar className="h-4 w-4" />
           Grade de Horários
-          <span className="bg-violet-100 text-violet-800 text-xs px-2 py-0.5 rounded-full font-bold">
+          <span className="bg-[hsl(25,85%,48%)]/10 text-[hsl(25,85%,48%)] text-xs px-2 py-0.5 rounded-full font-bold">
             {data.upcomingClasses.length}
           </span>
         </button>
@@ -253,16 +253,16 @@ export default function ProfessorAulasPage() {
         <div className="space-y-6">
           {/* Iframe Jitsi WebRTC Incorporado se houver transmissão ativa */}
           {activeBroadcast && (
-            <Card className="border-2 border-indigo-500 shadow-xl overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-indigo-700 via-indigo-800 to-violet-900 text-white flex flex-row items-center justify-between">
+            <Card className="border-2 border-[hsl(25,85%,48%)] shadow-xl overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-[hsl(220,25%,16%)] to-[hsl(220,30%,20%)] text-white flex flex-row items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="bg-red-500 text-white text-xs font-bold uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
+                    <span className="bg-[hsl(0,70%,50%)]/100 text-white text-xs font-bold uppercase px-2.5 py-0.5 rounded-full tracking-wider animate-pulse">
                       🔴 Transmitindo Ao Vivo
                     </span>
                     <CardTitle className="text-lg text-white">{activeBroadcast.title}</CardTitle>
                   </div>
-                  <CardDescription className="text-indigo-200 text-xs">
+                  <CardDescription className="text-[hsl(20,5%,75%)] text-xs">
                     Sala: {activeBroadcast.roomName} · Transmissão WebRTC criptografada de alta definição
                   </CardDescription>
                 </div>
@@ -289,10 +289,10 @@ export default function ProfessorAulasPage() {
           )}
 
           {/* Card para Criar Nova Sala Instantânea */}
-          <Card className="bg-gradient-to-r from-indigo-50 to-violet-50 border-indigo-200">
+          <Card className="bg-gradient-to-r from-[hsl(25,85%,48%)]/5 to-[hsl(35,10%,94%)] border-[hsl(25,85%,48%)]/30">
             <CardHeader>
               <CardTitle className="text-base text-indigo-950 flex items-center gap-2">
-                <Radio className="h-5 w-5 text-indigo-600" />
+                <Radio className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Criar Nova Sala de Aula Ao Vivo
               </CardTitle>
               <CardDescription>
@@ -308,7 +308,7 @@ export default function ProfessorAulasPage() {
                   className="bg-white text-sm"
                   required
                 />
-                <Button type="submit" disabled={isCreatingLive} className="bg-indigo-600 hover:bg-indigo-700 text-white whitespace-nowrap gap-2 shadow-sm">
+                <Button type="submit" disabled={isCreatingLive} className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)] text-white whitespace-nowrap gap-2 shadow-sm">
                   {isCreatingLive ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -329,7 +329,7 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-indigo-600" />
+                <Calendar className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Minhas Sessões Ao Vivo
               </CardTitle>
             </CardHeader>
@@ -348,8 +348,8 @@ export default function ProfessorAulasPage() {
                     return (
                       <div
                         key={session.id}
-                        className={`p-4 bg-gray-50 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3 ${
-                          isLive ? 'border-2 border-red-500 bg-red-50/40' : 'border border-gray-200'
+                        className={`p-4 bg-[hsl(35,10%,94%)] rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3 ${
+                          isLive ? 'border-2 border-red-500 bg-[hsl(0,70%,50%)]/10' : 'border border-gray-200'
                         }`}
                       >
                         <div>
@@ -359,8 +359,8 @@ export default function ProfessorAulasPage() {
                                 isLive
                                   ? 'bg-red-600 text-white animate-pulse'
                                   : session.status === 'SCHEDULED'
-                                  ? 'bg-indigo-600 text-white'
-                                  : 'bg-gray-500 text-white'
+                                  ? 'bg-[hsl(25,85%,48%)] text-white'
+                                  : 'bg-[hsl(35,10%,60%)] text-white'
                               }
                             >
                               {isLive ? 'Ao Vivo Agora' : session.status === 'SCHEDULED' ? 'Agendada' : 'Finalizada'}
@@ -383,7 +383,7 @@ export default function ProfessorAulasPage() {
                           <Button
                             size="sm"
                             onClick={() => setActiveBroadcast(session)}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white gap-1.5"
+                            className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white gap-1.5"
                           >
                             <PlayCircle className="h-4 w-4" />
                             Entrar na Sala
@@ -393,7 +393,7 @@ export default function ProfessorAulasPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleUpdateStatus(session.id, 'start')}
-                              className="text-green-700 border-green-300 hover:bg-green-50"
+                              className="text-[hsl(145,60%,45%)] border-green-300 hover:bg-green-50"
                             >
                               Iniciar Ao Vivo
                             </Button>
@@ -403,7 +403,7 @@ export default function ProfessorAulasPage() {
                               size="sm"
                               variant="outline"
                               onClick={() => handleUpdateStatus(session.id, 'end')}
-                              className="text-red-700 border-red-300 hover:bg-red-50"
+                              className="text-red-700 border-red-300 hover:bg-[hsl(0,70%,50%)]/10"
                             >
                               Finalizar
                             </Button>
@@ -424,10 +424,10 @@ export default function ProfessorAulasPage() {
       {/* ========================================================================= */}
       {activeTab === 'recordings' && (
         <div className="space-y-6">
-          <Card className="bg-gray-50 border-gray-200">
+          <Card className="bg-[hsl(35,10%,94%)] border-gray-200">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Film className="h-5 w-5 text-indigo-600" />
+                <Film className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Cadastrar Nova Aula Gravada
               </CardTitle>
               <CardDescription>
@@ -458,7 +458,7 @@ export default function ProfessorAulasPage() {
                   />
                 </div>
                 <div className="space-y-1 flex items-end">
-                  <Button type="submit" disabled={isCreatingRec} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white gap-2 shadow-sm">
+                  <Button type="submit" disabled={isCreatingRec} className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white gap-2 shadow-sm">
                     {isCreatingRec ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -479,7 +479,7 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-5 w-5 text-indigo-600" />
+                <Video className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Aulas Gravadas Ativas
               </CardTitle>
             </CardHeader>
@@ -494,7 +494,7 @@ export default function ProfessorAulasPage() {
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {data.recordings.map((rec) => (
-                    <div key={rec.id} className="p-4 bg-gray-50 rounded-lg border flex justify-between items-center hover:bg-indigo-50/30 transition-colors">
+                    <div key={rec.id} className="p-4 bg-[hsl(35,10%,94%)] rounded-lg border flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors">
                       <div>
                         <h4 className="font-bold text-gray-900">{rec.title}</h4>
                         <small className="text-gray-500">
@@ -522,7 +522,7 @@ export default function ProfessorAulasPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-indigo-600" />
+                <Calendar className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Aulas Agendadas com Alunos
               </CardTitle>
               <CardDescription>Horários e links de atendimento individual ou em grupo</CardDescription>
@@ -538,7 +538,7 @@ export default function ProfessorAulasPage() {
               ) : (
                 <div className="space-y-3">
                   {data.upcomingClasses.map((cls) => (
-                    <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-indigo-50/50 transition-colors border border-gray-100">
+                    <div key={cls.id} className="p-3.5 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors border border-[hsl(35,10%,85%)]">
                       <div>
                         <div className="font-semibold text-gray-900 capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
@@ -554,7 +554,7 @@ export default function ProfessorAulasPage() {
                         </small>
                       </div>
                       {cls.meetLink && (
-                        <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button asChild size="sm" className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white">
                           <a href={cls.meetLink} target="_blank" rel="noopener noreferrer">
                             Entrar na Sala
                           </a>

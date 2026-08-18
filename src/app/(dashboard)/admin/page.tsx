@@ -122,11 +122,11 @@ interface AdminData {
 const LEAD_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   NEW: { label: 'Novo', color: 'bg-blue-600' },
   CONTACTED: { label: 'Contatado', color: 'bg-yellow-600' },
-  CONSULTATION_SCHEDULED: { label: 'Consulta Agendada', color: 'bg-purple-600' },
-  CONSULTATION_COMPLETED: { label: 'Consulta Realizada', color: 'bg-indigo-600' },
+  CONSULTATION_SCHEDULED: { label: 'Consulta Agendada', color: 'bg-[hsl(25,85%,48%)]' },
+  CONSULTATION_COMPLETED: { label: 'Consulta Realizada', color: 'bg-[hsl(25,85%,48%)]' },
   PROPOSAL_SENT: { label: 'Proposta Enviada', color: 'bg-amber-600' },
   CONVERTED: { label: 'Convertido em Aluno', color: 'bg-green-600' },
-  LOST: { label: 'Perdido', color: 'bg-gray-500' },
+  LOST: { label: 'Perdido', color: 'text-[hsl(20,5%,45%)]' },
 }
 
 export default function AdminDashboard() {
@@ -214,7 +214,7 @@ export default function AdminDashboard() {
     return (
       <DashboardShell title="Painel Administrativo" subtitle="Carregando métricas e dados...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-700 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(220,25%,20%)] mx-auto mb-4"></div>
           <p className="text-gray-500">Conectando aos serviços da escola...</p>
         </div>
       </DashboardShell>
@@ -224,7 +224,7 @@ export default function AdminDashboard() {
   if (error || !data) {
     return (
       <DashboardShell title="Painel Administrativo">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+        <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md">
           {error || 'Não foi possível carregar as informações'}
         </div>
       </DashboardShell>
@@ -260,7 +260,7 @@ export default function AdminDashboard() {
                     </h3>
                     <small className="text-gray-500">de {data.metrics.totalStudents} total</small>
                   </div>
-                  <div className="bg-slate-100 p-3 rounded-full text-slate-800">
+                  <div className="bg-slate-100 p-3 rounded-full text-[hsl(20,10%,15%)]">
                     <Users className="h-6 w-6" />
                   </div>
                 </div>
@@ -314,11 +314,11 @@ export default function AdminDashboard() {
                     <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                       {data.metrics.activeLiveCount} <span className="text-sm font-normal text-gray-500">ao vivo</span>
                     </h3>
-                    <small className="text-purple-600 font-semibold">
+                    <small className="text-[hsl(25,85%,48%)] font-semibold">
                       {data.metrics.activeRecordingsCount} gravações salvas
                     </small>
                   </div>
-                  <div className="bg-red-100 p-3 rounded-full text-red-600">
+                  <div className="bg-red-100 p-3 rounded-full text-[hsl(0,70%,50%)]">
                     <Radio className="h-6 w-6" />
                   </div>
                 </div>
@@ -350,7 +350,7 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {data.recentPayments.map((p) => (
-                        <div key={p.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-gray-100 transition-colors">
+                        <div key={p.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center hover:bg-[hsl(35,10%,90%)] transition-colors">
                           <div>
                             <div className="font-semibold text-gray-900">{p.studentName}</div>
                             <small className="text-gray-500">{p.studentEmail}</small>
@@ -377,7 +377,7 @@ export default function AdminDashboard() {
               <Card className="h-full">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <UserCheck className="h-5 w-5 text-slate-800" />
+                    <UserCheck className="h-5 w-5 text-[hsl(20,10%,15%)]" />
                     Últimos Alunos Cadastrados
                   </CardTitle>
                   <CardDescription>Matrículas ativas na plataforma</CardDescription>
@@ -393,7 +393,7 @@ export default function AdminDashboard() {
                   ) : (
                     <div className="space-y-3">
                       {data.students.slice(0, 4).map((s) => (
-                        <div key={s.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                        <div key={s.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center">
                           <div>
                             <div className="font-semibold text-gray-900">{s.name}</div>
                             <small className="text-gray-500">Plano {s.plan}</small>
@@ -440,7 +440,7 @@ export default function AdminDashboard() {
                   data.leads
                     .filter((l) => l.status === 'NEW')
                     .map((lead) => (
-                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div key={lead.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg border text-xs space-y-2">
                         <div className="font-bold text-gray-900">{lead.name}</div>
                         <div className="text-gray-600 flex items-center gap-1 truncate">
                           <Mail className="h-3 w-3" /> {lead.email}
@@ -478,13 +478,13 @@ export default function AdminDashboard() {
                   data.leads
                     .filter((l) => l.status === 'CONTACTED')
                     .map((lead) => (
-                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div key={lead.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg border text-xs space-y-2">
                         <div className="font-bold text-gray-900">{lead.name}</div>
                         <div className="text-gray-600 truncate">{lead.email}</div>
                         <Button
                           size="sm"
                           onClick={() => handleUpdateLeadStatus(lead.id, 'CONSULTATION_SCHEDULED')}
-                          className="w-full bg-indigo-600 hover:bg-indigo-700 text-white text-xs h-7"
+                          className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)] text-white text-xs h-7"
                         >
                           Agendar Consulta →
                         </Button>
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex justify-between">
                   <span>Consulta Agendada</span>
-                  <Badge className="bg-indigo-600">
+                  <Badge className="bg-[hsl(25,85%,48%)]">
                     {data.metrics.leadsByStatus['CONSULTATION_SCHEDULED'] || 0}
                   </Badge>
                 </CardTitle>
@@ -511,7 +511,7 @@ export default function AdminDashboard() {
                   data.leads
                     .filter((l) => l.status === 'CONSULTATION_SCHEDULED')
                     .map((lead) => (
-                      <div key={lead.id} className="p-3 bg-gray-50 rounded-lg border text-xs space-y-2">
+                      <div key={lead.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg border text-xs space-y-2">
                         <div className="font-bold text-gray-900">{lead.name}</div>
                         <div className="text-gray-600 truncate">{lead.email}</div>
                         <Button
@@ -543,9 +543,9 @@ export default function AdminDashboard() {
                     .filter((l) => l.status === 'CONVERTED')
                     .map((lead) => (
                       <div key={lead.id} className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-xs space-y-1">
-                        <div className="font-bold text-emerald-900">{lead.name}</div>
+                        <div className="font-bold text-[hsl(145,60%,45%)]">{lead.name}</div>
                         <div className="text-emerald-700 truncate">{lead.email}</div>
-                        <div className="text-emerald-600 font-semibold flex items-center gap-1">
+                        <div className="text-[hsl(145,60%,45%)] font-semibold flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5" /> Matrícula Realizada
                         </div>
                       </div>
@@ -566,7 +566,7 @@ export default function AdminDashboard() {
             <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <UserCheck className="h-5 w-5 text-slate-800" />
+                  <UserCheck className="h-5 w-5 text-[hsl(20,10%,15%)]" />
                   Alunos Matriculados
                 </CardTitle>
                 <CardDescription>
@@ -598,7 +598,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="border rounded-lg overflow-hidden">
                   <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-100 text-xs text-gray-600 uppercase">
+                    <thead className="bg-[hsl(35,10%,90%)] text-xs text-gray-600 uppercase">
                       <tr>
                         <th className="p-3">Nome / E-mail</th>
                         <th className="p-3">Plano</th>
@@ -609,7 +609,7 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {filteredStudents.map((s) => (
-                        <tr key={s.id} className="hover:bg-gray-50 transition-colors">
+                        <tr key={s.id} className="hover:bg-[hsl(35,10%,94%)] transition-colors">
                           <td className="p-3">
                             <div className="font-semibold text-gray-900">{s.name}</div>
                             <small className="text-gray-500">{s.email}</small>
@@ -650,7 +650,7 @@ export default function AdminDashboard() {
       {activeTab === 'classes' && (
         <div className="space-y-6">
           {/* Card para Criar Nova Transmissão Instantânea */}
-          <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-slate-200">
+          <Card className="bg-gradient-to-r from-slate-50 to-blue-50 border-[hsl(35,10%,85%)]">
             <CardHeader>
               <CardTitle className="text-base text-slate-950 flex items-center gap-2">
                 <Radio className="h-5 w-5 text-blue-600" />
@@ -669,7 +669,7 @@ export default function AdminDashboard() {
                   className="bg-white"
                   required
                 />
-                <Button type="submit" disabled={isCreatingLive} className="bg-slate-900 hover:bg-slate-800 text-white whitespace-nowrap gap-2">
+                <Button type="submit" disabled={isCreatingLive} className="bg-[hsl(220,25%,12%)] hover:bg-[hsl(220,25%,16%)] text-white whitespace-nowrap gap-2">
                   {isCreatingLive ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -705,7 +705,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="space-y-3">
                   {data.liveSessions.map((session) => (
-                    <div key={session.id} className="p-4 bg-gray-50 rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                    <div key={session.id} className="p-4 bg-[hsl(35,10%,94%)] rounded-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                       <div>
                         <div className="flex items-center gap-2">
                           <Badge className={session.status === 'LIVE' ? 'bg-red-600 animate-pulse text-white' : 'bg-blue-600 text-white'}>
@@ -718,7 +718,7 @@ export default function AdminDashboard() {
                         </small>
                       </div>
                       {session.meetLink && (
-                        <Button asChild size="sm" className="bg-slate-900 hover:bg-slate-800 text-white">
+                        <Button asChild size="sm" className="bg-[hsl(220,25%,12%)] hover:bg-[hsl(220,25%,16%)] text-white">
                           <a href={session.meetLink} target="_blank" rel="noopener noreferrer">
                             <PlayCircle className="h-4 w-4 mr-2" />
                             Acessar Sala
@@ -736,7 +736,7 @@ export default function AdminDashboard() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Video className="h-5 w-5 text-indigo-600" />
+                <Video className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Gravações Salvas com Tempo de Retenção (VOD)
               </CardTitle>
             </CardHeader>
@@ -751,7 +751,7 @@ export default function AdminDashboard() {
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
                   {data.recordings.map((rec) => (
-                    <div key={rec.id} className="p-3 bg-gray-50 rounded-lg border flex justify-between items-center">
+                    <div key={rec.id} className="p-3 bg-[hsl(35,10%,94%)] rounded-lg border flex justify-between items-center">
                       <div>
                         <div className="font-semibold text-gray-900">{rec.title}</div>
                         <small className="text-gray-500">
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
         <div className="space-y-6">
           {/* Top 4 KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border-l-4 border-l-emerald-600 shadow-sm">
+            <Card className="border-l-4 border-l-[hsl(145,60%,45%)] shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -786,16 +786,16 @@ export default function AdminDashboard() {
                     <h3 className="text-2xl font-black text-gray-900 mt-1">
                       {data.metrics.totalRevenue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </h3>
-                    <small className="text-emerald-600 font-semibold">{data.metrics.completedTransactions || 0} faturas pagas</small>
+                    <small className="text-[hsl(145,60%,45%)] font-semibold">{data.metrics.completedTransactions || 0} faturas pagas</small>
                   </div>
-                  <div className="bg-emerald-100 p-3 rounded-full text-emerald-700">
+                  <div className="bg-[hsl(145,60%,45%)]/10 p-3 rounded-full text-emerald-700">
                     <DollarSign className="h-6 w-6" />
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-amber-500 shadow-sm">
+            <Card className="border-l-4 border-l-[hsl(35,90%,45%)] shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -803,7 +803,7 @@ export default function AdminDashboard() {
                     <h3 className="text-2xl font-black text-gray-900 mt-1">
                       {(data.metrics.pendingRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </h3>
-                    <small className="text-amber-600 font-semibold">{data.metrics.pendingTransactions || 0} faturas aguardando</small>
+                    <small className="text-[hsl(35,90%,45%)] font-semibold">{data.metrics.pendingTransactions || 0} faturas aguardando</small>
                   </div>
                   <div className="bg-amber-100 p-3 rounded-full text-amber-700">
                     <Clock className="h-6 w-6" />
@@ -812,7 +812,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-rose-600 shadow-sm">
+            <Card className="border-l-4 border-l-[hsl(0,70%,50%)] shadow-sm">
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start">
                   <div>
@@ -820,9 +820,9 @@ export default function AdminDashboard() {
                     <h3 className="text-2xl font-black text-gray-900 mt-1">
                       {(data.metrics.failedRevenue || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </h3>
-                    <small className="text-rose-600 font-semibold">{data.metrics.failedTransactions || 0} faturas pendentes</small>
+                    <small className="text-[hsl(0,70%,50%)] font-semibold">{data.metrics.failedTransactions || 0} faturas pendentes</small>
                   </div>
-                  <div className="bg-rose-100 p-3 rounded-full text-rose-700">
+                  <div className="bg-[hsl(0,70%,50%)]/10 p-3 rounded-full text-rose-700">
                     <AlertTriangle className="h-6 w-6" />
                   </div>
                 </div>
@@ -839,7 +839,7 @@ export default function AdminDashboard() {
                     </h3>
                     <small className="text-slate-600 font-semibold">Total de registros</small>
                   </div>
-                  <div className="bg-slate-100 p-3 rounded-full text-slate-800">
+                  <div className="bg-slate-100 p-3 rounded-full text-[hsl(20,10%,15%)]">
                     <Receipt className="h-6 w-6" />
                   </div>
                 </div>
@@ -849,11 +849,11 @@ export default function AdminDashboard() {
 
           {/* Filtros e Busca */}
           <Card className="shadow-sm">
-            <CardHeader className="border-b border-gray-100 pb-4">
+            <CardHeader className="border-b border-[hsl(35,10%,85%)] pb-4">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Receipt className="h-5 w-5 text-slate-900" />
+                    <Receipt className="h-5 w-5 text-[hsl(20,10%,10%)]" />
                     Livro-Razão Financeiro Global
                   </CardTitle>
                   <CardDescription>
@@ -873,7 +873,7 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg text-xs font-semibold">
+                  <div className="flex items-center gap-1 bg-[hsl(35,10%,90%)] p-1 rounded-lg text-xs font-semibold">
                     <button
                       onClick={() => setFinancialStatusFilter('ALL')}
                       className={`px-3 py-1.5 rounded-md transition-colors ${
@@ -945,7 +945,7 @@ export default function AdminDashboard() {
                 return (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-gray-700">
-                      <thead className="bg-gray-50/75 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                      <thead className="bg-[hsl(35,10%,94%)]/75 border-b border-[hsl(35,10%,85%)] text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         <tr>
                           <th className="px-6 py-3.5">ID / Transação</th>
                           <th className="px-6 py-3.5">Aluno & Contato</th>
@@ -958,7 +958,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="divide-y divide-gray-100">
                         {payments.map((p) => (
-                          <tr key={p.id} className="hover:bg-gray-50/50 transition-colors">
+                          <tr key={p.id} className="hover:bg-[hsl(35,10%,94%)]/50 transition-colors">
                             <td className="px-6 py-4 font-mono text-xs text-gray-500">
                               <span className="font-semibold text-gray-900 block font-sans text-sm">
                                 {p.stripePaymentId ? 'Stripe Gateway' : 'Fatura Direta'}

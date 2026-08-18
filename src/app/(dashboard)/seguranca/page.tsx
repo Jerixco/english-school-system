@@ -114,7 +114,7 @@ export default function SegurancaPage() {
   return (
     <DashboardShell title="Segurança" subtitle="Proteja sua conta com autenticação em duas etapas">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md mb-4 flex items-center gap-2">
+        <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md mb-4 flex items-center gap-2">
           <AlertCircle className="h-4 w-4" />
           {error}
         </div>
@@ -130,7 +130,7 @@ export default function SegurancaPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3 mb-4">
-                <Shield className="h-8 w-8 text-purple-600" />
+                <Shield className="h-8 w-8 text-[hsl(25,85%,48%)]" />
                 <div className="flex-1">
                   <h5 className="font-bold mb-1">Autenticação em Duas Etapas (2FA)</h5>
                   <small className="text-gray-600">
@@ -167,7 +167,7 @@ export default function SegurancaPage() {
                     </div>
                   )}
                   {secret && (
-                    <div className="bg-gray-100 border border-gray-200 rounded-md p-3 mb-4 text-center">
+                    <div className="bg-[hsl(35,10%,90%)] border border-gray-200 rounded-md p-3 mb-4 text-center">
                       <p className="text-sm text-gray-600 mb-1">Chave manual:</p>
                       <p className="font-mono font-bold">{secret}</p>
                     </div>
@@ -274,19 +274,19 @@ export default function SegurancaPage() {
               </h6>
               <ul className="text-sm text-gray-600 space-y-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-purple-600">•</span>
+                  <span className="text-[hsl(25,85%,48%)]">•</span>
                   <span>Use senhas fortes e únicas</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-purple-600">•</span>
+                  <span className="text-[hsl(25,85%,48%)]">•</span>
                   <span>Ative a autenticação em duas etapas</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-purple-600">•</span>
+                  <span className="text-[hsl(25,85%,48%)]">•</span>
                   <span>Nunca compartilhe seus códigos 2FA</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-purple-600">•</span>
+                  <span className="text-[hsl(25,85%,48%)]">•</span>
                   <span>Encerre a sessão em dispositivos compartilhados</span>
                 </li>
               </ul>

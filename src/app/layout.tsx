@@ -1,11 +1,23 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Outfit, Inter } from 'next/font/google'
 import { headers } from 'next/headers'
 import './globals.css'
 import Providers from '@/components/providers'
 import CookieConsentBanner from '@/components/CookieConsentBanner'
 
-const inter = Inter({ subsets: ['latin'] })
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+  display: 'swap',
+  variable: '--font-outfit',
+})
+
+const inter = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-inter',
+})
 
 export const metadata: Metadata = {
   title: 'English School - Aprenda Inglês com Professores Nativos',
@@ -64,12 +76,10 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Nonce definido pelo proxy (produção); permite os scripts inline de analytics
-  // sob CSP sem 'unsafe-inline'. Em dev é undefined (CSP permissivo).
   const nonce = (await headers()).get('x-nonce') ?? undefined
 
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" className={`${outfit.variable} ${inter.variable}`}>
       <head>
         {process.env.NEXT_PUBLIC_GA_ID && (
           <>
@@ -106,7 +116,10 @@ export default async function RootLayout({
           />
         )}
       </head>
-      <body className={inter.className}>
+      <body className="font-inter antialiased">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:bg-amber-600 focus:text-white focus:px-4 focus:py-2 focus:rounded-md">
+          Pular para conteúdo
+        </a>
         <Providers>
           {children}
           <CookieConsentBanner />

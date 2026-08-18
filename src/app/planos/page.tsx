@@ -1,5 +1,4 @@
 import PlanCard from '@/components/PlanCard'
-import { ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
@@ -48,50 +47,53 @@ const PLANS = {
 
 export default function PlanosPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[hsl(38,20%,97%)] grain">
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+      <header className="border-b border-[hsl(35,10%,85%)] bg-white/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between max-w-7xl">
+          <Link href="/" className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)] flex items-center gap-2">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
             English School
           </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm text-gray-600 hover:text-indigo-600 transition">Home</Link>
-            <Link href="/sobre" className="text-sm text-gray-600 hover:text-indigo-600 transition">Sobre</Link>
-            <Link href="/metodologia" className="text-sm text-gray-600 hover:text-indigo-600 transition">Metodologia</Link>
-            <Link href="/professores" className="text-sm text-gray-600 hover:text-indigo-600 transition">Professores</Link>
-            <Link href="/contato" className="text-sm text-gray-600 hover:text-indigo-600 transition">Contato</Link>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link href="/" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Home</Link>
+            <Link href="/sobre" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Sobre</Link>
+            <Link href="/metodologia" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Metodologia</Link>
+            <Link href="/professores" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Professores</Link>
+            <Link href="/contato" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Contato</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/register">
-              <Button variant="ghost">Cadastrar</Button>
+              <Button variant="ghost" className="text-[hsl(20,10%,15%)]">Cadastrar</Button>
             </Link>
             <Link href="/login">
-              <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Entrar</Button>
+              <Button className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold">Entrar</Button>
             </Link>
           </div>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="py-20 px-4 bg-gradient-to-br from-indigo-50/50 via-white to-violet-50/50">
+      <section className="py-16 md:py-20 px-4 md:px-6">
         <div className="container mx-auto max-w-4xl text-center">
-          <span className="bg-indigo-100 text-indigo-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider mb-4 inline-block">
-            Planos Flexíveis Sem Fidelidade
-          </span>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-gray-900 mb-6">
+          <div className="inline-flex items-center gap-1.5 bg-[hsl(25,85%,48%)]/10 text-[hsl(25,85%,48%)] text-xs font-semibold px-3 py-1.5 rounded-sm uppercase tracking-wider mb-6">
+            Planos flexíveis sem fidelidade
+          </div>
+          <h1 className="text-4xl md:text-5xl font-outfit font-black tracking-tight text-[hsl(20,10%,10%)] mb-6">
             Invista no seu inglês com o plano ideal
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-[hsl(20,5%,45%)] max-w-2xl mx-auto leading-relaxed">
             Aulas ao vivo com professores dedicados, materiais aplicados e simulações com o Tutor Alex.
           </p>
         </div>
       </section>
 
       {/* Pricing Grid */}
-      <section className="py-16 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid md:grid-cols-3 gap-8 items-stretch">
+      <section className="py-16 px-4 md:px-6">
+        <div className="container mx-auto max-w-7xl">
+          <div className="grid md:grid-cols-3 gap-6 items-start">
             {Object.entries(PLANS).map(([key, plan]) => (
               <PlanCard
                 key={key}
@@ -108,52 +110,38 @@ export default function PlanosPage() {
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-4 bg-gray-50/80 border-t border-gray-100">
+      <section className="py-20 px-4 md:px-6 bg-[hsl(35,10%,94%)]">
         <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Perguntas Frequentes</h2>
+          <h2 className="text-3xl font-outfit font-bold text-center text-[hsl(20,10%,10%)] mb-12">
+            Perguntas frequentes
+          </h2>
           <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">Como funciona o pagamento?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm">
-                  Aceitamos cartões de crédito e PIX com renovação mensal simplificada e proteção criptográfica de ponta a ponta. Você recebe comprovantes e faturas no seu portal do aluno.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">Existe taxa de cancelamento ou fidelidade?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm">
-                  Não! Todos os nossos planos são mensais e sem contrato de fidelidade. Você pode pausar ou cancelar a qualquer momento sem burocracia.
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg font-semibold text-gray-900">Como acesso as aulas e gravações?</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 text-sm">
-                  Assim que sua matrícula é confirmada, seu portal é liberado imediatamente com link direto para as salas ao vivo WebRTC, biblioteca de gravações VOD e o chat do Tutor Alex.
-                </p>
-              </CardContent>
-            </Card>
+            {[
+              { q: 'Como funciona o pagamento?', a: 'Aceitamos cartões de crédito e PIX com renovação mensal simplificada e proteção criptográfica de ponta a ponta. Você recebe comprovantes e faturas no seu portal do aluno.' },
+              { q: 'Existe taxa de cancelamento ou fidelidade?', a: 'Não. Todos os nossos planos são mensais e sem contrato de fidelidade. Você pode pausar ou cancelar a qualquer momento sem burocracia.' },
+              { q: 'Como acesso as aulas e gravações?', a: 'Assim que sua matrícula é confirmada, seu portal é liberado imediatamente com link direto para as salas ao vivo WebRTC, biblioteca de gravações VOD e o chat do Tutor Alex.' },
+            ].map(({ q, a }) => (
+              <Card key={q} className="bg-white">
+                <CardHeader>
+                  <CardTitle className="text-base font-outfit font-semibold text-[hsl(20,10%,10%)]">{q}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-[hsl(20,5%,45%)] text-sm leading-relaxed">{a}</p>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-10 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl text-center text-sm text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <footer className="border-t border-[hsl(35,10%,85%)] py-10 px-4 bg-white">
+        <div className="container mx-auto max-w-7xl text-sm text-[hsl(20,5%,45%)] flex flex-col sm:flex-row items-center justify-between gap-3">
           <p>© {new Date().getFullYear()} English School. Todos os direitos reservados.</p>
           <div className="flex items-center gap-4 text-xs">
-            <Link href="/" className="hover:text-indigo-600">Início</Link>
-            <Link href="/privacidade" className="hover:text-indigo-600 underline">Política de Privacidade (LGPD)</Link>
-            <Link href="/contato" className="hover:text-indigo-600">Contato</Link>
+            <Link href="/" className="hover:text-[hsl(25,85%,48%)] transition-colors">Início</Link>
+            <Link href="/privacidade" className="hover:text-[hsl(25,85%,48%)] underline underline-offset-4 transition-colors">Política de Privacidade (LGPD)</Link>
+            <Link href="/contato" className="hover:text-[hsl(25,85%,48%)] transition-colors">Contato</Link>
           </div>
         </div>
       </footer>

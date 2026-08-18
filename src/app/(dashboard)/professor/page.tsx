@@ -84,17 +84,17 @@ export default function ProfessorDashboardPage() {
       {activeLive && (
         <div className="bg-gradient-to-r from-red-600 via-rose-600 to-indigo-700 text-white rounded-xl p-5 mb-6 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4 animate-pulse">
           <div className="flex items-center gap-3">
-            <div className="bg-white text-red-600 p-3 rounded-full">
+            <div className="bg-white text-[hsl(0,70%,50%)] p-3 rounded-full">
               <Radio className="h-6 w-6" />
             </div>
             <div>
-              <span className="bg-red-500 text-white text-xs font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">
+              <span className="bg-[hsl(0,70%,50%)]/100 text-white text-xs font-bold uppercase px-2 py-0.5 rounded-full tracking-wider">
                 Sua Sala Está Ao Vivo
               </span>
               <h4 className="text-lg font-bold mt-1">{activeLive.title}</h4>
             </div>
           </div>
-          <Button asChild className="bg-white text-indigo-900 hover:bg-indigo-50 font-semibold shadow-md">
+          <Button asChild className="bg-white text-[hsl(220,25%,12%)] hover:bg-[hsl(25,85%,48%)]/5 font-semibold shadow-md">
             <Link href="/professor/aulas?tab=live">
               <PlayCircle className="h-4 w-4 mr-2" />
               Retornar à Transmissão
@@ -105,7 +105,7 @@ export default function ProfessorDashboardPage() {
 
       {/* Grid de KPIs com acentos Índigo & Violeta */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card className="border-l-4 border-l-indigo-600 shadow-sm">
+        <Card className="border-l-4 border-l-[hsl(25,85%,48%)] shadow-sm">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
@@ -113,9 +113,9 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.totalClasses}
                 </h3>
-                <small className="text-indigo-600 font-medium">Próximos atendimentos</small>
+                <small className="text-[hsl(25,85%,48%)] font-medium">Próximos atendimentos</small>
               </div>
-              <div className="bg-indigo-100 p-3 rounded-full text-indigo-600">
+              <div className="bg-[hsl(25,85%,48%)]/10 p-3 rounded-full text-[hsl(25,85%,48%)]">
                 <Calendar className="h-6 w-6" />
               </div>
             </div>
@@ -130,16 +130,16 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.totalStudents}
                 </h3>
-                <small className="text-violet-600 font-medium">Matrículas ativas</small>
+                <small className="text-[hsl(25,85%,48%)] font-medium">Matrículas ativas</small>
               </div>
-              <div className="bg-violet-100 p-3 rounded-full text-violet-600">
+              <div className="bg-[hsl(25,85%,48%)]/10 p-3 rounded-full text-[hsl(25,85%,48%)]">
                 <Users className="h-6 w-6" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-rose-600 shadow-sm">
+        <Card className="border-l-4 border-l-[hsl(0,70%,50%)] shadow-sm">
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
@@ -147,11 +147,11 @@ export default function ProfessorDashboardPage() {
                 <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
                   {data.metrics.activeLiveCount} <span className="text-sm font-normal text-gray-500">ao vivo</span>
                 </h3>
-                <small className="text-rose-600 font-medium">
+                <small className="text-[hsl(0,70%,50%)] font-medium">
                   {data.metrics.totalRecordings} gravações ativas
                 </small>
               </div>
-              <div className="bg-rose-100 p-3 rounded-full text-rose-600">
+              <div className="bg-[hsl(0,70%,50%)]/10 p-3 rounded-full text-[hsl(0,70%,50%)]">
                 <Radio className="h-6 w-6" />
               </div>
             </div>
@@ -166,12 +166,12 @@ export default function ProfessorDashboardPage() {
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-indigo-600" />
+                  <Calendar className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                   Próximas Aulas Agendadas
                 </CardTitle>
                 <CardDescription>Atendimentos e mentorias desta semana</CardDescription>
               </div>
-              <Link href="/professor/aulas?tab=schedule" className="text-xs text-indigo-600 hover:underline flex items-center gap-1 font-medium">
+              <Link href="/professor/aulas?tab=schedule" className="text-xs text-[hsl(25,85%,48%)] hover:underline flex items-center gap-1 font-medium">
                 Ver grade completa <ArrowRight className="h-3 w-3" />
               </Link>
             </CardHeader>
@@ -189,7 +189,7 @@ export default function ProfessorDashboardPage() {
               ) : (
                 <div className="space-y-3">
                   {data.upcomingClasses.slice(0, 4).map((cls) => (
-                    <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-indigo-50/50 transition-colors border border-gray-100">
+                    <div key={cls.id} className="p-3.5 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors border border-[hsl(35,10%,85%)]">
                       <div>
                         <div className="font-semibold text-gray-900 capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
@@ -205,7 +205,7 @@ export default function ProfessorDashboardPage() {
                         </small>
                       </div>
                       {cls.meetLink && (
-                        <Button asChild size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button asChild size="sm" className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white">
                           <a href={cls.meetLink} target="_blank" rel="noopener noreferrer">
                             Entrar na Sala
                           </a>
@@ -224,7 +224,7 @@ export default function ProfessorDashboardPage() {
           <Card className="h-full">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Radio className="h-5 w-5 text-indigo-600" />
+                <Radio className="h-5 w-5 text-[hsl(25,85%,48%)]" />
                 Ações Rápidas
               </CardTitle>
               <CardDescription>Ferramentas de transmissão e material de apoio</CardDescription>
@@ -235,14 +235,14 @@ export default function ProfessorDashboardPage() {
                   <Radio className="h-5 w-5 mr-3" />
                   <div>
                     <div className="font-bold text-sm">Abrir Sala de Aula Ao Vivo</div>
-                    <div className="text-xs text-indigo-100 font-normal">Iniciar transmissão WebRTC integrada</div>
+                    <div className="text-xs text-[hsl(25,85%,48%)] font-normal">Iniciar transmissão WebRTC integrada</div>
                   </div>
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full justify-start h-12 border-indigo-200 hover:bg-indigo-50 text-indigo-900">
+              <Button asChild variant="outline" className="w-full justify-start h-12 border-[hsl(25,85%,48%)]/30 hover:bg-[hsl(25,85%,48%)]/5 text-[hsl(220,25%,12%)]">
                 <Link href="/professor/aulas?tab=recordings">
-                  <Video className="h-5 w-5 mr-3 text-indigo-600" />
+                  <Video className="h-5 w-5 mr-3 text-[hsl(25,85%,48%)]" />
                   <div>
                     <div className="font-bold text-sm">Disponibilizar Gravação (VOD)</div>
                     <div className="text-xs text-gray-500 font-normal">Cadastrar thumbnail Canva e expiração</div>
@@ -250,9 +250,9 @@ export default function ProfessorDashboardPage() {
                 </Link>
               </Button>
 
-              <Button asChild variant="outline" className="w-full justify-start h-12 border-indigo-200 hover:bg-indigo-50 text-indigo-900">
+              <Button asChild variant="outline" className="w-full justify-start h-12 border-[hsl(25,85%,48%)]/30 hover:bg-[hsl(25,85%,48%)]/5 text-[hsl(220,25%,12%)]">
                 <Link href="/seguranca">
-                  <ShieldCheck className="h-5 w-5 mr-3 text-indigo-600" />
+                  <ShieldCheck className="h-5 w-5 mr-3 text-[hsl(25,85%,48%)]" />
                   <div>
                     <div className="font-bold text-sm">Segurança da Conta & 2FA</div>
                     <div className="text-xs text-gray-500 font-normal">Configurar autenticação em 2 fatores</div>
