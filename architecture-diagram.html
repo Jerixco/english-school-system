@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>English School System - Arquitetura Interativa & Fluxos de Dados</title>
+  <title>English School System - Arquitetura Interativa & Fluxos com Efeito Parallax</title>
   <style>
     :root {
-      --bg-main: #090D16;
-      --bg-card: #111827;
-      --bg-card-hover: #1F2937;
-      --bg-sidebar: #0E1424;
+      --bg-main: #080C15;
+      --bg-card: #101726;
+      --bg-card-hover: #1A2438;
+      --bg-sidebar: #0D1322;
       --border-color: rgba(255, 255, 255, 0.08);
       --border-active: #3B82F6;
       --text-main: #F3F4F6;
@@ -38,6 +38,7 @@
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      perspective: 1200px;
     }
 
     /* Top Bar */
@@ -48,7 +49,8 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      z-index: 20;
+      z-index: 30;
+      backdrop-filter: blur(12px);
     }
 
     .brand {
@@ -68,7 +70,7 @@
       font-weight: bold;
       color: white;
       font-size: 16px;
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
     }
 
     .brand-text h1 {
@@ -86,7 +88,7 @@
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
 
     .search-box {
@@ -96,14 +98,14 @@
       padding: 6px 12px;
       color: var(--text-main);
       font-size: 12px;
-      width: 220px;
+      width: 200px;
       outline: none;
       transition: all 0.2s;
     }
 
     .search-box:focus {
       border-color: var(--border-active);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
     }
 
     .btn {
@@ -117,21 +119,22 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.15s;
+      transition: all 0.2s;
+      user-select: none;
     }
 
     .btn:hover {
       background: var(--bg-card-hover);
-      border-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.25);
     }
 
     .btn.active {
-      background: rgba(59, 130, 246, 0.15);
+      background: rgba(59, 130, 246, 0.2);
       border-color: #3B82F6;
       color: #60A5FA;
     }
 
-    /* Main Workspace */
+    /* Workspace */
     .workspace {
       display: flex;
       flex: 1;
@@ -139,20 +142,89 @@
       overflow: hidden;
     }
 
-    /* Canvas / Diagram Viewport */
+    /* Diagram Viewport & Parallax Layers */
     .diagram-viewport {
       flex: 1;
       position: relative;
-      background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
       overflow: hidden;
       cursor: grab;
+      transform-style: preserve-3d;
     }
 
     .diagram-viewport:active {
       cursor: grabbing;
     }
 
+    /* Parallax Layer 1: Nebula / Deep Space Ambient */
+    .parallax-layer-nebula {
+      position: absolute;
+      top: -20%;
+      left: -20%;
+      width: 140%;
+      height: 140%;
+      background: radial-gradient(circle at 30% 40%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 75% 65%, rgba(139, 92, 246, 0.07) 0%, transparent 45%),
+                  radial-gradient(circle at 50% 85%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 1;
+      transition: transform 0.15s ease-out;
+    }
+
+    /* Parallax Layer 2: Grid */
+    .parallax-layer-grid {
+      position: absolute;
+      top: -30%;
+      left: -30%;
+      width: 160%;
+      height: 160%;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+      z-index: 2;
+      transition: transform 0.12s ease-out;
+    }
+
+    /* Parallax Layer 3: Tiers (Mid-ground) */
+    .parallax-layer-tiers {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform-origin: 0 0;
+      pointer-events: none;
+      z-index: 3;
+      transition: transform 0.08s ease-out;
+    }
+
+    .tier-group {
+      position: absolute;
+      border-radius: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.09);
+      background: rgba(255, 255, 255, 0.012);
+      box-sizing: border-box;
+      box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .tier-label {
+      position: absolute;
+      top: -12px;
+      left: 18px;
+      background: var(--bg-main);
+      padding: 3px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-dim);
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Parallax Layer 4: Nodes & SVG Connections (Foreground) */
     #diagram-svg {
       position: absolute;
       top: 0;
@@ -160,7 +232,9 @@
       width: 100%;
       height: 100%;
       pointer-events: none;
-      z-index: 2;
+      z-index: 4;
+      transform-origin: 0 0;
+      transition: transform 0.05s ease-out;
     }
 
     .diagram-canvas {
@@ -172,64 +246,58 @@
       transform-origin: 0 0;
       transition: transform 0.05s ease-out;
       z-index: 5;
+      transform-style: preserve-3d;
     }
 
-    /* Tier Layer Headers */
-    .tier-group {
-      position: absolute;
-      border-radius: 12px;
-      border: 1px dashed rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.015);
-      pointer-events: none;
-      box-sizing: border-box;
-    }
-
-    .tier-label {
-      position: absolute;
-      top: -12px;
-      left: 16px;
-      background: var(--bg-main);
-      padding: 2px 10px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-dim);
-      border-radius: 4px;
-      border: 1px solid var(--border-color);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    /* Nodes */
+    /* Node Component Cards with 3D Tilt */
     .arch-node {
       position: absolute;
       width: 250px;
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 14px;
       cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       user-select: none;
       pointer-events: auto;
+      transform-style: preserve-3d;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease;
+      will-change: transform;
+    }
+
+    .arch-node .card-reflection {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 12px;
+      pointer-events: none;
+      background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .arch-node:hover .card-reflection {
+      opacity: 1;
     }
 
     .arch-node:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+      border-color: rgba(255, 255, 255, 0.35);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 20px rgba(59, 130, 246, 0.15);
       background: var(--bg-card-hover);
     }
 
     .arch-node.highlighted {
       border-color: var(--active-flow-color, #3B82F6) !important;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3), 0 12px 32px rgba(0, 0, 0, 0.8) !important;
-      background: #1A2234 !important;
+      box-shadow: 0 0 0 2px var(--active-flow-color, #3B82F6), 0 16px 45px rgba(0, 0, 0, 0.8) !important;
+      background: #182236 !important;
     }
 
     .arch-node.dimmed {
-      opacity: 0.22;
-      filter: grayscale(80%);
+      opacity: 0.20;
+      filter: grayscale(85%);
     }
 
     .node-header {
@@ -237,22 +305,24 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;
+      transform: translateZ(15px);
     }
 
     .node-icon {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 13px;
+      font-size: 14px;
       font-weight: bold;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     .node-title {
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       color: #FFFFFF;
       line-height: 1.2;
     }
@@ -269,12 +339,14 @@
       color: var(--text-muted);
       line-height: 1.4;
       margin-bottom: 10px;
+      transform: translateZ(10px);
     }
 
     .node-tags {
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
+      transform: translateZ(12px);
     }
 
     .node-tag {
@@ -308,7 +380,7 @@
     }
 
     .edge-line.dimmed {
-      opacity: 0.08;
+      opacity: 0.06;
     }
 
     @keyframes flowDash {
@@ -317,19 +389,20 @@
       }
     }
 
-    /* Zoom Controls Floating Bar */
+    /* Canvas Floating Controls */
     .canvas-controls {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
+      bottom: 24px;
+      left: 24px;
       background: var(--bg-sidebar);
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 6px;
       display: flex;
       gap: 6px;
-      z-index: 10;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      z-index: 20;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
     }
 
     /* Right Flows Panel */
@@ -339,8 +412,8 @@
       border-left: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      z-index: 15;
-      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.4);
+      z-index: 25;
+      box-shadow: -8px 0 28px rgba(0, 0, 0, 0.5);
     }
 
     .panel-header {
@@ -446,10 +519,10 @@
       color: var(--text-dim);
     }
 
-    /* Flow Detail Steps Inspector */
+    /* Flow Detail Steps Drawer */
     .flow-details-drawer {
       border-top: 1px solid var(--border-color);
-      background: #090D16;
+      background: #080C15;
       max-height: 50%;
       overflow-y: auto;
       padding: 16px;
@@ -529,7 +602,7 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
       border-radius: 12px;
       padding: 18px;
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 16px 45px rgba(0, 0, 0, 0.85);
       z-index: 100;
       display: none;
       animation: modalFade 0.2s ease-out;
@@ -605,12 +678,13 @@
     <div class="brand">
       <div class="logo-badge">ES</div>
       <div class="brand-text">
-        <h1>English School System &bull; Mapa Arquitetural Interativo</h1>
-        <p>Visão Sistêmica de Componentes, Fronteiras de Segurança e Fluxos de Dados (Next.js 16 + Neon)</p>
+        <h1>English School System &bull; Mapa Arquitetural com Efeito Parallax</h1>
+        <p>Visão de Camadas, Controles de Segurança e Fluxos de Execução (Next.js 16 + Neon PostgreSQL)</p>
       </div>
     </div>
     <div class="header-controls">
-      <input type="text" id="search-input" class="search-box" placeholder="Buscar componente ou arquivo..." oninput="filterComponents(this.value)">
+      <input type="text" id="search-input" class="search-box" placeholder="Buscar componente..." oninput="filterComponents(this.value)">
+      <button class="btn active" id="btn-parallax" onclick="toggleParallax()">✨ Parallax: ATIVO</button>
       <button class="btn" onclick="resetZoom()">🔍 Resetar Zoom</button>
       <button class="btn" onclick="clearSelectedFlow()">✨ Visão Geral</button>
     </div>
@@ -619,12 +693,22 @@
   <!-- Workspace Container -->
   <div class="workspace">
     
-    <!-- Visual Interactive Diagram Viewport -->
+    <!-- Visual Interactive Diagram Viewport with Parallax Layers -->
     <div class="diagram-viewport" id="viewport">
+      <!-- Parallax Background Layer 1: Nebula Glow -->
+      <div class="parallax-layer-nebula" id="parallax-nebula"></div>
+
+      <!-- Parallax Background Layer 2: Grid -->
+      <div class="parallax-layer-grid" id="parallax-grid"></div>
+
+      <!-- Parallax Mid-ground Layer 3: Tiers -->
+      <div class="parallax-layer-tiers" id="parallax-tiers"></div>
+
+      <!-- Foreground Layer 4: SVG Connections -->
       <svg id="diagram-svg"></svg>
-      <div class="diagram-canvas" id="canvas">
-        <!-- Tiers & Nodes injected dynamically by JavaScript -->
-      </div>
+
+      <!-- Foreground Layer 5: Interactive Component Nodes -->
+      <div class="diagram-canvas" id="canvas"></div>
 
       <!-- Zoom & Pan Controls -->
       <div class="canvas-controls">
@@ -638,12 +722,10 @@
     <div class="flows-panel">
       <div class="panel-header">
         <h2>🔄 Fluxos de Execução da Aplicação</h2>
-        <span class="badge-count" id="flow-count">7 Fluxos Mapeados</span>
+        <span class="badge-count" id="flow-count">7 Fluxos</span>
       </div>
 
-      <div class="flows-list" id="flows-list">
-        <!-- Flow Cards rendered dynamically -->
-      </div>
+      <div class="flows-list" id="flows-list"></div>
 
       <!-- Active Flow Detailed Steps Drawer -->
       <div class="flow-details-drawer" id="flow-drawer">
@@ -687,9 +769,8 @@
     </div>
   </div>
 
-  <!-- Interactive Data & Architecture Logic -->
+  <!-- Interactive Data & Parallax Architecture Engine -->
   <script>
-    // Full Architecture Model Definition
     const ARCHITECTURE_DATA = {
       tiers: [
         { id: "tier_gateway", label: "Camada 1: Apresentação & Edge Gateway", x: 40, y: 40, width: 300, height: 760 },
@@ -1024,34 +1105,46 @@
       ]
     };
 
-    // State
-    let currentZoom = 1;
-    let panX = 0;
-    let panY = 0;
+    // Parallax & Canvas Engine State
+    let currentZoom = 0.72;
+    let panX = 40;
+    let panY = 20;
     let isPanning = false;
     let startX = 0;
     let startY = 0;
     let activeFlowId = null;
+    let parallaxEnabled = true;
+
+    // Mouse positions for 3D Camera & Parallax
+    let mouseX = 0;
+    let mouseY = 0;
+    let targetMouseX = 0;
+    let targetMouseY = 0;
 
     const viewport = document.getElementById('viewport');
     const canvas = document.getElementById('canvas');
     const svg = document.getElementById('diagram-svg');
+    const parallaxTiers = document.getElementById('parallax-tiers');
+    const parallaxGrid = document.getElementById('parallax-grid');
+    const parallaxNebula = document.getElementById('parallax-nebula');
     const flowsList = document.getElementById('flows-list');
     const flowDrawer = document.getElementById('flow-drawer');
     const nodeModal = document.getElementById('node-modal');
+    const btnParallax = document.getElementById('btn-parallax');
 
-    // Initialize View
     function init() {
       renderTiers();
       renderNodes();
       renderEdges();
       renderFlows();
       setupPanZoom();
-      centerView();
+      setupParallaxListeners();
+      updateTransform();
+      startParallaxLoop();
     }
 
-    // Render Tiers
     function renderTiers() {
+      parallaxTiers.innerHTML = '';
       ARCHITECTURE_DATA.tiers.forEach(tier => {
         const div = document.createElement('div');
         div.className = 'tier-group';
@@ -1065,12 +1158,12 @@
         label.textContent = tier.label;
         div.appendChild(label);
 
-        canvas.appendChild(div);
+        parallaxTiers.appendChild(div);
       });
     }
 
-    // Render Nodes
     function renderNodes() {
+      canvas.innerHTML = '';
       ARCHITECTURE_DATA.nodes.forEach(node => {
         const el = document.createElement('div');
         el.className = 'arch-node';
@@ -1082,9 +1175,31 @@
           openNodeModal(node);
         };
 
+        // 3D Tilt on Hover
+        el.addEventListener('mousemove', (e) => {
+          if (!parallaxEnabled) return;
+          const rect = el.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const rotateX = ((y - centerY) / centerY) * -12;
+          const rotateY = ((x - centerX) / centerX) * 12;
+
+          el.style.setProperty('--mouse-x', `${(x / rect.width) * 100}%`);
+          el.style.setProperty('--mouse-y', `${(y / rect.height) * 100}%`);
+          el.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.03, 1.03, 1.03) translateZ(20px)`;
+        });
+
+        el.addEventListener('mouseleave', () => {
+          el.style.transform = `perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1) translateZ(0px)`;
+        });
+
         let tagsHtml = node.guards.map(g => `<span class="node-tag security">🛡️ ${g}</span>`).join('');
 
         el.innerHTML = `
+          <div class="card-reflection"></div>
           <div class="node-header">
             <div class="node-icon" style="background: ${node.color}22; color: ${node.color};">${node.icon}</div>
             <div>
@@ -1100,7 +1215,6 @@
       });
     }
 
-    // Render Edges
     function renderEdges() {
       svg.innerHTML = '';
       ARCHITECTURE_DATA.edges.forEach(edge => {
@@ -1124,7 +1238,6 @@
       });
     }
 
-    // Render Flows List
     function renderFlows() {
       flowsList.innerHTML = '';
       ARCHITECTURE_DATA.flows.forEach(flow => {
@@ -1149,7 +1262,6 @@
       });
     }
 
-    // Select Flow and Highlight Route
     function selectFlow(flow) {
       if (activeFlowId === flow.id) {
         clearSelectedFlow();
@@ -1159,12 +1271,10 @@
       activeFlowId = flow.id;
       document.documentElement.style.setProperty('--active-flow-color', flow.color);
 
-      // Update flow cards
       document.querySelectorAll('.flow-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.getElementById(`flow-card-${flow.id}`);
       if (activeCard) activeCard.classList.add('active');
 
-      // Update nodes
       ARCHITECTURE_DATA.nodes.forEach(node => {
         const el = document.getElementById(`node-${node.id}`);
         if (!el) return;
@@ -1177,7 +1287,6 @@
         }
       });
 
-      // Update edges
       ARCHITECTURE_DATA.edges.forEach(edge => {
         const path = document.getElementById(`edge-${edge.from}-${edge.to}`);
         if (!path) return;
@@ -1190,7 +1299,6 @@
         }
       });
 
-      // Show steps drawer
       flowDrawer.classList.add('visible');
       document.getElementById('drawer-title').textContent = `Trace: ${flow.name}`;
       const drawerSteps = document.getElementById('drawer-steps');
@@ -1206,7 +1314,6 @@
       `).join('');
     }
 
-    // Clear Selected Flow
     function clearSelectedFlow() {
       activeFlowId = null;
       document.querySelectorAll('.flow-card').forEach(c => c.classList.remove('active'));
@@ -1219,7 +1326,6 @@
       flowDrawer.classList.remove('visible');
     }
 
-    // Node Modal Inspector
     function openNodeModal(node) {
       document.getElementById('modal-type').textContent = node.type;
       document.getElementById('modal-title').textContent = node.label;
@@ -1238,7 +1344,61 @@
       nodeModal.classList.remove('visible');
     }
 
-    // Pan & Zoom
+    // Parallax Toggle
+    function toggleParallax() {
+      parallaxEnabled = !parallaxEnabled;
+      btnParallax.textContent = parallaxEnabled ? "✨ Parallax: ATIVO" : "⚪ Parallax: DESATIVADO";
+      btnParallax.classList.toggle('active', parallaxEnabled);
+      if (!parallaxEnabled) {
+        parallaxNebula.style.transform = 'none';
+        parallaxGrid.style.transform = 'none';
+        parallaxTiers.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+      }
+    }
+
+    // Parallax Multi-Layer Movement Loop
+    function setupParallaxListeners() {
+      window.addEventListener('mousemove', (e) => {
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        targetMouseX = (e.clientX - cx) / cx; // -1 to 1
+        targetMouseY = (e.clientY - cy) / cy; // -1 to 1
+      });
+    }
+
+    function startParallaxLoop() {
+      function render() {
+        if (parallaxEnabled) {
+          // Smooth interpolation
+          mouseX += (targetMouseX - mouseX) * 0.08;
+          mouseY += (targetMouseY - mouseY) * 0.08;
+
+          // Parallax Depth Layer 1: Nebula (0.12x)
+          const nebX = panX * 0.12 + mouseX * -30;
+          const nebY = panY * 0.12 + mouseY * -30;
+          parallaxNebula.style.transform = `translate(${nebX}px, ${nebY}px)`;
+
+          // Parallax Depth Layer 2: Grid (0.28x)
+          const gridX = panX * 0.28 + mouseX * -15;
+          const gridY = panY * 0.28 + mouseY * -15;
+          parallaxGrid.style.transform = `translate(${gridX}px, ${gridY}px)`;
+
+          // Parallax Depth Layer 3: Tiers (0.75x)
+          const tierOffsetX = mouseX * -8;
+          const tierOffsetY = mouseY * -8;
+          parallaxTiers.style.transform = `translate(${panX + tierOffsetX}px, ${panY + tierOffsetY}px) scale(${currentZoom})`;
+
+          // Subtle Camera Pitch on main canvas
+          const pitchX = mouseY * -2.5;
+          const pitchY = mouseX * 2.5;
+          canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom}) rotateX(${pitchX}deg) rotateY(${pitchY}deg)`;
+          svg.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom}) rotateX(${pitchX}deg) rotateY(${pitchY}deg)`;
+        }
+        requestAnimationFrame(render);
+      }
+      requestAnimationFrame(render);
+    }
+
     function setupPanZoom() {
       viewport.addEventListener('mousedown', (e) => {
         if (e.target.closest('.arch-node') || e.target.closest('.canvas-controls')) return;
@@ -1267,9 +1427,11 @@
     }
 
     function updateTransform() {
-      canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
-      svg.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
-      svg.style.transformOrigin = '0 0';
+      if (!parallaxEnabled) {
+        canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+        svg.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+        parallaxTiers.style.transform = `translate(${panX}px, ${panY}px) scale(${currentZoom})`;
+      }
     }
 
     function zoomIn() {
@@ -1294,7 +1456,6 @@
       updateTransform();
     }
 
-    // Component Search Filter
     function filterComponents(query) {
       const q = query.toLowerCase().trim();
       if (!q) {
@@ -1320,7 +1481,6 @@
       });
     }
 
-    // Start on Load
     window.onload = init;
   </script>
 </body>

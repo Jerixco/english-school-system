@@ -3,7 +3,7 @@
   "system": "English School System",
   "version": "1.0.0",
   "architecturePattern": "Next.js App Router Monolith with Multi-Layer Security, RBAC, and Serverless Persistence",
-  "generatedAt": "2026-08-18T14:15:00Z",
+  "generatedAt": "2026-08-18T14:50:00Z",
   "nodes": [
     {
       "id": "client_browser",

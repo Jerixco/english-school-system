@@ -39,6 +39,4 @@ next-env.d.ts
 # agent & local cache
 .gemini/
 .specify/
-.vscode/
-engagement/
 config.toml
