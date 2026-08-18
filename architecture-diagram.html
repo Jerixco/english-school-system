@@ -773,11 +773,11 @@
   <script>
     const ARCHITECTURE_DATA = {
       tiers: [
-        { id: "tier_gateway", label: "Camada 1: Apresentação & Edge Gateway", x: 40, y: 40, width: 300, height: 760 },
-        { id: "tier_security", label: "Camada 2: Segurança, Auth & Governança", x: 380, y: 40, width: 300, height: 760 },
-        { id: "tier_api", label: "Camada 3: Application Core & API Routes", x: 720, y: 40, width: 300, height: 760 },
-        { id: "tier_services", label: "Camada 4: Domain Services & Adapters", x: 1060, y: 40, width: 300, height: 760 },
-        { id: "tier_external", label: "Camada 5: Banco de Dados & Serviços Externos", x: 1400, y: 40, width: 300, height: 760 }
+        { id: "tier_gateway", label: "Camada 1: Apresentação & Edge Gateway", x: 40, y: 30, width: 290, height: 1140 },
+        { id: "tier_security", label: "Camada 2: Segurança, Auth & Governança", x: 380, y: 30, width: 290, height: 1140 },
+        { id: "tier_api", label: "Camada 3: Application Core & API Routes", x: 720, y: 30, width: 290, height: 1140 },
+        { id: "tier_services", label: "Camada 4: Domain Services & Adapters", x: 1060, y: 30, width: 290, height: 1140 },
+        { id: "tier_external", label: "Camada 5: Banco de Dados & Serviços Externos", x: 1400, y: 30, width: 290, height: 1140 }
       ],
       nodes: [
         // Layer 1
@@ -786,7 +786,7 @@
           label: "Client Web Browser",
           type: "SPA / SSR Client",
           layer: "Apresentação & Edge Gateway",
-          x: 65, y: 90,
+          x: 60, y: 200,
           color: "#38BDF8",
           icon: "🌐",
           desc: "Interface Next.js 16 para Alunos, Professores, Administradores e Avaliador Demo.",
@@ -798,7 +798,7 @@
           label: "Security Edge Proxy",
           type: "Edge Middleware",
           layer: "Apresentação & Edge Gateway",
-          x: 65, y: 480,
+          x: 60, y: 650,
           color: "#38BDF8",
           icon: "🛡️",
           desc: "Middleware global com injeção de x-nonce, CSP sem unsafe-eval e anti-spoofing de IP.",
@@ -812,7 +812,7 @@
           label: "Rate Limiter Engine",
           type: "Security Engine",
           layer: "Segurança, Auth & Governança",
-          x: 405, y: 90,
+          x: 400, y: 130,
           color: "#10B981",
           icon: "⏱️",
           desc: "Proteção adaptativa com Redis Upstash e fallback em memória (Auth: 5/5min, API: 100/min, AI: 30/min).",
@@ -824,7 +824,7 @@
           label: "NextAuth JWT & 2FA",
           type: "Auth Service",
           layer: "Segurança, Auth & Governança",
-          x: 405, y: 340,
+          x: 400, y: 480,
           color: "#10B981",
           icon: "🔑",
           desc: "Autenticação via Bcrypt (Cost 12), 2FA TOTP com segredos AES-256-GCM e revogação dinâmica pós-troca de senha.",
@@ -836,7 +836,7 @@
           label: "RBAC & Demo Guard",
           type: "Access Controller",
           layer: "Segurança, Auth & Governança",
-          x: 405, y: 580,
+          x: 400, y: 820,
           color: "#10B981",
           icon: "🔒",
           desc: "Verificação de papéis (ADMIN, TEACHER, STUDENT) e isolamento da conta demo em sandbox somente leitura.",
@@ -850,7 +850,7 @@
           label: "API Auth & Passwords",
           type: "API Endpoints",
           layer: "Application Core & API Routes",
-          x: 745, y: 90,
+          x: 740, y: 70,
           color: "#818CF8",
           icon: "⚡",
           desc: "Endpoints de login, registro, 2FA e reset de senha via tokens SHA-256 de uso único sem expor email na URL.",
@@ -862,7 +862,7 @@
           label: "API Leads & CRM",
           type: "API Endpoints",
           layer: "Application Core & API Routes",
-          x: 745, y: 240,
+          x: 740, y: 285,
           color: "#818CF8",
           icon: "👥",
           desc: "Ingestão e pipeline comercial de leads com sanitização de inputs e registro de auditoria.",
@@ -874,7 +874,7 @@
           label: "API Students & Classes",
           type: "API Endpoints",
           layer: "Application Core & API Routes",
-          x: 745, y: 390,
+          x: 740, y: 500,
           color: "#818CF8",
           icon: "🎓",
           desc: "Gestão acadêmica, agendamento de aulas, salas Jitsi seguras e streaming de gravações VOD.",
@@ -886,7 +886,7 @@
           label: "API Payments & Stripe",
           type: "API Endpoints",
           layer: "Application Core & API Routes",
-          x: 745, y: 540,
+          x: 740, y: 715,
           color: "#818CF8",
           icon: "💳",
           desc: "Checkout de planos com preços canônicos no servidor e webhook Stripe com assinatura criptográfica HMAC.",
@@ -898,7 +898,7 @@
           label: "API AI Tutor Alex",
           type: "API Endpoints",
           layer: "Application Core & API Routes",
-          x: 745, y: 680,
+          x: 740, y: 930,
           color: "#818CF8",
           icon: "🤖",
           desc: "Tutor virtual de inglês com defesas de prompt injection e chave isolada no servidor.",
@@ -912,7 +912,7 @@
           label: "Domain Services Core",
           type: "Business Logic",
           layer: "Domain Services & Adapters",
-          x: 1085, y: 220,
+          x: 1080, y: 340,
           color: "#F59E0B",
           icon: "⚙️",
           desc: "Serviços de domínio desacoplados: PaymentService (Stripe + Sandbox), LeadService, StudentService e LiveSessionService.",
@@ -924,7 +924,7 @@
           label: "AiTutor Failover Service",
           type: "AI Engine",
           layer: "Domain Services & Adapters",
-          x: 1085, y: 560,
+          x: 1080, y: 740,
           color: "#F59E0B",
           icon: "🧠",
           desc: "Orquestrador do Gemini com failover automático (Gemini 1.5 Flash -> Flash 8b) em caso de erro 429.",
@@ -938,7 +938,7 @@
           label: "Neon Serverless DB",
           type: "PostgreSQL & Prisma",
           layer: "Banco de Dados & Serviços Externos",
-          x: 1425, y: 90,
+          x: 1420, y: 90,
           color: "#EC4899",
           icon: "🗄️",
           desc: "PostgreSQL na nuvem com connection pooling, criptografia AES-256-GCM, soft deletes e auditoria de log.",
@@ -950,7 +950,7 @@
           label: "Google Gemini API",
           type: "Generative AI",
           layer: "Banco de Dados & Serviços Externos",
-          x: 1425, y: 310,
+          x: 1420, y: 350,
           color: "#A855F7",
           icon: "✨",
           desc: "Modelos generativos Gemini 1.5 Flash para processamento de conversação e correções gramaticais.",
@@ -962,7 +962,7 @@
           label: "Stripe Platform",
           type: "Payment Gateway",
           layer: "Banco de Dados & Serviços Externos",
-          x: 1425, y: 490,
+          x: 1420, y: 610,
           color: "#A855F7",
           icon: "💰",
           desc: "Processamento de pagamentos em conformidade com PCI-DSS e webhook criptográfico.",
@@ -974,7 +974,7 @@
           label: "Comms & Video Gateways",
           type: "Messaging & WebRTC",
           layer: "Banco de Dados & Serviços Externos",
-          x: 1425, y: 660,
+          x: 1420, y: 870,
           color: "#A855F7",
           icon: "📡",
           desc: "Transporter SMTP Lazy, API REST WhatsApp Business e videoconferência Jitsi Meet.",
@@ -1106,9 +1106,9 @@
     };
 
     // Parallax & Canvas Engine State
-    let currentZoom = 0.72;
-    let panX = 40;
-    let panY = 20;
+    let currentZoom = 0.58;
+    let panX = 30;
+    let panY = 10;
     let isPanning = false;
     let startX = 0;
     let startY = 0;
@@ -1223,9 +1223,9 @@
         if (!fromNode || !toNode) return;
 
         const x1 = fromNode.x + 250;
-        const y1 = fromNode.y + 40;
+        const y1 = fromNode.y + 75;
         const x2 = toNode.x;
-        const y2 = toNode.y + 40;
+        const y2 = toNode.y + 75;
 
         const dx = Math.abs(x2 - x1) * 0.5;
         const pathData = `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
@@ -1450,9 +1450,9 @@
     }
 
     function centerView() {
-      currentZoom = 0.72;
-      panX = 40;
-      panY = 20;
+      currentZoom = 0.58;
+      panX = 30;
+      panY = 10;
       updateTransform();
     }
 
