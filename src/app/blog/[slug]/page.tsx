@@ -31,7 +31,12 @@ const blogPost = {
   seoDescription: 'Descubra as melhores estratégias para acelerar seu aprendizado de inglês e alcançar fluência em menos tempo.',
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
+}) {
+  const { slug } = await params
   return (
     <div className="min-h-screen">
       {/* Header */}

@@ -3,11 +3,12 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle, Home } from 'lucide-react'
 import Link from 'next/link'
 
-export default function SuccessPage({
+export default async function SuccessPage({
   searchParams,
 }: {
-  searchParams: { session_id?: string }
+  searchParams: Promise<{ session_id?: string }>
 }) {
+  await searchParams
   return (
     <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
       <Card className="max-w-md w-full">
