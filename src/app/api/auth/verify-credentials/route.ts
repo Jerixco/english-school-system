@@ -99,13 +99,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      twoFactorRequired: user.twoFactorEnabled,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
+      requiresTwoFactor: Boolean(user.twoFactorEnabled),
     })
   } catch (error) {
     if (error instanceof ZodError) {

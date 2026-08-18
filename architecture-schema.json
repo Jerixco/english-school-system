@@ -1,0 +1,715 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "system": "English School System",
+  "version": "1.0.0",
+  "architecturePattern": "Next.js App Router Monolith with Multi-Layer Security, RBAC, and Serverless Persistence",
+  "generatedAt": "2026-08-18T14:15:00Z",
+  "nodes": [
+    {
+      "id": "client_browser",
+      "label": "Client Web Browser (Next.js SSR/CSR)",
+      "layer": "Presentation & Gateway",
+      "type": "Client",
+      "technologies": ["React 18", "TailwindCSS", "Lucide React", "Recharts"],
+      "description": "Interface responsiva SPA/SSR servindo Landing Page, Portais Aluno, Professor, Administrador e Sandbox Demo.",
+      "files": ["src/app/*", "src/components/*"],
+      "securityGuards": ["CSP Nonce", "Sanitized DOM", "Strict-Transport-Security"]
+    },
+    {
+      "id": "edge_proxy",
+      "label": "Security Edge Proxy & Middleware",
+      "layer": "Presentation & Gateway",
+      "type": "Middleware / Gateway",
+      "technologies": ["Next.js Middleware", "Web Crypto API"],
+      "description": "Intercepta 100% do tráfego. Aplica CSP rigoroso (sem unsafe-eval), cabeçalhos de segurança OWASP, anti-spoofing de IP e injeção de x-nonce.",
+      "files": ["src/proxy.ts", "next.config.js", "src/lib/client-ip.ts"],
+      "securityGuards": ["Anti-Spoofing IP via TRUSTED_PROXY_COUNT", "CSP sem unsafe-eval", "HSTS", "X-Frame-Options", "Permissions-Policy"]
+    },
+    {
+      "id": "rate_limiter",
+      "label": "Distributed & In-Memory Rate Limiter",
+      "layer": "Security & Governance",
+      "type": "Security Engine",
+      "technologies": ["@upstash/ratelimit", "@upstash/redis", "rate-limiter-flexible"],
+      "description": "Controle de taxa adaptativo: Redis Upstash em produção com fail-safe in-memory para desenvolvimento local e testes.",
+      "files": ["src/lib/rate-limiter.ts"],
+      "securityGuards": ["Sliding window quotas (Auth: 5/5min, API: 100/min, AI: 30/min, Stripe: 3/hour)"]
+    },
+    {
+      "id": "auth_engine",
+      "label": "Authentication & JWT Engine",
+      "layer": "Security & Governance",
+      "type": "Authentication Service",
+      "technologies": ["NextAuth.js v4", "Bcryptjs (Cost 12)", "TOTP (speakeasy)"],
+      "description": "Autenticação segura via credenciais, 2FA com segredos criptografados em AES-256-GCM, proteção contra força bruta e invalidação dinâmica de tokens pós-troca de senha.",
+      "files": ["src/lib/auth.ts", "src/lib/two-factor.ts", "src/app/api/auth/*"],
+      "securityGuards": ["Lockout de conta (5 falhas = 15min)", "Revogação automática via passwordChangedAt/deletedAt", "2FA TOTP Window 1"]
+    },
+    {
+      "id": "rbac_demo_guard",
+      "label": "RBAC & Demo Sandbox Guard",
+      "layer": "Security & Governance",
+      "type": "Access Controller",
+      "technologies": ["TypeScript", "Zod", "Server Session"],
+      "description": "Garante autorização granular por papel (ADMIN, TEACHER, STUDENT) e impõe sandbox estritamente read-only (403 Forbidden) para contas de demonstração.",
+      "files": ["src/lib/security.ts", "src/lib/roles.ts"],
+      "securityGuards": ["blockDemoMutations em 100% dos endpoints POST/PUT/PATCH/DELETE", "Validação estrita de posse de recurso"]
+    },
+    {
+      "id": "api_auth",
+      "label": "API Auth Endpoints",
+      "layer": "Application Core",
+      "type": "Route Handler",
+      "technologies": ["Next.js App Router API Routes", "Zod"],
+      "description": "Rotas de login, registro com sanitização, esqueci a senha (sem vazamento de email na URL) e redefinição de senha com tokens SHA-256 de uso único.",
+      "files": [
+        "src/app/api/auth/[...nextauth]/route.ts",
+        "src/app/api/auth/register/route.ts",
+        "src/app/api/auth/forgot-password/route.ts",
+        "src/app/api/auth/reset-password/route.ts",
+        "src/app/api/auth/2fa/setup/route.ts",
+        "src/app/api/auth/2fa/verify/route.ts"
+      ],
+      "securityGuards": ["Anti-enumeração de usuários", "Hash SHA-256 de tokens de recuperação", "Expiração estrita de 1 hora"]
+    },
+    {
+      "id": "api_leads",
+      "label": "API Leads & CRM",
+      "layer": "Application Core",
+      "type": "Route Handler",
+      "technologies": ["Next.js App Router", "Zod", "Audit Logger"],
+      "description": "Captura e qualificação de leads com sanitização HTML/XSS, controle de pipeline comercial e auditoria de ações administrativas.",
+      "files": ["src/app/api/leads/route.ts", "src/app/api/leads/[id]/route.ts"],
+      "securityGuards": ["Rate limiting", "Sanitização de notas via DOMPurify", "Registro de auditoria em AuditLog"]
+    },
+    {
+      "id": "api_students_classes",
+      "label": "API Students, Classes & VOD",
+      "layer": "Application Core",
+      "type": "Route Handler",
+      "technologies": ["Next.js App Router", "Prisma ORM", "Zod"],
+      "description": "Gestão de matrículas, agendamento de aulas com professores, geração de tokens para salas Jitsi e streaming de gravações VOD.",
+      "files": [
+        "src/app/api/students/route.ts",
+        "src/app/api/students/[id]/route.ts",
+        "src/app/api/classes/route.ts",
+        "src/app/api/live-sessions/route.ts",
+        "src/app/api/recordings/route.ts"
+      ],
+      "securityGuards": ["Isolamento multi-tenant por studentId", "Salas Jitsi com hashes aleatórios", "Expiração de links VOD"]
+    },
+    {
+      "id": "api_stripe_payments",
+      "label": "API Payments & Stripe Webhook",
+      "layer": "Application Core",
+      "type": "Route Handler",
+      "technologies": ["Stripe SDK", "Crypto HMAC SHA-256", "Next.js App Router"],
+      "description": "Checkout de assinaturas recorrentes com validação canônica de preços no servidor, webhook do Stripe com assinatura criptográfica e sandbox assinado.",
+      "files": [
+        "src/app/api/stripe/checkout/route.ts",
+        "src/app/api/stripe/webhook/route.ts",
+        "src/app/api/payments/route.ts"
+      ],
+      "securityGuards": ["Tabela canônica de preços imutável no cliente", "Verificação estrita de assinatura Stripe", "Tokens de sandbox assinados via HMAC"]
+    },
+    {
+      "id": "api_ai_tutor",
+      "label": "API AI Tutor Alex",
+      "layer": "Application Core",
+      "type": "Route Handler",
+      "technologies": ["@google/generative-ai", "Next.js App Router"],
+      "description": "Chat interativo de tutoria de inglês com Alex. Implementa defesas contra jailbreak, failover transparente entre modelos e proteção contra quota 429.",
+      "files": ["src/app/api/ai/tutor/route.ts", "src/services/ai-tutor.service.ts"],
+      "securityGuards": ["Prompt injection boundaries", "Isolamento de persona de ensino", "Sanitização de histórico caótico"]
+    },
+    {
+      "id": "service_layer",
+      "label": "Domain Services & Adapters",
+      "layer": "Domain Services",
+      "type": "Business Logic",
+      "technologies": ["TypeScript Class Services", "Nodemailer Lazy", "WhatsApp REST"],
+      "description": "Camada desacoplada contendo regras de negócio de pagamentos (Stripe/Sandbox), mensageria assíncrona, IA e gestão de sessões.",
+      "files": [
+        "src/services/payment.service.ts",
+        "src/services/ai-tutor.service.ts",
+        "src/services/whatsapp.service.ts",
+        "src/services/lead.service.ts",
+        "src/services/student.service.ts",
+        "src/services/live-session.service.ts",
+        "src/services/recording.service.ts",
+        "src/lib/email.ts"
+      ],
+      "securityGuards": ["Transporter SMTP sob demanda", "Fallback isolado de Sandbox", "Validação de contratos de mensagem"]
+    },
+    {
+      "id": "database_neon",
+      "label": "Neon PostgreSQL & Prisma ORM",
+      "layer": "Persistence & External",
+      "type": "Database",
+      "technologies": ["Neon Serverless PostgreSQL", "Prisma 5.22", "PgBouncer Connection Pooling"],
+      "description": "Banco de dados relacional com pooling de conexões SSL, soft deletes em cascata, campos críticos criptografados em AES-GCM e auditoria imutável.",
+      "files": ["prisma/schema.prisma", "src/lib/prisma.ts", "src/lib/encryption.ts"],
+      "securityGuards": ["SSL Mode Require", "Criptografia AES-256-GCM para 2FA", "Soft delete via deletedAt", "Transações atômicas $transaction"]
+    },
+    {
+      "id": "external_gemini",
+      "label": "Google Gemini Generative AI",
+      "layer": "Persistence & External",
+      "type": "External Service",
+      "technologies": ["Gemini 1.5 Flash", "Gemini 1.5 Flash-8b"],
+      "description": "Motor de inteligência artificial generativa com alta velocidade e baixo custo para prática de conversação e correções gramaticais em tempo real.",
+      "files": ["src/services/ai-tutor.service.ts"],
+      "securityGuards": ["Chave protegida no servidor", "Multi-model fallback em runtime"]
+    },
+    {
+      "id": "external_stripe",
+      "label": "Stripe Payments Platform",
+      "layer": "Persistence & External",
+      "type": "External Service",
+      "technologies": ["Stripe Billing", "Stripe Checkout", "Stripe Webhooks"],
+      "description": "Processamento de cartões de crédito e faturamento recorrente automatizado.",
+      "files": ["src/lib/stripe.ts", "src/services/stripe.service.ts"],
+      "securityGuards": ["PCI-DSS compliant via Stripe Elements/Checkout", "Webhook Secret HMAC"]
+    },
+    {
+      "id": "external_comms",
+      "label": "External Messaging Gateways (SMTP & WhatsApp)",
+      "layer": "Persistence & External",
+      "type": "External Service",
+      "technologies": ["SMTP TLS/SSL", "WhatsApp Business REST Gateway", "Calendly API", "Jitsi Meet"],
+      "description": "Comunicação transacional multicanal: notificações de boas-vindas, lembretes de aulas, links de videoconferência e confirmações financeiras.",
+      "files": ["src/lib/email.ts", "src/lib/whatsapp.ts"],
+      "securityGuards": ["Sanitização de payloads", "TLS Encryption"]
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_client_proxy",
+      "source": "client_browser",
+      "target": "edge_proxy",
+      "label": "HTTPS Request (SSR / API)",
+      "protocol": "HTTPS",
+      "security": "TLS 1.3 + Nonce CSP + HSTS"
+    },
+    {
+      "id": "e_proxy_ratelimit",
+      "source": "edge_proxy",
+      "target": "rate_limiter",
+      "label": "Client IP Verification & Quota Check",
+      "protocol": "In-Process / Upstash REST",
+      "security": "Anti-Spoofing Trusted Proxy Resolution"
+    },
+    {
+      "id": "e_proxy_auth",
+      "source": "edge_proxy",
+      "target": "auth_engine",
+      "label": "Session / JWT Validation",
+      "protocol": "JWT / Bcrypt",
+      "security": "Dynamic Session Invalidation via passwordChangedAt"
+    },
+    {
+      "id": "e_auth_rbac",
+      "source": "auth_engine",
+      "target": "rbac_demo_guard",
+      "label": "Role & Sandbox Evaluation",
+      "protocol": "In-Memory",
+      "security": "blockDemoMutations Guard"
+    },
+    {
+      "id": "e_rbac_api_auth",
+      "source": "rbac_demo_guard",
+      "target": "api_auth",
+      "label": "Authorized Access",
+      "protocol": "Route Dispatch",
+      "security": "Zod Validation + Rate Limit"
+    },
+    {
+      "id": "e_rbac_api_leads",
+      "source": "rbac_demo_guard",
+      "target": "api_leads",
+      "label": "Authorized Access",
+      "protocol": "Route Dispatch",
+      "security": "DOMPurify XSS Filter + AuditLog"
+    },
+    {
+      "id": "e_rbac_api_students",
+      "source": "rbac_demo_guard",
+      "target": "api_students_classes",
+      "label": "Authorized Access",
+      "protocol": "Route Dispatch",
+      "security": "Tenant Isolation + Session Ownership"
+    },
+    {
+      "id": "e_rbac_api_payments",
+      "source": "rbac_demo_guard",
+      "target": "api_stripe_payments",
+      "label": "Authorized Access",
+      "protocol": "Route Dispatch",
+      "security": "Stripe HMAC / Canonical Prices"
+    },
+    {
+      "id": "e_rbac_api_ai",
+      "source": "rbac_demo_guard",
+      "target": "api_ai_tutor",
+      "label": "Authorized Access",
+      "protocol": "Route Dispatch",
+      "security": "AI Prompt Injection Shield"
+    },
+    {
+      "id": "e_api_services",
+      "source": "api_students_classes",
+      "target": "service_layer",
+      "label": "Business Logic Invocation",
+      "protocol": "TypeScript Methods",
+      "security": "Strict Typing & Error Boundaries"
+    },
+    {
+      "id": "e_payments_services",
+      "source": "api_stripe_payments",
+      "target": "service_layer",
+      "label": "Payment Processing",
+      "protocol": "Adapter Pattern",
+      "security": "Stripe Adapter vs Signed Sandbox"
+    },
+    {
+      "id": "e_ai_services",
+      "source": "api_ai_tutor",
+      "target": "service_layer",
+      "label": "AI Tutor Invocation",
+      "protocol": "Service Call",
+      "security": "Chaos & Failover Logic"
+    },
+    {
+      "id": "e_services_db",
+      "source": "service_layer",
+      "target": "database_neon",
+      "label": "Prisma Queries & Mutations",
+      "protocol": "PostgreSQL Wire / SSL",
+      "security": "Prisma $transaction + AES-256 Encryption"
+    },
+    {
+      "id": "e_services_gemini",
+      "source": "service_layer",
+      "target": "external_gemini",
+      "label": "Gemini API Generation",
+      "protocol": "HTTPS REST",
+      "security": "Encrypted Server-Side API Key"
+    },
+    {
+      "id": "e_services_stripe",
+      "source": "service_layer",
+      "target": "external_stripe",
+      "label": "Stripe Checkout & Customer Sync",
+      "protocol": "HTTPS REST",
+      "security": "Stripe Secret Key + HMAC Webhook"
+    },
+    {
+      "id": "e_services_comms",
+      "source": "service_layer",
+      "target": "external_comms",
+      "label": "Dispatches Email / WhatsApp / Meeting",
+      "protocol": "SMTP / REST",
+      "security": "Lazy Transporter + Sanitized Body"
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow_lead_onboarding",
+      "name": "1. Lead Capture & Onboarding Automático",
+      "description": "Visitante preenche formulário de demonstração/aula experimental na landing page. O lead é validado contra XSS, gravado no banco, notificado por WhatsApp/Email e direcionado ao agendamento.",
+      "trigger": "Submissão de formulário em / ou /planos",
+      "securityGuards": ["Rate limiter de IP", "Sanitização Zod + DOMPurify", "AuditLog de criação"],
+      "color": "#3B82F6",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "POST /api/leads",
+          "payload": "{ name, email, phone, source, level }",
+          "securityCheck": "Verificação de cabeçalhos de segurança e IP confiável."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rate_limiter",
+          "action": "checkRateLimit(apiRateLimiter)",
+          "payload": "Identifier IP",
+          "securityCheck": "Verifica cota de 100 reqs/min por IP."
+        },
+        {
+          "step": 3,
+          "from": "rate_limiter",
+          "to": "api_leads",
+          "action": "Validação de Schema (leadSchema)",
+          "payload": "Dados do Lead",
+          "securityCheck": "Zod valida formato do email, telefone e sanitiza inputs."
+        },
+        {
+          "step": 4,
+          "from": "api_leads",
+          "to": "service_layer",
+          "action": "LeadService.createLead() & WhatsAppService",
+          "payload": "Lead Data",
+          "securityCheck": "Criação atômica e disparo de eventos de mensageria."
+        },
+        {
+          "step": 5,
+          "from": "service_layer",
+          "to": "database_neon",
+          "action": "prisma.lead.create() + prisma.auditLog.create()",
+          "payload": "Lead Record",
+          "securityCheck": "Persistência em PostgreSQL Neon com SSL ativado."
+        },
+        {
+          "step": 6,
+          "from": "service_layer",
+          "to": "external_comms",
+          "action": "sendWelcomeEmail() & sendWelcomeWhatsApp()",
+          "payload": "Templates de Boas-Vindas",
+          "securityCheck": "Comunicação segura com links autenticados para Calendly."
+        }
+      ]
+    },
+    {
+      "id": "flow_auth_2fa_revocation",
+      "name": "2. Autenticação Segura, 2FA & Revogação Dinâmica",
+      "description": "Login com credenciais bcrypt (cost 12), desafio 2FA TOTP (segredos AES-256-GCM), bloqueio após 5 falhas e revogação dinâmica de sessão JWT.",
+      "trigger": "Submissão em /login",
+      "securityGuards": ["Lockout de conta (5 falhas = 15min)", "AES-256-GCM para 2FA Secret", "Invalidação por passwordChangedAt"],
+      "color": "#10B981",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "POST /api/auth/callback/credentials",
+          "payload": "{ email, password, twoFactorToken }",
+          "securityCheck": "CSP nonce e anti-spoofing de IP."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rate_limiter",
+          "action": "checkRateLimit(authRateLimiter)",
+          "payload": "Identifier IP",
+          "securityCheck": "Proteção contra força bruta (máximo 5 tentativas/5min)."
+        },
+        {
+          "step": 3,
+          "from": "rate_limiter",
+          "to": "auth_engine",
+          "action": "NextAuth authorize()",
+          "payload": "Credenciais",
+          "securityCheck": "Checa lockedUntil e deletedAt no banco."
+        },
+        {
+          "step": 4,
+          "from": "auth_engine",
+          "to": "database_neon",
+          "action": "bcrypt.compare(password, user.password)",
+          "payload": "Hash Check",
+          "securityCheck": "Bcrypt Cost 12. Se falhar, incrementa failedLoginCount."
+        },
+        {
+          "step": 5,
+          "from": "auth_engine",
+          "to": "service_layer",
+          "action": "verifyTwoFactorToken(token, decrypt(secret))",
+          "payload": "TOTP Token",
+          "securityCheck": "Descriptografa segredo AES-256-GCM e valida TOTP com tolerância window=1."
+        },
+        {
+          "step": 6,
+          "from": "auth_engine",
+          "to": "client_browser",
+          "action": "Retorna Sessão JWT Assinada",
+          "payload": "Session Cookie",
+          "securityCheck": "Sessão com maxAge de 8h e verificação contínua no callback jwt."
+        }
+      ]
+    },
+    {
+      "id": "flow_subscription_checkout",
+      "name": "3. Assinatura de Planos & Checkout Stripe / Sandbox",
+      "description": "Aluno seleciona plano de inglês. O servidor calcula o preço canônico, inicializa o Stripe Checkout (ou Sandbox assinado via HMAC) e processa webhook de ativação.",
+      "trigger": "Clique em 'Assinar' em /planos",
+      "securityGuards": ["Preços canônicos no servidor (SERVER_PLAN_PRICES)", "Assinatura Stripe Webhook HMAC", "Sandbox isolado"],
+      "color": "#8B5CF6",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "POST /api/stripe/checkout",
+          "payload": "{ plan: 'STANDARD' }",
+          "securityCheck": "Requer usuário autenticado (getAuthenticatedUser)."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rbac_demo_guard",
+          "action": "blockDemoMutations(user)",
+          "payload": "User Context",
+          "securityCheck": "Se for usuário demo, retorna 403 Forbidden imediatamente."
+        },
+        {
+          "step": 3,
+          "from": "rbac_demo_guard",
+          "to": "api_stripe_payments",
+          "action": "PaymentService.createCheckout()",
+          "payload": "CheckoutRequest",
+          "securityCheck": "Valida plano contra SERVER_PLAN_PRICES canônico no servidor."
+        },
+        {
+          "step": 4,
+          "from": "api_stripe_payments",
+          "to": "external_stripe",
+          "action": "stripe.checkout.sessions.create()",
+          "payload": "Line Items Canônicos",
+          "securityCheck": "Cria sessão Stripe com metadata={userId, plan} ou Sandbox Token assinado."
+        },
+        {
+          "step": 5,
+          "from": "external_stripe",
+          "to": "api_stripe_payments",
+          "action": "POST /api/stripe/webhook (checkout.session.completed)",
+          "payload": "Stripe Event + Signature Header",
+          "securityCheck": "stripe.webhooks.constructEvent() com STRIPE_WEBHOOK_SECRET."
+        },
+        {
+          "step": 6,
+          "from": "api_stripe_payments",
+          "to": "database_neon",
+          "action": "prisma.student.upsert() + prisma.payment.create()",
+          "payload": "Ativação de Matrícula",
+          "securityCheck": "Transação atômica que ativa o status do aluno e agenda próximo vencimento."
+        }
+      ]
+    },
+    {
+      "id": "flow_live_classroom",
+      "name": "4. Agendamento & Sala de Aula ao Vivo (Jitsi Meet)",
+      "description": "Professor ou aluno agenda aula ao vivo. O sistema gera ID de sala aleatório não-previsível, vincula ao professor e aluno e despacha lembretes.",
+      "trigger": "Agendamento em /aluno ou /admin",
+      "securityGuards": ["Hashes de sala criptograficamente aleatórios", "Isolamento de acesso aluno-professor", "CSP frame-src meet.jit.si"],
+      "color": "#EC4899",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "POST /api/live-sessions",
+          "payload": "{ title, scheduledFor, duration, teacherId }",
+          "securityCheck": "Verificação de permissão e rate limiting."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rbac_demo_guard",
+          "action": "blockDemoMutations(user)",
+          "payload": "User Context",
+          "securityCheck": "Impede agendamento real em modo demonstração."
+        },
+        {
+          "step": 3,
+          "from": "rbac_demo_guard",
+          "to": "api_students_classes",
+          "action": "LiveSessionService.createSession()",
+          "payload": "Session Specs",
+          "securityCheck": "Gera roomName aleatório seguro com crypto.randomBytes."
+        },
+        {
+          "step": 4,
+          "from": "api_students_classes",
+          "to": "database_neon",
+          "action": "prisma.liveSession.create()",
+          "payload": "LiveSession Record",
+          "securityCheck": "Salva sessão com status SCHEDULED indexado."
+        },
+        {
+          "step": 5,
+          "from": "api_students_classes",
+          "to": "external_comms",
+          "action": "sendClassReminderWhatsApp()",
+          "payload": "Lembrete com Link da Aula",
+          "securityCheck": "Disparo de notificação via WhatsApp/Email."
+        },
+        {
+          "step": 6,
+          "from": "client_browser",
+          "to": "external_comms",
+          "action": "Carrega Jitsi Meet Iframe",
+          "payload": "meet.jit.si/roomName",
+          "securityCheck": "Permissions-Policy com camera e microphone autorizados exclusivamente para self e meet.jit.si."
+        }
+      ]
+    },
+    {
+      "id": "flow_ai_tutor",
+      "name": "5. IA Tutor Alex (Resiliência, Caos & Defesa de Prompt)",
+      "description": "Aluno pratica conversação em inglês com Alex. O sistema protege contra jailbreaks, sanitiza o histórico e aciona fallback de modelo se houver quota 429.",
+      "trigger": "Envio de mensagem no componente AiTutorCard",
+      "securityGuards": ["System Instruction Anti-Jailbreak", "Multi-Model Fallback (Gemini Flash -> Flash 8b)", "Sliding Window Rate Limit 30/min"],
+      "color": "#F59E0B",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "POST /api/ai/tutor",
+          "payload": "{ message, history: [...] }",
+          "securityCheck": "Requer sessão ativa de aluno ou admin."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rate_limiter",
+          "action": "checkRateLimit(aiRateLimiter)",
+          "payload": "User ID Identifier",
+          "securityCheck": "Limita a 30 mensagens por minuto para proteger quotas de API."
+        },
+        {
+          "step": 3,
+          "from": "rate_limiter",
+          "to": "api_ai_tutor",
+          "action": "AiTutorService.getReply(message, history)",
+          "payload": "Input Sanitizado",
+          "securityCheck": "Valida integridade do histórico (alternância estrita user/model)."
+        },
+        {
+          "step": 4,
+          "from": "api_ai_tutor",
+          "to": "external_gemini",
+          "action": "Tentativa 1: gemini-1.5-flash com SYSTEM_INSTRUCTION",
+          "payload": "Conversational Prompt",
+          "securityCheck": "Instrução de sistema inviolável proibindo vazamento de credenciais ou troca de persona."
+        },
+        {
+          "step": 5,
+          "from": "external_gemini",
+          "to": "service_layer",
+          "action": "Se 429 Quota Exceeded -> Fallback automático para gemini-1.5-flash-8b",
+          "payload": "Failover Retry",
+          "securityCheck": "Recuperação resiliente sem erro visível para o aluno."
+        },
+        {
+          "step": 6,
+          "from": "service_layer",
+          "to": "client_browser",
+          "action": "Entrega resposta formatada com 💡 Quick Tip gramatical",
+          "payload": "{ text, isQuotaExceeded }",
+          "securityCheck": "Resposta limpa renderizada sem perigo de injeção HTML."
+        }
+      ]
+    },
+    {
+      "id": "flow_demo_sandbox",
+      "name": "6. Modo Demonstração & Sandbox Read-Only",
+      "description": "Permite que avaliadores e potenciais compradores naveguem por todas as abas dos 3 portais (Admin, Aluno, Professor) sem risco de vazamento ou destruição de dados reais.",
+      "trigger": "Login com credenciais da conta de demonstração",
+      "securityGuards": ["isDemoUser(user)", "blockDemoMutations() retornando 403", "Navegação Multi-Portal na Sidebar"],
+      "color": "#6366F1",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "auth_engine",
+          "action": "Login com conta demo",
+          "payload": "Credenciais Demo",
+          "securityCheck": "Autentica usuário isolado no banco com flag de demonstração."
+        },
+        {
+          "step": 2,
+          "from": "auth_engine",
+          "to": "client_browser",
+          "action": "Renderiza Dashboard com Seletor Multi-Portal",
+          "payload": "DashboardSidebar com tabs Admin/Aluno/Professor",
+          "securityCheck": "Exibe badge ilustrativa 'Modo Avaliador (Somente Leitura)'."
+        },
+        {
+          "step": 3,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "Tentativa de Mutação (ex: PATCH /api/students/123 ou DELETE)",
+          "payload": "Payload de Alteração",
+          "securityCheck": "Avaliador tenta editar ou excluir registro de teste."
+        },
+        {
+          "step": 4,
+          "from": "edge_proxy",
+          "to": "rbac_demo_guard",
+          "action": "blockDemoMutations(user)",
+          "payload": "Intercepção de Rota",
+          "securityCheck": "Detecta conta demo e bloqueia a mutação antes de tocar no banco de dados."
+        },
+        {
+          "step": 5,
+          "from": "rbac_demo_guard",
+          "to": "client_browser",
+          "action": "HTTP 403 Forbidden",
+          "payload": "{ error: 'Modo Demonstração: Esta conta possui acesso estritamente ilustrativo.' }",
+          "securityCheck": "Garante integridade zero-write na base de dados de produção."
+        }
+      ]
+    },
+    {
+      "id": "flow_lgpd_anonymization",
+      "name": "7. Governança LGPD & Anonimização Atômica",
+      "description": "Direito ao esquecimento e exclusão de dados sob a LGPD (Art. 18). Executa anonimização irreversível dos dados pessoais enquanto preserva integridade de auditoria contábil.",
+      "trigger": "Requisição de Exclusão de Conta pelo Aluno ou Admin",
+      "securityGuards": ["Transação atômica Prisma $transaction", "Anonimização irreversível (ANON-HASH)", "AuditLog imutável"],
+      "color": "#14B8A6",
+      "steps": [
+        {
+          "step": 1,
+          "from": "client_browser",
+          "to": "edge_proxy",
+          "action": "DELETE /api/students/[id]",
+          "payload": "{ reason: 'LGPD Right to be Forgotten' }",
+          "securityCheck": "Validação de identidade do titular ou papel ADMIN."
+        },
+        {
+          "step": 2,
+          "from": "edge_proxy",
+          "to": "rbac_demo_guard",
+          "action": "blockDemoMutations(user)",
+          "payload": "Security Check",
+          "securityCheck": "Impede exclusão em conta demo."
+        },
+        {
+          "step": 3,
+          "from": "rbac_demo_guard",
+          "to": "service_layer",
+          "action": "anonymizeUserData(userId)",
+          "payload": "Rotina LGPD",
+          "securityCheck": "Inicia processo de desidentificação (src/lib/lgpd.ts)."
+        },
+        {
+          "step": 4,
+          "from": "service_layer",
+          "to": "database_neon",
+          "action": "prisma.$transaction([user.update, student.update, auditLog.create])",
+          "payload": "Anonimização em Lote",
+          "securityCheck": "Substitui nome por 'Usuário Anonimizado', email por 'anon_xxx@anon.local', apaga telefones/2FA e seta deletedAt."
+        },
+        {
+          "step": 5,
+          "from": "database_neon",
+          "to": "auth_engine",
+          "action": "Invalidação imediata de sessões ativas",
+          "payload": "Revogação JWT",
+          "securityCheck": "Callback jwt detecta deletedAt e rejeita qualquer token subsequente."
+        },
+        {
+          "step": 6,
+          "from": "service_layer",
+          "to": "client_browser",
+          "action": "Confirmação de Anonimização Concluída",
+          "payload": "{ success: true, message: 'Dados anonimizados conforme a LGPD.' }",
+          "securityCheck": "AuditLog registra o hash da operação sem reter os dados pessoais originais."
+        }
+      ]
+    }
+  ]
+}

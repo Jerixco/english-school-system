@@ -94,13 +94,20 @@ export async function GET(
     // Preparar resposta com dados apropriados ao nível de acesso
     const response: any = {
       id: teacher.id,
-      user: sanitizeUserData(teacher.user),
       bio: teacher.bio,
       specialties: teacher.specialties,
       isActive: teacher.isActive,
       upcomingClasses: teacher.classes,
       createdAt: teacher.createdAt,
       updatedAt: teacher.updatedAt,
+    }
+
+    // Esconder email para usuários não autenticados / não-admin
+    if (user && isAdmin(user)) {
+      response.user = sanitizeUserData(teacher.user)
+    } else {
+      const { email: _e, ...safeUser } = teacher.user
+      response.user = safeUser
     }
 
     // Admin e professor próprio veem disponibilidade e Calendly
