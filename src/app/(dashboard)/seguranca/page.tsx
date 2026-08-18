@@ -133,7 +133,7 @@ export default function SegurancaPage() {
                 <Shield className="h-8 w-8 text-[hsl(25,85%,48%)]" />
                 <div className="flex-1">
                   <h5 className="font-bold mb-1">Autenticação em Duas Etapas (2FA)</h5>
-                  <small className="text-gray-600">
+                  <small className="text-[hsl(20,5%,45%)]">
                     {twoFactorEnabled
                       ? 'Sua conta está protegida com 2FA'
                       : 'Adicione uma camada extra de segurança'}
@@ -146,7 +146,7 @@ export default function SegurancaPage() {
 
               {!twoFactorEnabled && step === 'idle' && (
                 <div>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-[hsl(20,5%,45%)] mb-4">
                     Use um aplicativo autenticador (Google Authenticator, Authy, etc.) para
                     gerar códigos de verificação ao fazer login.
                   </p>
@@ -158,7 +158,7 @@ export default function SegurancaPage() {
 
               {!twoFactorEnabled && step === 'scanning' && (
                 <div>
-                  <p className="mb-4 text-gray-600">
+                  <p className="mb-4 text-[hsl(20,5%,45%)]">
                     Escaneie o QR Code com seu aplicativo autenticador ou insira a chave manualmente:
                   </p>
                   {qrCode && (
@@ -168,7 +168,7 @@ export default function SegurancaPage() {
                   )}
                   {secret && (
                     <div className="bg-[hsl(35,10%,90%)] border border-gray-200 rounded-md p-3 mb-4 text-center">
-                      <p className="text-sm text-gray-600 mb-1">Chave manual:</p>
+                      <p className="text-sm text-[hsl(20,5%,45%)] mb-1">Chave manual:</p>
                       <p className="font-mono font-bold">{secret}</p>
                     </div>
                   )}
@@ -208,7 +208,7 @@ export default function SegurancaPage() {
 
               {twoFactorEnabled && (
                 <div>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-[hsl(20,5%,45%)] mb-4">
                     Para desativar o 2FA, confirme sua senha e o código atual do autenticador.
                   </p>
                   <form onSubmit={disable2FA} className="space-y-4">
@@ -255,11 +255,11 @@ export default function SegurancaPage() {
               </h6>
               <dl className="space-y-2">
                 <div>
-                  <dt className="text-sm text-gray-600">Email</dt>
+                  <dt className="text-sm text-[hsl(20,5%,45%)]">Email</dt>
                   <dd className="font-medium">{session?.user?.email}</dd>
                 </div>
                 <div>
-                  <dt className="text-sm text-gray-600">Nome</dt>
+                  <dt className="text-sm text-[hsl(20,5%,45%)]">Nome</dt>
                   <dd className="font-medium">{session?.user?.name}</dd>
                 </div>
               </dl>
@@ -272,7 +272,7 @@ export default function SegurancaPage() {
                 <Lock className="h-4 w-4" />
                 Dicas de Segurança
               </h6>
-              <ul className="text-sm text-gray-600 space-y-2">
+              <ul className="text-sm text-[hsl(20,5%,45%)] space-y-2">
                 <li className="flex items-start gap-2">
                   <span className="text-[hsl(25,85%,48%)]">•</span>
                   <span>Use senhas fortes e únicas</span>

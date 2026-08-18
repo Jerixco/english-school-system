@@ -109,8 +109,8 @@ export default function ProfessorDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Aulas Agendadas</p>
-                <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                <p className="text-sm font-medium text-[hsl(20,5%,45%)]">Aulas Agendadas</p>
+                <h3 className="text-3xl font-extrabold text-[hsl(20,10%,10%)] mt-1">
                   {data.metrics.totalClasses}
                 </h3>
                 <small className="text-[hsl(25,85%,48%)] font-medium">Próximos atendimentos</small>
@@ -126,8 +126,8 @@ export default function ProfessorDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Meus Alunos</p>
-                <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
+                <p className="text-sm font-medium text-[hsl(20,5%,45%)]">Meus Alunos</p>
+                <h3 className="text-3xl font-extrabold text-[hsl(20,10%,10%)] mt-1">
                   {data.metrics.totalStudents}
                 </h3>
                 <small className="text-[hsl(25,85%,48%)] font-medium">Matrículas ativas</small>
@@ -143,9 +143,9 @@ export default function ProfessorDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-sm font-medium text-gray-500">Aulas Ao Vivo & VOD</p>
-                <h3 className="text-3xl font-extrabold text-gray-900 mt-1">
-                  {data.metrics.activeLiveCount} <span className="text-sm font-normal text-gray-500">ao vivo</span>
+                <p className="text-sm font-medium text-[hsl(20,5%,45%)]">Aulas Ao Vivo & VOD</p>
+                <h3 className="text-3xl font-extrabold text-[hsl(20,10%,10%)] mt-1">
+                  {data.metrics.activeLiveCount} <span className="text-sm font-normal text-[hsl(20,5%,45%)]">ao vivo</span>
                 </h3>
                 <small className="text-[hsl(0,70%,50%)] font-medium">
                   {data.metrics.totalRecordings} gravações ativas
@@ -191,7 +191,7 @@ export default function ProfessorDashboardPage() {
                   {data.upcomingClasses.slice(0, 4).map((cls) => (
                     <div key={cls.id} className="p-3.5 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors border border-[hsl(35,10%,85%)]">
                       <div>
-                        <div className="font-semibold text-gray-900 capitalize">
+                        <div className="font-semibold text-[hsl(20,10%,10%)] capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             day: '2-digit',
@@ -200,7 +200,7 @@ export default function ProfessorDashboardPage() {
                             minute: '2-digit',
                           })}
                         </div>
-                        <small className="text-gray-500">
+                        <small className="text-[hsl(20,5%,45%)]">
                           Aluno: {cls.studentName} · {cls.duration} min
                         </small>
                       </div>
@@ -245,7 +245,7 @@ export default function ProfessorDashboardPage() {
                   <Video className="h-5 w-5 mr-3 text-[hsl(25,85%,48%)]" />
                   <div>
                     <div className="font-bold text-sm">Disponibilizar Gravação (VOD)</div>
-                    <div className="text-xs text-gray-500 font-normal">Cadastrar thumbnail Canva e expiração</div>
+                    <div className="text-xs text-[hsl(20,5%,45%)] font-normal">Cadastrar thumbnail Canva e expiração</div>
                   </div>
                 </Link>
               </Button>
@@ -255,7 +255,7 @@ export default function ProfessorDashboardPage() {
                   <ShieldCheck className="h-5 w-5 mr-3 text-[hsl(25,85%,48%)]" />
                   <div>
                     <div className="font-bold text-sm">Segurança da Conta & 2FA</div>
-                    <div className="text-xs text-gray-500 font-normal">Configurar autenticação em 2 fatores</div>
+                    <div className="text-xs text-[hsl(20,5%,45%)] font-normal">Configurar autenticação em 2 fatores</div>
                   </div>
                 </Link>
               </Button>

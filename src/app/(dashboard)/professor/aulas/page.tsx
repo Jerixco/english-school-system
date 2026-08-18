@@ -175,7 +175,7 @@ export default function ProfessorAulasPage() {
       <DashboardShell title="Gestão de Aulas & Transmissões" subtitle="Carregando...">
         <div className="text-center py-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(25,85%,48%)] mx-auto mb-4"></div>
-          <p className="text-gray-500">Conectando ao sistema de salas...</p>
+          <p className="text-[hsl(20,5%,45%)]">Conectando ao sistema de salas...</p>
         </div>
       </DashboardShell>
     )
@@ -203,7 +203,7 @@ export default function ProfessorAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'live'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Radio className="h-4 w-4" />
@@ -220,7 +220,7 @@ export default function ProfessorAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'recordings'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Video className="h-4 w-4" />
@@ -235,7 +235,7 @@ export default function ProfessorAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'schedule'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Calendar className="h-4 w-4" />
@@ -365,9 +365,9 @@ export default function ProfessorAulasPage() {
                             >
                               {isLive ? 'Ao Vivo Agora' : session.status === 'SCHEDULED' ? 'Agendada' : 'Finalizada'}
                             </Badge>
-                            <h4 className="font-bold text-gray-900">{session.title}</h4>
+                            <h4 className="font-bold text-[hsl(20,10%,10%)]">{session.title}</h4>
                           </div>
-                          <small className="text-gray-500">
+                          <small className="text-[hsl(20,5%,45%)]">
                             {new Date(session.scheduledFor).toLocaleDateString('pt-BR', {
                               weekday: 'short',
                               day: '2-digit',
@@ -496,8 +496,8 @@ export default function ProfessorAulasPage() {
                   {data.recordings.map((rec) => (
                     <div key={rec.id} className="p-4 bg-[hsl(35,10%,94%)] rounded-lg border flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors">
                       <div>
-                        <h4 className="font-bold text-gray-900">{rec.title}</h4>
-                        <small className="text-gray-500">
+                        <h4 className="font-bold text-[hsl(20,10%,10%)]">{rec.title}</h4>
+                        <small className="text-[hsl(20,5%,45%)]">
                           Gravada em {new Date(rec.recordedAt).toLocaleDateString('pt-BR')} · {rec.durationMinutes || 45} min
                         </small>
                       </div>
@@ -540,7 +540,7 @@ export default function ProfessorAulasPage() {
                   {data.upcomingClasses.map((cls) => (
                     <div key={cls.id} className="p-3.5 bg-[hsl(35,10%,94%)] rounded-lg flex justify-between items-center hover:bg-[hsl(25,85%,48%)]/5 transition-colors border border-[hsl(35,10%,85%)]">
                       <div>
-                        <div className="font-semibold text-gray-900 capitalize">
+                        <div className="font-semibold text-[hsl(20,10%,10%)] capitalize">
                           {new Date(cls.scheduledAt).toLocaleDateString('pt-BR', {
                             weekday: 'long',
                             day: '2-digit',
@@ -549,7 +549,7 @@ export default function ProfessorAulasPage() {
                             minute: '2-digit',
                           })}
                         </div>
-                        <small className="text-gray-500">
+                        <small className="text-[hsl(20,5%,45%)]">
                           Aluno: {cls.studentName} ({cls.studentEmail}) · {cls.duration} min
                         </small>
                       </div>

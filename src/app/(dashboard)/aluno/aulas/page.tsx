@@ -107,7 +107,7 @@ export default function AlunoAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'live'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Radio className="h-4 w-4" />
@@ -124,7 +124,7 @@ export default function AlunoAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'recordings'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Video className="h-4 w-4" />
@@ -139,7 +139,7 @@ export default function AlunoAulasPage() {
           className={`flex items-center gap-2 px-4 py-2.5 font-medium text-sm rounded-lg transition-colors ${
             activeTab === 'history'
               ? 'bg-[hsl(25,85%,48%)] text-white shadow-sm'
-              : 'text-gray-600 hover:bg-[hsl(35,10%,90%)]'
+              : 'text-[hsl(20,5%,45%)] hover:bg-[hsl(35,10%,90%)]'
           }`}
         >
           <Award className="h-4 w-4" />
@@ -150,7 +150,7 @@ export default function AlunoAulasPage() {
       {loading ? (
         <div className="text-center py-16">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[hsl(25,85%,48%)] mx-auto mb-4"></div>
-          <p className="text-gray-500">Carregando aulas e vídeos disponíveis...</p>
+          <p className="text-[hsl(20,5%,45%)]">Carregando aulas e vídeos disponíveis...</p>
         </div>
       ) : (
         <>
@@ -227,7 +227,7 @@ export default function AlunoAulasPage() {
                             >
                               {isLive ? 'Ao Vivo Agora' : session.status === 'SCHEDULED' ? 'Agendada' : 'Finalizada'}
                             </Badge>
-                            <span className="text-xs text-gray-500 font-medium">
+                            <span className="text-xs text-[hsl(20,5%,45%)] font-medium">
                               {session.duration} min
                             </span>
                           </div>
@@ -238,7 +238,7 @@ export default function AlunoAulasPage() {
                         </CardHeader>
                         <CardContent>
                           <div className="text-xs space-y-1 mb-4">
-                            <div className="flex items-center gap-2 text-gray-700">
+                            <div className="flex items-center gap-2 text-[hsl(20,5%,45%)]">
                               <Calendar className="h-4 w-4 text-[hsl(25,85%,48%)]" />
                               <span>
                                 {new Date(session.scheduledFor).toLocaleDateString('pt-BR', {
@@ -250,7 +250,7 @@ export default function AlunoAulasPage() {
                                 })}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-gray-700">
+                            <div className="flex items-center gap-2 text-[hsl(20,5%,45%)]">
                               <User className="h-4 w-4 text-[hsl(25,85%,48%)]" />
                               <span>Professor: {session.teacher.name || 'Sarah'}</span>
                             </div>
@@ -374,7 +374,7 @@ export default function AlunoAulasPage() {
                       </div>
 
                       <CardContent className="pt-2">
-                        <div className="text-xs text-gray-500 flex justify-between items-center mb-3">
+                        <div className="text-xs text-[hsl(20,5%,45%)] flex justify-between items-center mb-3">
                           <span>Gravada em: {new Date(rec.recordedAt).toLocaleDateString('pt-BR')}</span>
                           <span>Prof. {rec.teacher.name || 'Sarah'}</span>
                         </div>
@@ -426,7 +426,7 @@ export default function AlunoAulasPage() {
                     </div>
 
                     <div className="border rounded-lg overflow-hidden">
-                      <div className="p-3 bg-[hsl(35,10%,90%)] font-semibold text-xs text-gray-600 uppercase grid grid-cols-12">
+                      <div className="p-3 bg-[hsl(35,10%,90%)] font-semibold text-xs text-[hsl(20,5%,45%)] uppercase grid grid-cols-12">
                         <div className="col-span-4">Aula / Tema</div>
                         <div className="col-span-3">Data & Hora</div>
                         <div className="col-span-3">Professor</div>
@@ -434,13 +434,13 @@ export default function AlunoAulasPage() {
                       </div>
                       <div className="divide-y divide-gray-200">
                         <div className="p-3 text-sm grid grid-cols-12 items-center hover:bg-[hsl(35,10%,94%)]">
-                          <div className="col-span-4 font-medium text-gray-900">
+                          <div className="col-span-4 font-medium text-[hsl(20,10%,10%)]">
                             Business Negotiation Simulation
                           </div>
-                          <div className="col-span-3 text-gray-500">
+                          <div className="col-span-3 text-[hsl(20,5%,45%)]">
                             03/08/2026 às 14:00
                           </div>
-                          <div className="col-span-3 text-gray-700">
+                          <div className="col-span-3 text-[hsl(20,5%,45%)]">
                             Prof. Alex
                           </div>
                           <div className="col-span-2 text-right">
@@ -449,13 +449,13 @@ export default function AlunoAulasPage() {
                         </div>
 
                         <div className="p-3 text-sm grid grid-cols-12 items-center hover:bg-[hsl(35,10%,94%)]">
-                          <div className="col-span-4 font-medium text-gray-900">
+                          <div className="col-span-4 font-medium text-[hsl(20,10%,10%)]">
                             Idioms & Natural Expressions
                           </div>
-                          <div className="col-span-3 text-gray-500">
+                          <div className="col-span-3 text-[hsl(20,5%,45%)]">
                             27/07/2026 às 14:00
                           </div>
-                          <div className="col-span-3 text-gray-700">
+                          <div className="col-span-3 text-[hsl(20,5%,45%)]">
                             Prof. Alex
                           </div>
                           <div className="col-span-2 text-right">
