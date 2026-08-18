@@ -249,7 +249,7 @@
       transform-style: preserve-3d;
     }
 
-    /* Node Component Cards with 3D Tilt */
+    /* Node Component Cards with 3D Tilt & Fluid Drag */
     .arch-node {
       position: absolute;
       width: 250px;
@@ -257,13 +257,21 @@
       border: 1px solid var(--border-color);
       border-radius: 12px;
       padding: 14px;
-      cursor: pointer;
+      cursor: grab;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
       user-select: none;
       pointer-events: auto;
       transform-style: preserve-3d;
-      transition: box-shadow 0.3s ease, border-color 0.3s ease, background 0.3s ease, opacity 0.3s ease;
-      will-change: transform;
+      transition: box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease, opacity 0.25s ease;
+      will-change: transform, left, top;
+    }
+
+    .arch-node.dragging {
+      cursor: grabbing !important;
+      z-index: 60 !important;
+      transition: none !important;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(59, 130, 246, 0.5) !important;
+      border-color: #3B82F6 !important;
     }
 
     .arch-node .card-reflection {
@@ -685,6 +693,7 @@
     <div class="header-controls">
       <input type="text" id="search-input" class="search-box" placeholder="Buscar componente..." oninput="filterComponents(this.value)">
       <button class="btn active" id="btn-parallax" onclick="toggleParallax()">✨ Parallax: ATIVO</button>
+      <button class="btn" onclick="resetPositions()">🔄 Resetar Posições</button>
       <button class="btn" onclick="resetZoom()">🔍 Resetar Zoom</button>
       <button class="btn" onclick="clearSelectedFlow()">✨ Visão Geral</button>
     </div>
@@ -1162,6 +1171,9 @@
       });
     }
 
+    // Initial Default Node Positions for Reset
+    const INITIAL_NODE_POSITIONS = ARCHITECTURE_DATA.nodes.map(n => ({ id: n.id, x: n.x, y: n.y }));
+
     function renderNodes() {
       canvas.innerHTML = '';
       ARCHITECTURE_DATA.nodes.forEach(node => {
@@ -1170,14 +1182,63 @@
         el.id = `node-${node.id}`;
         el.style.left = `${node.x}px`;
         el.style.top = `${node.y}px`;
-        el.onclick = (e) => {
+
+        let isDragging = false;
+        let startClientX = 0;
+        let startClientY = 0;
+        let startNodeX = node.x;
+        let startNodeY = node.y;
+        let hasMoved = false;
+
+        // Fluid Drag Listener
+        el.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return; // Left click only
           e.stopPropagation();
-          openNodeModal(node);
-        };
+          isDragging = true;
+          hasMoved = false;
+          startClientX = e.clientX;
+          startClientY = e.clientY;
+          startNodeX = node.x;
+          startNodeY = node.y;
+
+          function onMouseMove(moveEv) {
+            if (!isDragging) return;
+            const dx = (moveEv.clientX - startClientX) / currentZoom;
+            const dy = (moveEv.clientY - startClientY) / currentZoom;
+            
+            if (Math.hypot(dx, dy) > 3) {
+              if (!hasMoved) {
+                hasMoved = true;
+                el.classList.add('dragging');
+              }
+              node.x = startNodeX + dx;
+              node.y = startNodeY + dy;
+              el.style.left = `${node.x}px`;
+              el.style.top = `${node.y}px`;
+              renderEdges();
+            }
+          }
+
+          function onMouseUp() {
+            if (isDragging) {
+              isDragging = false;
+              el.classList.remove('dragging');
+              window.removeEventListener('mousemove', onMouseMove);
+              window.removeEventListener('mouseup', onMouseUp);
+
+              if (!hasMoved) {
+                openNodeModal(node);
+              }
+            }
+          }
+
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+        });
 
         // 3D Tilt on Hover
         el.addEventListener('mousemove', (e) => {
-          if (!parallaxEnabled) return;
+          if (!parallaxEnabled || el.classList.contains('dragging')) return;
           const rect = el.getBoundingClientRect();
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
@@ -1193,6 +1254,7 @@
         });
 
         el.addEventListener('mouseleave', () => {
+          if (el.classList.contains('dragging')) return;
           el.style.transform = `perspective(800px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1) translateZ(0px)`;
         });
 
@@ -1213,6 +1275,24 @@
 
         canvas.appendChild(el);
       });
+    }
+
+    function resetPositions() {
+      INITIAL_NODE_POSITIONS.forEach(pos => {
+        const node = ARCHITECTURE_DATA.nodes.find(n => n.id === pos.id);
+        if (node) {
+          node.x = pos.x;
+          node.y = pos.y;
+          const el = document.getElementById(`node-${node.id}`);
+          if (el) {
+            el.style.transition = 'left 0.3s ease, top 0.3s ease';
+            el.style.left = `${node.x}px`;
+            el.style.top = `${node.y}px`;
+            setTimeout(() => { el.style.transition = ''; }, 300);
+          }
+        }
+      });
+      setTimeout(renderEdges, 50);
     }
 
     function renderEdges() {
