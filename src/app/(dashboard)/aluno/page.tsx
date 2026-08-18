@@ -104,9 +104,17 @@ export default function AlunoDashboardPage() {
   if (loading) {
     return (
       <DashboardShell title="Portal do Aluno" subtitle="Carregando seu ambiente de estudos...">
-        <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Preparando suas aulas e informações financeiras...</p>
+        <div className="space-y-4">
+          <div className="h-24 rounded-xl bg-muted/60 animate-pulse" />
+          <div className="grid md:grid-cols-3 gap-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-32 rounded-xl bg-muted/60 animate-pulse" />
+            ))}
+          </div>
+          <div className="grid lg:grid-cols-7 gap-6">
+            <div className="lg:col-span-4 h-64 rounded-xl bg-muted/60 animate-pulse" />
+            <div className="lg:col-span-3 h-64 rounded-xl bg-muted/60 animate-pulse" />
+          </div>
         </div>
       </DashboardShell>
     )

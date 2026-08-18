@@ -37,7 +37,6 @@ function LoginForm() {
     } else if (errorParam) {
       setError(`Erro na autenticação: ${errorParam}`)
     }
-    // Pré-carrega as rotas de dashboard para transição de página instantânea
     router.prefetch('/admin')
     router.prefetch('/professor')
     router.prefetch('/aluno')
@@ -73,7 +72,6 @@ function LoginForm() {
       }
 
       if (result?.ok) {
-        // Obtém a sessão diretamente para redirecionar de forma imediata à rota do perfil
         const session = await getSession()
         const targetUrl = getDashboardUrl(session?.user?.role || '')
         router.push(targetUrl)
@@ -96,16 +94,19 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[hsl(38,20%,97%)]">
+      <Card className="w-full max-w-md shadow-tinted">
         <CardHeader className="text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            English School
-          </div>
-          <CardTitle className="text-2xl">
-            {step === 'credentials' ? 'Login' : 'Verificação em Duas Etapas'}
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
+            <span className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)]">English School</span>
+          </Link>
+          <CardTitle className="text-2xl font-outfit font-bold text-[hsl(20,10%,10%)]">
+            {step === 'credentials' ? 'Login' : 'Verificação em duas etapas'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-[hsl(20,5%,45%)]">
             {step === 'credentials'
               ? 'Entre com suas credenciais para acessar o sistema'
               : 'Digite o código de 6 dígitos do seu aplicativo autenticador'}
@@ -113,7 +114,7 @@ function LoginForm() {
         </CardHeader>
         <CardContent>
           {success && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm mb-4">
+            <div className="bg-[hsl(145,60%,45%)]/10 border border-[hsl(145,60%,45%)]/20 text-[hsl(145,60%,45%)] px-4 py-3 rounded-md text-sm mb-4">
               {success}
             </div>
           )}
@@ -121,12 +122,12 @@ function LoginForm() {
           {step === 'credentials' ? (
             <form onSubmit={handleCredentialsSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md text-sm">
                   {error}
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-[hsl(20,10%,10%)] font-medium">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -135,10 +136,11 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
+                  className="bg-white"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password" className="text-[hsl(20,10%,10%)] font-medium">Senha</Label>
                 <Input
                   id="password"
                   type="password"
@@ -147,21 +149,22 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
+                  className="bg-white"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button type="submit" className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold" disabled={loading}>
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
           ) : (
             <form onSubmit={handleTwoFactorSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+                <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md text-sm">
                   {error}
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="twoFactorToken">Código de Verificação</Label>
+                <Label htmlFor="twoFactorToken" className="text-[hsl(20,10%,10%)] font-medium">Código de verificação</Label>
                 <Input
                   id="twoFactorToken"
                   type="text"
@@ -173,16 +176,16 @@ function LoginForm() {
                   onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, ''))}
                   required
                   autoComplete="one-time-code"
-                  className="text-center text-2xl tracking-widest"
+                  className="text-center text-2xl tracking-widest bg-white"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading || twoFactorToken.length !== 6}>
+              <Button type="submit" className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold" disabled={loading || twoFactorToken.length !== 6}>
                 {loading ? 'Verificando...' : 'Confirmar'}
               </Button>
               <Button
                 type="button"
                 variant="outline"
-                className="w-full"
+                className="w-full border-[hsl(35,10%,85%)] text-[hsl(20,10%,15%)]"
                 onClick={() => {
                   setStep('credentials')
                   setTwoFactorToken('')
@@ -194,19 +197,19 @@ function LoginForm() {
             </form>
           )}
 
-          <div className="mt-4 text-center text-sm space-y-2">
+          <div className="mt-6 text-center text-sm space-y-2">
             <div>
-              <Link href="/forgot-password" className="text-purple-600 hover:underline">
+              <Link href="/forgot-password" className="text-[hsl(25,85%,48%)] hover:underline">
                 Esqueceu sua senha?
               </Link>
             </div>
             <div>
-              <Link href="/register" className="text-purple-600 hover:underline">
+              <Link href="/register" className="text-[hsl(25,85%,48%)] hover:underline">
                 Não tem uma conta? Cadastre-se
               </Link>
             </div>
             <div>
-              <Link href="/" className="text-purple-600 hover:underline">
+              <Link href="/" className="text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">
                 Voltar para o site
               </Link>
             </div>
@@ -219,7 +222,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[hsl(38,20%,97%)]">Carregando...</div>}>
       <LoginForm />
     </Suspense>
   )

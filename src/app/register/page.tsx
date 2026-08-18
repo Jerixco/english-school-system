@@ -72,24 +72,27 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[hsl(38,20%,97%)]">
+      <Card className="w-full max-w-md shadow-tinted">
         <CardHeader className="text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            English School
-          </div>
-          <CardTitle className="text-2xl">Criar Conta</CardTitle>
-          <CardDescription>Cadastre-se para acessar o portal do aluno</CardDescription>
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
+            <span className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)]">English School</span>
+          </Link>
+          <CardTitle className="text-2xl font-outfit font-bold text-[hsl(20,10%,10%)]">Criar conta</CardTitle>
+          <CardDescription className="text-[hsl(20,5%,45%)]">Cadastre-se para acessar o portal do aluno</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
+              <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md text-sm">
                 {error}
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="name">Nome</Label>
+              <Label htmlFor="name" className="text-[hsl(20,10%,10%)] font-medium">Nome</Label>
               <Input
                 id="name"
                 type="text"
@@ -98,10 +101,11 @@ export default function RegisterPage() {
                 onChange={(e) => setName(e.target.value)}
                 required
                 minLength={2}
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-[hsl(20,10%,10%)] font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -109,10 +113,11 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-[hsl(20,10%,10%)] font-medium">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -121,13 +126,14 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="bg-white"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[hsl(20,5%,45%)]">
                 Mínimo 8 caracteres, com maiúscula, minúscula e número
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+              <Label htmlFor="confirmPassword" className="text-[hsl(20,10%,10%)] font-medium">Confirmar senha</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -136,22 +142,25 @@ export default function RegisterPage() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
+                className="bg-white"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Criando conta...' : 'Criar Conta'}
+            <Button type="submit" className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold" disabled={loading}>
+              {loading ? 'Criando conta...' : 'Criar conta'}
             </Button>
           </form>
-          <div className="mt-4 text-center text-sm">
-            <span className="text-gray-600">Já tem uma conta? </span>
-            <Link href="/login" className="text-purple-600 hover:underline">
-              Faça login
-            </Link>
-          </div>
-          <div className="mt-2 text-center text-sm">
-            <Link href="/" className="text-purple-600 hover:underline">
-              Voltar para o site
-            </Link>
+          <div className="mt-6 text-center text-sm space-y-2">
+            <div>
+              <span className="text-[hsl(20,5%,45%)]">Já tem uma conta? </span>
+              <Link href="/login" className="text-[hsl(25,85%,48%)] hover:underline">
+                Faça login
+              </Link>
+            </div>
+            <div>
+              <Link href="/" className="text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">
+                Voltar para o site
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>
