@@ -56,8 +56,8 @@ export default function ProfessorDashboardPage() {
     return (
       <DashboardShell title="Portal do Professor" subtitle="Carregando informações...">
         <div className="text-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Conectando à sua área docente...</p>
+          <div className="w-12 h-12 rounded-xl bg-muted/60 animate-pulse mx-auto mb-4"></div>
+          <p className="text-[hsl(20,5%,45%)]">Conectando à sua área docente...</p>
         </div>
       </DashboardShell>
     )
@@ -66,7 +66,7 @@ export default function ProfessorDashboardPage() {
   if (error || !data) {
     return (
       <DashboardShell title="Portal do Professor">
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md">
+        <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md">
           {error || 'Não foi possível carregar as informações'}
         </div>
       </DashboardShell>

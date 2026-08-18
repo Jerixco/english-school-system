@@ -49,7 +49,7 @@ function ResetPasswordForm() {
         return
       }
 
-      setMessage('Senha redefinida com sucesso! Redirecionando para o login...')
+      setMessage('Senha redefinida com sucesso. Redirecionando para o login...')
       setTimeout(() => {
         router.push('/login')
       }, 3000)
@@ -62,15 +62,17 @@ function ResetPasswordForm() {
 
   if (!token) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
-        <Card className="w-full max-w-md">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-[hsl(38,20%,97%)]">
+        <Card className="w-full max-w-md shadow-tinted">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-red-600">Link inválido</CardTitle>
-            <CardDescription>O link de recuperação é inválido ou está incompleto.</CardDescription>
+            <CardTitle className="text-2xl font-outfit font-bold text-[hsl(0,70%,50%)]">Link inválido</CardTitle>
+            <CardDescription className="text-[hsl(20,5%,45%)]">O link de recuperação é inválido ou está incompleto.</CardDescription>
           </CardHeader>
           <CardContent className="text-center">
             <Link href="/forgot-password">
-              <Button className="w-full">Solicitar novo link</Button>
+              <Button className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold">
+                Solicitar novo link
+              </Button>
             </Link>
           </CardContent>
         </Card>
@@ -79,30 +81,37 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[hsl(38,20%,97%)]">
+      <Card className="w-full max-w-md shadow-tinted">
         <CardHeader className="text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            English School
-          </div>
-          <CardTitle className="text-2xl">Redefinir Senha</CardTitle>
-          <CardDescription>Digite sua nova senha abaixo</CardDescription>
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
+            <span className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)]">English School</span>
+          </Link>
+          <CardTitle className="text-2xl font-outfit font-bold text-[hsl(20,10%,10%)]">
+            Redefinir senha
+          </CardTitle>
+          <CardDescription className="text-[hsl(20,5%,45%)]">
+            Digite sua nova senha abaixo
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {message && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm mb-4">
+            <div className="bg-[hsl(145,60%,45%)]/10 border border-[hsl(145,60%,45%)]/20 text-[hsl(145,60%,45%)] px-4 py-3 rounded-md text-sm mb-4">
               {message}
             </div>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-4">
+            <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md text-sm mb-4">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Nova Senha</Label>
+              <Label htmlFor="password" className="text-[hsl(20,10%,10%)] font-medium">Nova senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -111,10 +120,11 @@ function ResetPasswordForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
+                className="bg-white"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <Label htmlFor="confirmPassword" className="text-[hsl(20,10%,10%)] font-medium">Confirmar nova senha</Label>
               <Input
                 id="confirmPassword"
                 type="password"
@@ -123,15 +133,16 @@ function ResetPasswordForm() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
+                className="bg-white"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Salvando...' : 'Redefinir Senha'}
+            <Button type="submit" className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold" disabled={loading}>
+              {loading ? 'Salvando...' : 'Redefinir senha'}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm">
-            <Link href="/login" className="text-purple-600 hover:underline">
+          <div className="mt-6 text-center">
+            <Link href="/login" className="text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors text-sm">
               Voltar para o login
             </Link>
           </div>
@@ -143,7 +154,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Carregando...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[hsl(38,20%,97%)]">Carregando...</div>}>
       <ResetPasswordForm />
     </Suspense>
   )

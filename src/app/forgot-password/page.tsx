@@ -42,32 +42,37 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-purple-50 to-blue-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-[hsl(38,20%,97%)]">
+      <Card className="w-full max-w-md shadow-tinted">
         <CardHeader className="text-center">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent mb-2">
-            English School
-          </div>
-          <CardTitle className="text-2xl">Esqueceu sua senha?</CardTitle>
-          <CardDescription>
-            Digite seu email para receber um link de redefinição de senha
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
+            <span className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)]">English School</span>
+          </Link>
+          <CardTitle className="text-2xl font-outfit font-bold text-[hsl(20,10%,10%)]">
+            Esqueceu sua senha?
+          </CardTitle>
+          <CardDescription className="text-[hsl(20,5%,45%)]">
+            Digite seu email para receber um link de redefinição
           </CardDescription>
         </CardHeader>
         <CardContent>
           {message && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-md text-sm mb-4">
+            <div className="bg-[hsl(145,60%,45%)]/10 border border-[hsl(145,60%,45%)]/20 text-[hsl(145,60%,45%)] px-4 py-3 rounded-md text-sm mb-4">
               {message}
             </div>
           )}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm mb-4">
+            <div className="bg-[hsl(0,70%,50%)]/10 border border-[hsl(0,70%,50%)]/20 text-[hsl(0,70%,50%)] px-4 py-3 rounded-md text-sm mb-4">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-[hsl(20,10%,10%)] font-medium">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -76,18 +81,19 @@ export default function ForgotPasswordPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                className="bg-white"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold" disabled={loading}>
               {loading ? 'Enviando...' : 'Enviar link de recuperação'}
             </Button>
           </form>
 
-          <div className="mt-4 text-center text-sm space-y-2">
-            <Link href="/login" className="text-purple-600 hover:underline block">
+          <div className="mt-6 text-center text-sm space-y-2">
+            <Link href="/login" className="text-[hsl(25,85%,48%)] hover:underline block">
               Lembrou a senha? Faça login
             </Link>
-            <Link href="/" className="text-purple-600 hover:underline block">
+            <Link href="/" className="text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">
               Voltar para o site
             </Link>
           </div>

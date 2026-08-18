@@ -18,7 +18,7 @@ import {
 export const metadata: Metadata = {
   title: 'Política de Privacidade & LGPD | English School',
   description:
-    'Conheça nossa Política de Privacidade em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018). Saiba como tratamos e protegemos seus dados pessoais.',
+    'Conheça nossa Política de Privacidade em conformidade com a Lei Geral de Proteção de Dados (LGPD - Lei no 13.709/2018). Saiba como tratamos e protegemos seus dados pessoais.',
   alternates: {
     canonical: '/privacidade',
   },
@@ -28,21 +28,24 @@ export default function PrivacidadePage() {
   const lastUpdated = '14 de agosto de 2026'
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[hsl(38,20%,97%)] grain">
       {/* Header de Navegação */}
-      <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-[hsl(35,10%,85%)] bg-white/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-7xl">
           <Link
             href="/"
-            className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent"
+            className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)] flex items-center gap-2"
           >
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
             English School
           </Link>
           <div className="flex items-center gap-3">
-            <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs">
+            <Button asChild variant="outline" size="sm" className="gap-1.5 text-xs border-[hsl(35,10%,85%)] text-[hsl(20,10%,15%)]">
               <Link href="/">
                 <ArrowLeft className="h-4 w-4" />
-                Voltar ao Início
+                Voltar ao início
               </Link>
             </Button>
           </div>
@@ -50,27 +53,27 @@ export default function PrivacidadePage() {
       </header>
 
       {/* Hero */}
-      <section className="py-14 px-4 bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-900 text-white">
+      <section className="py-14 px-4 bg-[hsl(220,25%,12%)] text-white">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="inline-flex items-center gap-2 bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 border border-indigo-500/30">
+          <div className="inline-flex items-center gap-2 bg-[hsl(25,85%,48%)]/20 text-[hsl(25,85%,48%)] px-3 py-1 rounded-sm text-xs font-semibold uppercase tracking-wider mb-4 border border-[hsl(25,85%,48%)]/30">
             <ShieldCheck className="h-4 w-4" />
-            Conformidade LGPD (Lei nº 13.709/2018)
+            Conformidade LGPD (Lei no 13.709/2018)
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white mb-4">
+          <h1 className="text-3xl sm:text-4xl font-outfit font-bold tracking-tight text-white mb-4">
             Política de Privacidade e Proteção de Dados
           </h1>
-          <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-[hsl(20,5%,65%)] max-w-2xl mx-auto leading-relaxed">
             Transparência, segurança e respeito aos seus direitos fundamentais de liberdade e privacidade.
           </p>
-          <div className="mt-4 text-xs text-slate-400">
-            Última atualização: <strong className="text-slate-200">{lastUpdated}</strong>
+          <div className="mt-4 text-xs text-[hsl(20,5%,55%)]">
+            Última atualização: <strong className="text-[hsl(20,5%,75%)]">{lastUpdated}</strong>
           </div>
         </div>
       </section>
 
       {/* Conteúdo Principal */}
-      <main className="py-12 px-4">
-        <div className="container mx-auto max-w-4xl space-y-8">
+      <main className="py-12 px-4 bg-white">
+        <div className="container mx-auto max-w-4xl space-y-6">
           {/* Card Resumo Rápido */}
           <Card className="border-indigo-100 bg-indigo-50/40 shadow-sm">
             <CardHeader className="pb-3">
@@ -141,7 +144,7 @@ export default function PrivacidadePage() {
             <CardHeader>
               <CardTitle className="text-xl text-slate-900 flex items-center gap-2">
                 <FileText className="h-5 w-5 text-indigo-600" />
-                2. Bases Legais do Tratamento (Art. 7º da LGPD)
+                2. Bases Legais do Tratamento (Art. 7o da LGPD)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-slate-700 leading-relaxed">
@@ -149,10 +152,10 @@ export default function PrivacidadePage() {
                 Todo tratamento de dados pessoais realizado pela English School está devidamente fundamentado nas hipóteses legais previstas pela LGPD:
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
-                <li><strong>Execução de Contrato (Art. 7º, V):</strong> Para prestação das aulas de inglês, acesso ao portal do aluno, agendamento de professores e processamento da assinatura.</li>
-                <li><strong>Cumprimento de Obrigação Legal ou Regulatória (Art. 7º, II):</strong> Emissão de notas fiscais, faturas de cobrança e cumprimento de ordens judiciais.</li>
-                <li><strong>Legítimo Interesse e Segurança (Art. 7º, IX):</strong> Prevenção a acessos não autorizados, auditoria de segurança da informação e bloqueio de credenciais comprometidas.</li>
-                <li><strong>Consentimento (Art. 7º, I):</strong> Quando aplicável, para o envio de comunicações promocionais e cookies analíticos opcionais.</li>
+                <li><strong>Execução de Contrato (Art. 7o, V):</strong> Para prestação das aulas de inglês, acesso ao portal do aluno, agendamento de professores e processamento da assinatura.</li>
+                <li><strong>Cumprimento de Obrigação Legal ou Regulatória (Art. 7o, II):</strong> Emissão de notas fiscais, faturas de cobrança e cumprimento de ordens judiciais.</li>
+                <li><strong>Legítimo Interesse e Segurança (Art. 7o, IX):</strong> Prevenção a acessos não autorizados, auditoria de segurança da informação e bloqueio de credenciais comprometidas.</li>
+                <li><strong>Consentimento (Art. 7o, I):</strong> Quando aplicável, para o envio de comunicações promocionais e cookies analíticos opcionais.</li>
               </ul>
             </CardContent>
           </Card>
@@ -193,7 +196,7 @@ export default function PrivacidadePage() {
               </p>
               <ul className="list-disc pl-5 space-y-1.5 text-xs sm:text-sm">
                 <li><strong>Gravações de Aulas (VOD):</strong> Permanecem disponíveis temporariamente para revisão durante a vigência do plano do estudante (com expiração e descarte automatizado).</li>
-                <li><strong>Logs de Auditoria e Conexão:</strong> Mantidos por prazo de segurança conforme prazos estabelecidos pelo Marco Civil da Internet (Lei nº 12.965/2014).</li>
+                <li><strong>Logs de Auditoria e Conexão:</strong> Mantidos por prazo de segurança conforme prazos estabelecidos pelo Marco Civil da Internet (Lei no 12.965/2014).</li>
                 <li><strong>Encerramento de Conta:</strong> Ao cancelar sua matrícula, o aluno pode solicitar a eliminação definitiva de seus dados por meio do canal de privacidade.</li>
               </ul>
             </CardContent>
@@ -251,17 +254,17 @@ export default function PrivacidadePage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t py-10 px-4 bg-white mt-12">
-        <div className="container mx-auto max-w-4xl text-center text-xs text-slate-500 space-y-2">
+      <footer className="border-t border-[hsl(35,10%,85%)] py-10 px-4 bg-[hsl(35,10%,94%)] mt-12">
+        <div className="container mx-auto max-w-4xl text-center text-xs text-[hsl(20,5%,45%)] space-y-2">
           <p>© {new Date().getFullYear()} English School. Todos os direitos reservados.</p>
           <div className="flex items-center justify-center gap-4 text-xs">
-            <Link href="/" className="hover:text-indigo-600 transition">Início</Link>
+            <Link href="/" className="hover:text-[hsl(25,85%,48%)] transition-colors">Início</Link>
             <span>•</span>
-            <Link href="/planos" className="hover:text-indigo-600 transition">Planos</Link>
+            <Link href="/planos" className="hover:text-[hsl(25,85%,48%)] transition-colors">Planos</Link>
             <span>•</span>
-            <Link href="/privacidade" className="text-indigo-600 font-semibold">Política de Privacidade (LGPD)</Link>
+            <Link href="/privacidade" className="text-[hsl(25,85%,48%)] font-semibold">Política de Privacidade (LGPD)</Link>
             <span>•</span>
-            <Link href="/contato" className="hover:text-indigo-600 transition">Contato</Link>
+            <Link href="/contato" className="hover:text-[hsl(25,85%,48%)] transition-colors">Contato</Link>
           </div>
         </div>
       </footer>

@@ -4,7 +4,6 @@ import { Calendar, User, ArrowLeft, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import { sanitizeRichHtml } from '@/lib/sanitize-html'
 
-// This would typically fetch from API based on slug
 const blogPost = {
   title: '5 Dicas para Aprender Inglês Mais Rápido',
   slug: '5-dicas-para-aprender-ingles-mais-rapido',
@@ -38,30 +37,35 @@ export default async function BlogPostPage({
 }) {
   const { slug } = await params
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-[hsl(38,20%,97%)] grain">
       {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+      <header className="border-b border-[hsl(35,10%,85%)]">
+        <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between max-w-7xl">
+          <Link href="/" className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)] flex items-center gap-2">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+              <span className="text-white font-bold text-sm">E</span>
+            </div>
             English School
-          </div>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm hover:text-purple-600 transition">Home</Link>
-            <Link href="/blog" className="text-sm hover:text-purple-600 transition">Blog</Link>
-            <Link href="/planos" className="text-sm hover:text-purple-600 transition">Planos</Link>
+          </Link>
+          <nav className="hidden md:flex items-center gap-8">
+            <Link href="/" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Home</Link>
+            <Link href="/blog" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Blog</Link>
+            <Link href="/planos" className="text-sm font-medium text-[hsl(20,5%,45%)] hover:text-[hsl(25,85%,48%)] transition-colors">Planos</Link>
           </nav>
           <Link href="/agendar">
-            <Button>Agendar Consulta Gratuita</Button>
+            <Button className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold">
+              Agendar consulta
+            </Button>
           </Link>
         </div>
       </header>
 
       {/* Article */}
-      <article className="py-20 px-4">
+      <article className="py-16 md:py-20 px-4 md:px-6 bg-white">
         <div className="container mx-auto max-w-4xl">
-          <Link href="/blog" className="inline-flex items-center text-purple-600 hover:text-purple-700 mb-8">
+          <Link href="/blog" className="inline-flex items-center text-[hsl(25,85%,48%)] hover:text-[hsl(25,85%,48%)/80] mb-8 text-sm font-medium transition-colors">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Voltar ao Blog
+            Voltar ao blog
           </Link>
 
           <header className="mb-8">
@@ -69,29 +73,32 @@ export default async function BlogPostPage({
               {blogPost.tags.map((tag) => (
                 <span
                   key={tag}
-                  className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full"
+                  className="text-xs font-semibold px-2.5 py-1 rounded-sm bg-[hsl(25,85%,48%)]/10 text-[hsl(25,85%,48%)] uppercase tracking-wide"
                 >
                   {tag}
                 </span>
               ))}
             </div>
-            <h1 className="text-4xl font-bold mb-4">{blogPost.title}</h1>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
+            <h1 className="text-3xl md:text-4xl font-outfit font-bold text-[hsl(20,10%,10%)] mb-4 leading-tight">
+              {blogPost.title}
+            </h1>
+            <div className="flex items-center gap-4 text-sm text-[hsl(20,5%,45%)]">
               <div className="flex items-center gap-1">
-                <User className="h-4 w-4" />
+                <User className="h-4 w-4 text-[hsl(25,85%,48%)]" />
                 <span>{blogPost.author}</span>
               </div>
               <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
+                <Calendar className="h-4 w-4 text-[hsl(25,85%,48%)]" />
                 <span>{new Date(blogPost.createdAt).toLocaleDateString('pt-BR')}</span>
               </div>
             </div>
           </header>
 
-          <Card>
+          <Card className="bg-[hsl(35,10%,94%)] border-none">
             <CardContent className="pt-6">
               <div
-                className="prose prose-lg max-w-none"
+                className="text-[hsl(20,5%,45%)] leading-relaxed prose prose-lg max-w-none"
+                style={{ fontFamily: 'var(--font-inter)' }}
                 dangerouslySetInnerHTML={{ __html: sanitizeRichHtml(blogPost.content) }}
               />
             </CardContent>
@@ -99,12 +106,12 @@ export default async function BlogPostPage({
 
           <div className="mt-8 flex justify-between items-center">
             <Link href="/blog">
-              <Button variant="outline">
+              <Button variant="outline" className="border-[hsl(35,10%,85%)] text-[hsl(20,10%,15%)]">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Voltar ao Blog
+                Voltar ao blog
               </Button>
             </Link>
-            <Button variant="outline">
+            <Button variant="outline" className="border-[hsl(35,10%,85%)] text-[hsl(20,10%,15%)]">
               <Share2 className="mr-2 h-4 w-4" />
               Compartilhar
             </Button>
@@ -113,25 +120,27 @@ export default async function BlogPostPage({
       </article>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-gray-50">
+      <section className="py-16 md:py-20 px-4 md:px-6 bg-[hsl(35,10%,94%)]">
         <div className="container mx-auto max-w-4xl text-center">
-          <h2 className="text-3xl font-bold mb-6">Gostou do artigo?</h2>
-          <p className="text-xl text-gray-600 mb-8">
+          <h2 className="text-3xl font-outfit font-bold text-[hsl(20,10%,10%)] mb-6">
+            Gostou do artigo
+          </h2>
+          <p className="text-lg text-[hsl(20,5%,45%)] mb-8 leading-relaxed">
             Agende sua consulta gratuita e descubra como podemos ajudar você a alcançar fluência em inglês.
           </p>
           <Link href="/agendar">
-            <Button size="lg" className="text-lg px-8 py-6">
-              Agendar Consulta Gratuita
+            <Button size="lg" className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold shadow-tinted text-lg px-8">
+              Agendar consulta gratuita
             </Button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center text-sm text-gray-600">
-            <p>© 2024 English School. Todos os direitos reservados.</p>
+      <footer className="border-t border-[hsl(35,10%,85%)] py-12 px-4 md:px-6 bg-[hsl(35,10%,94%)]">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center text-sm text-[hsl(20,5%,45%)]">
+            <p>© {new Date().getFullYear()} English School. Todos os direitos reservados.</p>
           </div>
         </div>
       </footer>
