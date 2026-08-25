@@ -29,14 +29,21 @@ export async function proxy(req: NextRequest) {
 
   const isDev = process.env.NODE_ENV === 'development'
 
-  // Nonce por request. Em produção substitui 'unsafe-inline' em script-src,
-  // fechando XSS por injeção de <script> inline. Em dev mantém-se permissivo
-  // (HMR/Fast Refresh do Next dependem de inline + eval).
-  const nonce = crypto.randomUUID().replace(/-/g, '')
-
-  const scriptSrc = isDev
-    ? "'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com"
-    : `'self' 'nonce-${nonce}' https://www.googletagmanager.com https://www.google-analytics.com`
+  const scriptSrc = [
+    "'self'",
+    "'unsafe-inline'",
+    isDev ? "'unsafe-eval'" : '',
+    'https://www.googletagmanager.com',
+    'https://www.google-analytics.com',
+    'https://assets.calendly.com',
+    'https://js.stripe.com',
+    'https://meet.jit.si',
+    'https://vercel.com',
+    'https://vercel.live',
+    'https://*.vercel.live',
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   const connectSrc = [
     "'self'",
@@ -92,14 +99,8 @@ export async function proxy(req: NextRequest) {
     "upgrade-insecure-requests",
   ].join('; ')
 
-  // Propaga nonce + CSP nos headers do REQUEST: assim o Next aplica o nonce
-  // automaticamente nos próprios scripts inline de bootstrap/hidratação, e o
-  // layout lê 'x-nonce' para os scripts de analytics.
   const requestHeaders = new Headers(req.headers)
-  if (!isDev) {
-    requestHeaders.set('x-nonce', nonce)
-    requestHeaders.set('Content-Security-Policy', csp)
-  }
+  requestHeaders.set('Content-Security-Policy', csp)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
 

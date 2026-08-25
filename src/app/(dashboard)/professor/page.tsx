@@ -74,10 +74,11 @@ export default function ProfessorDashboardPage() {
   }
 
   const activeLive = data.liveSessions.find((s) => s.status === 'LIVE')
+  const teacherFirstName = (data.teacher?.name || 'Professor').split(' ')[0]
 
   return (
     <DashboardShell
-      title={`Olá, Prof. ${data.teacher.name.split(' ')[0]}!`}
+      title={`Olá, Prof. ${teacherFirstName}!`}
       subtitle="Gerencie suas turmas, transmita aulas ao vivo e acompanhe seus alunos."
     >
       {/* Banner se houver aula ao vivo */}

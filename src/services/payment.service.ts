@@ -106,8 +106,36 @@ export class StripePaymentAdapter implements PaymentGateway {
     }
   }
 
-  async processWebhook(payload: any): Promise<{ processed: boolean; paymentId?: string }> {
-    return { processed: true }
+  async processWebhook(payload: any, signature?: string): Promise<{ processed: boolean; paymentId?: string }> {
+    const { stripe } = await import('@/lib/stripe')
+    const { StripeService } = await import('@/services/stripe.service')
+
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
+    let event: any = payload
+
+    if (webhookSecret && signature) {
+      const rawBody = typeof payload === 'string' ? payload : JSON.stringify(payload)
+      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
+    }
+
+    const stripeService = new StripeService()
+
+    switch (event.type) {
+      case 'checkout.session.completed':
+        await stripeService.handleCheckoutCompleted(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      case 'customer.subscription.updated':
+        await stripeService.handleSubscriptionUpdated(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      case 'customer.subscription.deleted':
+        await stripeService.handleSubscriptionDeleted(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      default:
+        return { processed: true }
+    }
   }
 }
 

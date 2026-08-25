@@ -54,8 +54,13 @@ export default function AiTutorCard() {
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [activeSpeechIdx, setActiveSpeechIdx] = useState<number | null>(null)
   const [autoPlayAudio, setAutoPlayAudio] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
   const recognitionRef = useRef<any>(null)
   const chatBottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
 
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -348,7 +353,7 @@ export default function AiTutorCard() {
         {/* Input Form with Microphone Recording */}
         <form onSubmit={handleSend} className="flex gap-2">
           {/* Microphone STT Button */}
-          {isSpeechRecognitionSupported() && (
+          {hasMounted && isSpeechRecognitionSupported() && (
             <Button
               type="button"
               variant={isRecording ? 'destructive' : 'outline'}
