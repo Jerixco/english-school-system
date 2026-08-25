@@ -152,8 +152,8 @@ export async function GET(req: NextRequest) {
       }),
       students: students.map((s) => ({
         id: s.id,
-        name: s.user.name || 'Aluno',
-        email: s.user.email,
+        name: s.user?.name || 'Aluno',
+        email: s.user?.email || '',
         plan: s.plan,
         status: s.status,
       })),

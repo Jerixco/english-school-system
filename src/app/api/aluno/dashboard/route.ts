@@ -122,14 +122,14 @@ export async function GET(req: NextRequest) {
           title: activeLiveSession.title,
           description: activeLiveSession.description,
           meetLink: activeLiveSession.meetLink,
-          teacherName: activeLiveSession.teacher.user.name,
+          teacherName: activeLiveSession.teacher?.user?.name || 'Professor',
           startedAt: activeLiveSession.startedAt,
         } : null,
         upcomingClasses: student.classes.map((c) => ({
           id: c.id,
           scheduledAt: c.scheduledAt,
           duration: c.duration,
-          teacherName: c.teacher.user.name,
+          teacherName: c.teacher?.user?.name || 'Professor',
           meetLink: c.meetLink,
         })),
         recentPayments: student.payments.map((p) => ({

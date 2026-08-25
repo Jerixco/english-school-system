@@ -26,95 +26,14 @@ function getDefaultRouteForRole(role: string): string {
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const response = NextResponse.next()
 
-  const isDev = process.env.NODE_ENV === 'development'
-
-  const scriptSrc = [
-    "'self'",
-    "'unsafe-inline'",
-    isDev ? "'unsafe-eval'" : '',
-    'https://www.googletagmanager.com',
-    'https://www.google-analytics.com',
-    'https://assets.calendly.com',
-    'https://js.stripe.com',
-    'https://meet.jit.si',
-    'https://vercel.com',
-    'https://vercel.live',
-    'https://*.vercel.live',
-  ]
-    .filter(Boolean)
-    .join(' ')
-
-  const connectSrc = [
-    "'self'",
-    'https://www.google-analytics.com',
-    'https://*.google-analytics.com',
-    'https://*.analytics.google.com',
-    'https://*.googletagmanager.com',
-    'https://api.stripe.com',
-    'https://*.sentry.io',
-    'https://calendly.com',
-    'https://meet.jit.si',
-    'https://vercel.com',
-    'https://vercel.live',
-    'https://*.vercel.live',
-    'https://*.pusher.com',
-    'wss://*.pusher.com',
-  ].join(' ')
-
-  const imgSrc = [
-    "'self'",
-    'blob:',
-    'data:',
-    'https://www.googletagmanager.com',
-    'https://www.google-analytics.com',
-    'https://images.unsplash.com',
-    'https://avatars.githubusercontent.com',
-    'https://vercel.com',
-    'https://vercel.live',
-    'https://*.vercel.live',
-  ].join(' ')
-
-  const fontSrc = [
-    "'self'",
-    'https://fonts.gstatic.com',
-    'https://vercel.live',
-    'https://assets.vercel.com',
-  ].join(' ')
-
-  const csp = [
-    "default-src 'self'",
-    `script-src ${scriptSrc}`,
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://vercel.live https://*.vercel.live",
-    `img-src ${imgSrc}`,
-    `font-src ${fontSrc}`,
-    `connect-src ${connectSrc}`,
-    "frame-src 'self' https://js.stripe.com https://calendly.com https://meet.jit.si https://vercel.com https://vercel.live https://*.vercel.live",
-    "manifest-src 'self' https://vercel.com https://vercel.live https://*.vercel.live",
-    "object-src 'none'",
-    "base-uri 'self'",
-    "form-action 'self'",
-    "frame-ancestors 'none'",
-    "block-all-mixed-content",
-    "upgrade-insecure-requests",
-  ].join('; ')
-
-  const requestHeaders = new Headers(req.headers)
-  requestHeaders.set('Content-Security-Policy', csp)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
-
-  response.headers.set('X-DNS-Prefetch-Control', 'on')
-  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
-  response.headers.set('X-Frame-Options', 'SAMEORIGIN')
-  response.headers.set('X-Content-Type-Options', 'nosniff')
-  response.headers.set('X-XSS-Protection', '1; mode=block')
-  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  response.headers.set('Permissions-Policy', 'camera=(self "https://meet.jit.si"), microphone=(self "https://meet.jit.si"), geolocation=()')
-  response.headers.set('Content-Security-Policy', csp)
-
-  if (req.nextUrl.pathname.startsWith('/api/')) {
-    response.headers.set('Access-Control-Allow-Origin', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+  // CORS para rotas /api/
+  if (pathname.startsWith('/api/')) {
+    response.headers.set(
+      'Access-Control-Allow-Origin',
+      process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    )
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
     response.headers.set('Access-Control-Allow-Credentials', 'true')
@@ -127,10 +46,12 @@ export async function proxy(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
   const userRole = token?.role as string | undefined
 
+  // Redireciona usuários autenticados que tentam acessar /login ou /register
   if (PUBLIC_AUTH_ROUTES.some((route) => pathname.startsWith(route)) && token) {
     return NextResponse.redirect(new URL(getDefaultRouteForRole(userRole || 'STUDENT'), req.url))
   }
 
+  // Validação de RBAC para rotas protegidas
   for (const [routePrefix, allowedRoles] of Object.entries(ROLE_ROUTES)) {
     if (pathname.startsWith(routePrefix)) {
       if (!token) {
@@ -149,5 +70,13 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/admin/:path*', '/aluno/:path*', '/professor/:path*', '/seguranca', '/login', '/register'],
+  matcher: [
+    '/api/:path*',
+    '/admin/:path*',
+    '/aluno/:path*',
+    '/professor/:path*',
+    '/seguranca',
+    '/login',
+    '/register',
+  ],
 }
