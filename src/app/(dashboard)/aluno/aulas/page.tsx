@@ -22,6 +22,8 @@ import {
   Award,
 } from 'lucide-react'
 import { useSearchParams } from 'next/navigation'
+import DevicePreCheckModal from '@/components/classroom/DevicePreCheckModal'
+import ClassFeedbackModal from '@/components/classroom/ClassFeedbackModal'
 
 interface LiveSessionItem {
   id: string
@@ -61,6 +63,8 @@ export default function AlunoAulasPage() {
   const [loading, setLoading] = useState(true)
   const [activeLiveStream, setActiveLiveStream] = useState<LiveSessionItem | null>(null)
   const [selectedVideo, setSelectedVideo] = useState<RecordingItem | null>(null)
+  const [preCheckSession, setPreCheckSession] = useState<LiveSessionItem | null>(null)
+  const [feedbackSession, setFeedbackSession] = useState<LiveSessionItem | null>(null)
 
   useEffect(() => {
     async function loadData() {
@@ -177,7 +181,11 @@ export default function AlunoAulasPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setActiveLiveStream(null)}
+                      onClick={() => {
+                        const current = activeLiveStream
+                        setActiveLiveStream(null)
+                        setFeedbackSession(current)
+                      }}
                       className="bg-white/10 hover:bg-white/20 text-white border-white/30"
                     >
                       Sair da Sala
@@ -258,7 +266,7 @@ export default function AlunoAulasPage() {
 
                           {isLive ? (
                             <Button
-                              onClick={() => setActiveLiveStream(session)}
+                              onClick={() => setPreCheckSession(session)}
                               className="w-full bg-red-600 hover:bg-red-700 text-white font-bold shadow-md"
                             >
                               <PlayCircle className="h-4 w-4 mr-2" />
@@ -266,7 +274,7 @@ export default function AlunoAulasPage() {
                             </Button>
                           ) : session.status === 'SCHEDULED' ? (
                             <Button
-                              onClick={() => setActiveLiveStream(session)}
+                              onClick={() => setPreCheckSession(session)}
                               variant="outline"
                               className="w-full text-sky-700 border-sky-300 hover:bg-[hsl(25,85%,48%)]/5"
                             >
@@ -470,6 +478,34 @@ export default function AlunoAulasPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Pre-Check Device Testing Modal */}
+      {preCheckSession && (
+        <DevicePreCheckModal
+          open={Boolean(preCheckSession)}
+          onClose={() => setPreCheckSession(null)}
+          sessionTitle={preCheckSession.title}
+          teacherName={preCheckSession.teacher.name || undefined}
+          onConfirm={() => {
+            const target = preCheckSession
+            setPreCheckSession(null)
+            setActiveLiveStream(target)
+          }}
+        />
+      )}
+
+      {/* Post-Class Feedback Modal */}
+      {feedbackSession && (
+        <ClassFeedbackModal
+          open={Boolean(feedbackSession)}
+          onClose={() => setFeedbackSession(null)}
+          sessionTitle={feedbackSession.title}
+          teacherName={feedbackSession.teacher.name || undefined}
+          onSubmit={(feedback: { rating: number; tags: string[]; comment: string }) => {
+            console.log('Feedback enviado:', feedback)
+          }}
+        />
       )}
     </DashboardShell>
   )

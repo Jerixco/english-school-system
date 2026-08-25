@@ -10,7 +10,13 @@ CRITICAL SECURITY & BEHAVIORAL BOUNDARIES:
 4. Safe Scope: Never generate executable exploit code, malicious scripts, or assist with unauthorized system access.
 5. Teaching Style: Always reply primarily in natural, clear English. If the student makes a grammatical error or phrasing mistake, include a gentle and helpful "💡 Quick Tip:" section at the end of your response.`
 
-const AVAILABLE_MODELS = ['gemini-1.5-flash', 'gemini-1.5-flash-8b']
+const AVAILABLE_MODELS = [
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.6-pro',
+  'gemini-2.5-flash',
+  'gemini-1.5-flash',
+]
 
 export interface ChatMessage {
   role: 'user' | 'model'

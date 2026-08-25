@@ -2,17 +2,18 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowRight, Check, Users, Award, Clock, Globe, Bot, LayoutDashboard, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Check, Users, Award, Clock, Globe, Bot, LayoutDashboard, ShieldCheck, Sparkles, Star } from 'lucide-react'
 import LeadForm from '@/components/LeadForm'
+import ParallaxHero from '@/components/landing/ParallaxHero'
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[hsl(38,20%,97%)] grain">
       {/* Header */}
-      <header className="border-b border-[hsl(35,10%,85%)] bg-white/80 backdrop-blur-md z-50">
+      <header className="border-b border-[hsl(35,10%,85%)] bg-white/80 backdrop-blur-md z-50 sticky top-0">
         <div className="container mx-auto px-4 md:px-6 py-4 flex items-center justify-between max-w-7xl">
           <Link href="/" className="text-xl font-outfit font-bold text-[hsl(20,10%,10%)] flex items-center gap-2">
-            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center">
+            <div className="w-8 h-8 bg-[hsl(25,85%,48%)] rounded-md flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-sm">E</span>
             </div>
             English School
@@ -29,7 +30,7 @@ export default function HomePage() {
               <Button variant="ghost" className="text-[hsl(20,10%,15%)]">Cadastrar</Button>
             </Link>
             <Link href="/login">
-              <Button className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold">
+              <Button className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold shadow-sm">
                 Entrar
               </Button>
             </Link>
@@ -37,84 +38,8 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="py-16 md:py-24 px-4 md:px-6 relative overflow-hidden" id="main-content">
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(25,85%,48%)]/5 via-transparent to-transparent pointer-events-none" />
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="max-w-xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm bg-[hsl(25,85%,48%)]/10 text-[hsl(25,85%,48%)] text-xs font-semibold mb-6 uppercase tracking-wider">
-                <span className="w-1.5 h-1.5 rounded-sm bg-[hsl(25,85%,48%)]" />
-                Aulas 100% Online & Ao Vivo
-              </div>
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-outfit font-extrabold mb-6 leading-[1.1] tracking-tight text-[hsl(20,10%,10%)]">
-                Aprenda inglês com{' '}
-                <span className="text-[hsl(25,85%,48%)]">
-                  professores nativos
-                </span>
-              </h1>
-              <p className="text-lg md:text-xl text-[hsl(20,5%,45%)] mb-8 leading-relaxed max-w-lg">
-                Aulas ao vivo personalizadas com inteligência artificial, suporte em tempo real e metodologia acelerada para sua fluência.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Link href="/agendar">
-                  <Button size="lg" className="bg-[hsl(25,85%,48%)] hover:bg-[hsl(25,85%,48%)/90] text-white font-semibold shadow-tinted">
-                    Agendar aula gratuita
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
-                <Link href="/metodologia">
-                  <Button size="lg" variant="outline" className="border-[hsl(35,10%,85%)] text-[hsl(20,10%,15%)] hover:bg-[hsl(25,85%,48%)]/5">
-                    Conhecer metodologia
-                  </Button>
-                </Link>
-              </div>
-              <div className="mt-8 flex flex-wrap items-center gap-6 text-sm text-[hsl(20,5%,45%)]">
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-[hsl(145,60%,45%)]" />
-                  <span>Primeira aula grátis</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-[hsl(145,60%,45%)]" />
-                  <span>Sem contrato de fidelidade</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Hero Image with floating card */}
-            <div className="relative">
-              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-[hsl(35,10%,85%)]/50 bg-white">
-                <Image
-                  src="/images/hero-student.jpg"
-                  alt="Aluna em aula online de inglês com professor nativo"
-                  width={600}
-                  height={750}
-                  className="w-full h-auto object-cover"
-                  priority
-                />
-              </div>
-
-              {/* Floating card — offset */}
-              <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 rounded-xl shadow-lg border border-[hsl(35,10%,85%)]/50 max-w-[220px]">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-lg overflow-hidden shrink-0 border border-[hsl(35,10%,85%)]">
-                    <Image
-                      src="/images/hero-teacher.jpg"
-                      alt="Professor Nativo"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div>
-                    <p className="text-xs font-outfit font-bold text-[hsl(20,10%,10%)]">Professores certificados</p>
-                    <p className="text-xs text-[hsl(20,5%,45%)]">EUA, Reino Unido e Canadá</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Interactive Parallax Hero Section */}
+      <ParallaxHero />
 
       {/* Features — asymmetric, not 3 equal columns */}
       <section className="py-20 px-4 md:px-6 bg-white">

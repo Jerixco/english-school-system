@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Shield, Info, Lock, AlertCircle } from 'lucide-react'
 
 type SetupStep = 'idle' | 'scanning' | 'enabled'
@@ -23,6 +24,7 @@ export default function SegurancaPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false)
+  const [showDisableDialog, setShowDisableDialog] = useState(false)
 
   useEffect(() => {
     fetch('/api/auth/profile')
@@ -236,9 +238,29 @@ export default function SegurancaPage() {
                         />
                       </div>
                     </div>
-                    <Button type="submit" variant="destructive" disabled={loading}>
-                      {loading ? 'Desativando...' : 'Desativar 2FA'}
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDisableDialog(true)}
+                      disabled={!password || !token || loading}
+                    >
+                      Desativar 2FA
                     </Button>
+
+                    <AlertDialog
+                      open={showDisableDialog}
+                      onOpenChange={setShowDisableDialog}
+                      title="Desativar Autenticação em Duas Etapas?"
+                      description="Ao desativar o 2FA, sua conta ficará vulnerável apenas com a senha tradicional. Tem certeza que deseja continuar?"
+                      confirmText="Sim, Desativar"
+                      cancelText="Cancelar"
+                      variant="destructive"
+                      loading={loading}
+                      onConfirm={async () => {
+                        await disable2FA({ preventDefault: () => {} } as any)
+                        setShowDisableDialog(false)
+                      }}
+                    />
                   </form>
                 </div>
               )}

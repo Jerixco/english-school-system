@@ -1,10 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sparkles, Send, RefreshCw, AlertCircle, User, MessageSquare, Compass, Briefcase, GraduationCap, Plane } from 'lucide-react'
+import {
+  Sparkles,
+  Send,
+  RefreshCw,
+  AlertCircle,
+  User,
+  MessageSquare,
+  Compass,
+  Briefcase,
+  GraduationCap,
+  Plane,
+  Mic,
+  MicOff,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
+import {
+  isSpeechRecognitionSupported,
+  isSpeechSynthesisSupported,
+  startSpeechRecognition,
+  speakEnglishText,
+  stopSpeaking,
+} from '@/lib/speech'
 
 interface Message {
   role: 'user' | 'model'
@@ -23,15 +45,39 @@ export default function AiTutorCard() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'model',
-      text: "Hi there! 👋 I'm Alex, your AI English Tutor. What would you like to practice today? You can choose a quick topic below or type any question!",
+      text: "Hi there! 👋 I'm Alex, your AI English Tutor. What would you like to practice today? You can speak using the microphone or type any question!",
     },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isRecording, setIsRecording] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [activeSpeechIdx, setActiveSpeechIdx] = useState<number | null>(null)
+  const [autoPlayAudio, setAutoPlayAudio] = useState(false)
+  const recognitionRef = useRef<any>(null)
+  const chatBottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, loading])
+
+  useEffect(() => {
+    return () => {
+      stopSpeaking()
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch {}
+      }
+    }
+  }, [])
 
   const sendQuery = async (userMessage: string) => {
     if (!userMessage.trim() || loading) return
 
+    stopSpeaking()
+    setIsSpeaking(false)
+    setActiveSpeechIdx(null)
     setInput('')
     const updatedMessages = [...messages, { role: 'user' as const, text: userMessage }]
     setMessages(updatedMessages)
@@ -55,10 +101,22 @@ export default function AiTutorCard() {
         throw new Error(data.error || 'Falha ao processar resposta do Tutor IA')
       }
 
-      setMessages([
-        ...updatedMessages,
-        { role: 'model', text: data.reply || 'Great job! Keep practicing!' },
-      ])
+      const replyText = data.reply || 'Great job! Keep practicing!'
+      const newMessages: Message[] = [...updatedMessages, { role: 'model', text: replyText }]
+      setMessages(newMessages)
+
+      if (autoPlayAudio && isSpeechSynthesisSupported()) {
+        const newMsgIdx = newMessages.length - 1
+        setActiveSpeechIdx(newMsgIdx)
+        speakEnglishText(
+          replyText,
+          () => setIsSpeaking(true),
+          () => {
+            setIsSpeaking(false)
+            setActiveSpeechIdx(null)
+          }
+        )
+      }
     } catch (err: any) {
       setMessages([
         ...updatedMessages,
@@ -76,6 +134,51 @@ export default function AiTutorCard() {
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     await sendQuery(input)
+  }
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop()
+        } catch {}
+      }
+      setIsRecording(false)
+      return
+    }
+
+    setIsRecording(true)
+    recognitionRef.current = startSpeechRecognition({
+      onResult: (transcript) => {
+        setInput(transcript)
+      },
+      onError: (err) => {
+        console.error('Speech error:', err)
+        setIsRecording(false)
+      },
+      onEnd: () => {
+        setIsRecording(false)
+      },
+    })
+  }
+
+  const handlePlayAudio = (text: string, index: number) => {
+    if (isSpeaking && activeSpeechIdx === index) {
+      stopSpeaking()
+      setIsSpeaking(false)
+      setActiveSpeechIdx(null)
+      return
+    }
+
+    setActiveSpeechIdx(index)
+    speakEnglishText(
+      text,
+      () => setIsSpeaking(true),
+      () => {
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+      }
+    )
   }
 
   return (
@@ -97,26 +200,47 @@ export default function AiTutorCard() {
                 <Sparkles className="h-4 w-4 text-yellow-300 fill-yellow-300 animate-pulse" />
               </CardTitle>
               <CardDescription className="text-purple-100 text-xs">
-                Pratique conversação 24/7 com correções e feedback em tempo real
+                Pratique conversação e pronúncia 24/7 com correções em tempo real
               </CardDescription>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-white hover:bg-purple-600/50 hover:text-white"
-            onClick={() =>
-              setMessages([
-                {
-                  role: 'model',
-                  text: "Hi there! 👋 I'm Alex, your AI English Tutor. What would you like to practice today?",
-                },
-              ])
-            }
-            title="Reiniciar conversa"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {/* Auto-Play Audio Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const nextState = !autoPlayAudio
+                setAutoPlayAudio(nextState)
+                if (!nextState) stopSpeaking()
+              }}
+              title={autoPlayAudio ? 'Áudio automático ativado' : 'Ativar áudio automático'}
+              className={`p-1.5 rounded-md text-xs flex items-center gap-1 transition-colors ${
+                autoPlayAudio
+                  ? 'bg-purple-500 text-white shadow-inner'
+                  : 'text-purple-200 hover:bg-purple-600/50'
+              }`}
+            >
+              {autoPlayAudio ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4 opacity-70" />}
+            </button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-purple-600/50 hover:text-white"
+              onClick={() => {
+                stopSpeaking()
+                setMessages([
+                  {
+                    role: 'model',
+                    text: "Hi there! 👋 I'm Alex, your AI English Tutor. What would you like to practice today?",
+                  },
+                ])
+              }}
+              title="Reiniciar conversa"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
@@ -145,7 +269,7 @@ export default function AiTutorCard() {
                 </div>
               )}
               <div
-                className={`p-3 rounded-xl max-w-[82%] whitespace-pre-wrap leading-relaxed ${
+                className={`p-3 rounded-xl max-w-[82%] whitespace-pre-wrap leading-relaxed relative group ${
                   msg.role === 'user'
                     ? 'bg-purple-600 text-white rounded-tr-none shadow-sm'
                     : msg.isError
@@ -153,7 +277,29 @@ export default function AiTutorCard() {
                     : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
                 }`}
               >
-                {msg.text}
+                <div>{msg.text}</div>
+
+                {/* Audio Listen Button for Model Responses */}
+                {msg.role === 'model' && !msg.isError && (
+                  <button
+                    type="button"
+                    onClick={() => handlePlayAudio(msg.text, index)}
+                    className="mt-2 text-xs inline-flex items-center gap-1 text-purple-700 hover:text-purple-900 font-medium transition-colors"
+                    title="Ouvir pronúncia em inglês"
+                  >
+                    {isSpeaking && activeSpeechIdx === index ? (
+                      <>
+                        <VolumeX className="h-3.5 w-3.5 text-purple-600 animate-pulse" />
+                        <span className="text-[11px] text-purple-600">Parar áudio</span>
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">Ouvir pronúncia</span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               {msg.role === 'user' && (
                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 shrink-0">
@@ -175,6 +321,7 @@ export default function AiTutorCard() {
               </div>
             </div>
           )}
+          <div ref={chatBottomRef} />
         </div>
 
         {/* Quick Prompt Pills */}
@@ -198,14 +345,36 @@ export default function AiTutorCard() {
           </div>
         </div>
 
-        {/* Input Form */}
+        {/* Input Form with Microphone Recording */}
         <form onSubmit={handleSend} className="flex gap-2">
+          {/* Microphone STT Button */}
+          {isSpeechRecognitionSupported() && (
+            <Button
+              type="button"
+              variant={isRecording ? 'destructive' : 'outline'}
+              onClick={toggleRecording}
+              disabled={loading}
+              title={isRecording ? 'Parar gravação' : 'Falar em inglês no microfone'}
+              className={`px-3 shrink-0 ${
+                isRecording ? 'animate-pulse ring-2 ring-red-400' : 'hover:bg-purple-50 hover:text-purple-700'
+              }`}
+            >
+              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4 text-purple-600" />}
+            </Button>
+          )}
+
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Digite uma mensagem em inglês (ex: How was your day?)..."
+            placeholder={
+              isRecording
+                ? '🎙️ Ouvindo sua fala em inglês...'
+                : 'Digite ou fale uma mensagem em inglês (ex: How was your day?)...'
+            }
             disabled={loading}
-            className="flex-1 text-sm focus-visible:ring-purple-500"
+            className={`flex-1 text-sm focus-visible:ring-purple-500 ${
+              isRecording ? 'border-red-400 bg-red-50/50' : ''
+            }`}
           />
           <Button
             type="submit"
