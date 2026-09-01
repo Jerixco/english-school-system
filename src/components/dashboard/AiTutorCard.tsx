@@ -24,6 +24,7 @@ import {
   isSpeechRecognitionSupported,
   startSpeechRecognition,
 } from '@/lib/speech'
+import { renderTutorMessage } from '@/lib/tutor-message'
 
 interface Message {
   role: 'user' | 'model'
@@ -365,7 +366,7 @@ export default function AiTutorCard() {
                     : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
                 }`}
               >
-                <div>{msg.text}</div>
+                <div>{renderTutorMessage(msg.text)}</div>
 
                 {/* Audio Listen Button for Model Responses */}
                 {msg.role === 'model' && !msg.isError && (
