@@ -10,3 +10,4 @@ ed4700436d87f6d961af596da57dd48e3ca8e0a4:.github/workflows/ci.yml:generic-api-ke
 ed4700436d87f6d961af596da57dd48e3ca8e0a4:.github/workflows/ci.yml:generic-api-key:18
 ed4700436d87f6d961af596da57dd48e3ca8e0a4:vitest.config.ts:generic-api-key:9
 ed4700436d87f6d961af596da57dd48e3ca8e0a4:vitest.config.ts:generic-api-key:10
+e7ee8433541394952656758c72c38fd4b5f0385d:.env.example:generic-api-key:56
