@@ -1,5 +1,4 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
@@ -58,26 +57,40 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
-
-    // Radix Slot exige exatamente um filho direto. Expressões condicionais
-    // como `{loading && <Loader2 />}` criam um segundo filho booleano mesmo
-    // quando loading é false, causando "Slot failed to slot onto its children".
     if (asChild) {
+      const childElements = React.Children.toArray(children)
+      const child = childElements.length === 1 ? childElements[0] : null
+
+      // Composição manual evita a exceção fatal do Radix Slot e preserva
+      // classes/props do elemento filho (Link, a, etc.).
+      if (React.isValidElement(child)) {
+        const childProps = child.props as { className?: string }
+        return React.cloneElement(child, {
+          ...props,
+          className: cn(buttonVariants({ variant, size, className }), childProps.className),
+          'aria-busy': loading || undefined,
+          ref,
+        } as React.HTMLAttributes<HTMLElement>)
+      }
+
+      // Proteção adicional para chamadas incorretas: a UI continua renderizando
+      // em vez de deixar uma exceção do componente quebrar toda a página.
       return (
-        <Comp
+        <button
           className={cn(buttonVariants({ variant, size, className }))}
           ref={ref}
+          disabled={disabled || loading}
           aria-busy={loading || undefined}
           {...props}
         >
-          {children}
-        </Comp>
+          {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {loading && loadingText ? loadingText : children}
+        </button>
       )
     }
 
     return (
-      <Comp
+      <button
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
         disabled={disabled || loading}
@@ -85,7 +98,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
         {loading && loadingText ? loadingText : children}
-      </Comp>
+      </button>
     )
   }
 )

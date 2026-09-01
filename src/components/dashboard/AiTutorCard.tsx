@@ -57,6 +57,9 @@ export default function AiTutorCard() {
   const [hasMounted, setHasMounted] = useState(false)
   const recognitionRef = useRef<any>(null)
   const chatBottomRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioCacheRef = useRef<Map<string, string>>(new Map())
+  const audioRequestIdRef = useRef(0)
 
   useEffect(() => {
     setHasMounted(true)
@@ -69,6 +72,11 @@ export default function AiTutorCard() {
   useEffect(() => {
     return () => {
       stopSpeaking()
+      audioRequestIdRef.current += 1
+      audioRef.current?.pause()
+      audioRef.current = null
+      for (const url of audioCacheRef.current.values()) URL.revokeObjectURL(url)
+      audioCacheRef.current.clear()
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
@@ -77,12 +85,102 @@ export default function AiTutorCard() {
     }
   }, [])
 
-  const sendQuery = async (userMessage: string) => {
-    if (!userMessage.trim() || loading) return
-
+  const stopTutorAudio = () => {
+    audioRequestIdRef.current += 1
+    audioRef.current?.pause()
+    audioRef.current = null
     stopSpeaking()
     setIsSpeaking(false)
     setActiveSpeechIdx(null)
+  }
+
+  const fallbackToBrowserSpeech = (text: string, index: number) => {
+    if (!isSpeechSynthesisSupported()) {
+      setIsSpeaking(false)
+      setActiveSpeechIdx(null)
+      return
+    }
+
+    setActiveSpeechIdx(index)
+    speakEnglishText(
+      text,
+      () => setIsSpeaking(true),
+      () => {
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+      }
+    )
+  }
+
+  const playTutorAudio = async (text: string, index: number) => {
+    const requestId = ++audioRequestIdRef.current
+    audioRef.current?.pause()
+    audioRef.current = null
+    stopSpeaking()
+    setActiveSpeechIdx(index)
+    setIsSpeaking(false)
+
+    let fallbackUsed = false
+    const fallback = () => {
+      if (fallbackUsed || audioRequestIdRef.current !== requestId) return
+      fallbackUsed = true
+      fallbackToBrowserSpeech(text, index)
+    }
+
+    try {
+      let audioUrl = audioCacheRef.current.get(text)
+      if (!audioUrl) {
+        const response = await fetch('/api/ai/tutor/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        })
+
+        if (!response.ok) throw new Error('ElevenLabs TTS unavailable')
+
+        audioUrl = URL.createObjectURL(await response.blob())
+        audioCacheRef.current.set(text, audioUrl)
+
+        if (audioCacheRef.current.size > 12) {
+          const oldestText = audioCacheRef.current.keys().next().value
+          if (oldestText) {
+            const oldestUrl = audioCacheRef.current.get(oldestText)
+            if (oldestUrl) URL.revokeObjectURL(oldestUrl)
+            audioCacheRef.current.delete(oldestText)
+          }
+        }
+      }
+
+      if (!audioUrl || audioRequestIdRef.current !== requestId) return
+
+      const audio = new Audio(audioUrl)
+      audioRef.current = audio
+      audio.onplay = () => {
+        if (audioRequestIdRef.current === requestId) setIsSpeaking(true)
+      }
+      audio.onended = () => {
+        if (audioRequestIdRef.current !== requestId) return
+        audioRef.current = null
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+      }
+      audio.onerror = fallback
+
+      try {
+        await audio.play()
+      } catch {
+        // Alguns navegadores bloqueiam áudio iniciado após uma chamada de rede.
+        fallback()
+      }
+    } catch {
+      fallback()
+    }
+  }
+
+  const sendQuery = async (userMessage: string) => {
+    if (!userMessage.trim() || loading) return
+
+    stopTutorAudio()
     setInput('')
     const updatedMessages = [...messages, { role: 'user' as const, text: userMessage }]
     setMessages(updatedMessages)
@@ -110,17 +208,9 @@ export default function AiTutorCard() {
       const newMessages: Message[] = [...updatedMessages, { role: 'model', text: replyText }]
       setMessages(newMessages)
 
-      if (autoPlayAudio && isSpeechSynthesisSupported()) {
+      if (autoPlayAudio) {
         const newMsgIdx = newMessages.length - 1
-        setActiveSpeechIdx(newMsgIdx)
-        speakEnglishText(
-          replyText,
-          () => setIsSpeaking(true),
-          () => {
-            setIsSpeaking(false)
-            setActiveSpeechIdx(null)
-          }
-        )
+        void playTutorAudio(replyText, newMsgIdx)
       }
     } catch (err: any) {
       setMessages([
@@ -168,22 +258,12 @@ export default function AiTutorCard() {
   }
 
   const handlePlayAudio = (text: string, index: number) => {
-    if (isSpeaking && activeSpeechIdx === index) {
-      stopSpeaking()
-      setIsSpeaking(false)
-      setActiveSpeechIdx(null)
+    if (activeSpeechIdx === index) {
+      stopTutorAudio()
       return
     }
 
-    setActiveSpeechIdx(index)
-    speakEnglishText(
-      text,
-      () => setIsSpeaking(true),
-      () => {
-        setIsSpeaking(false)
-        setActiveSpeechIdx(null)
-      }
-    )
+    void playTutorAudio(text, index)
   }
 
   return (
@@ -216,7 +296,7 @@ export default function AiTutorCard() {
               onClick={() => {
                 const nextState = !autoPlayAudio
                 setAutoPlayAudio(nextState)
-                if (!nextState) stopSpeaking()
+                if (!nextState) stopTutorAudio()
               }}
               title={autoPlayAudio ? 'Áudio automático ativado' : 'Ativar áudio automático'}
               aria-label={autoPlayAudio ? 'Desativar áudio automático' : 'Ativar áudio automático'}
@@ -235,7 +315,7 @@ export default function AiTutorCard() {
               size="sm"
               className="text-white hover:bg-purple-600/50 hover:text-white"
               onClick={() => {
-                stopSpeaking()
+                stopTutorAudio()
                 setMessages([
                   {
                     role: 'model',
