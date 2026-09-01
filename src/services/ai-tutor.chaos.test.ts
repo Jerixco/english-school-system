@@ -50,6 +50,42 @@ describe('AI Tutor: integração e resiliência', () => {
     expect(sdkMocks.getGenerativeModel).toHaveBeenCalledTimes(2)
   })
 
+  it('descobre um modelo habilitado quando os candidatos padrão não estão disponíveis', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          models: [
+            { name: 'models/text-embedding-001', supportedGenerationMethods: ['embedContent'] },
+            { name: 'models/gemini-account-model', supportedGenerationMethods: ['generateContent'] },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      )
+    )
+
+    sdkMocks.getGenerativeModel.mockImplementation((config: { model: string }) => {
+      if (config.model === 'gemini-account-model') {
+        return { startChat: sdkMocks.startChat }
+      }
+      throw Object.assign(new Error('Model not found'), { status: 404 })
+    })
+
+    try {
+      const reply = await new AiTutorService('fake-test-api-key').getReply('Practice English')
+
+      expect(reply.text).toBe("Hello! Let's practice.")
+      expect(sdkMocks.getGenerativeModel).toHaveBeenLastCalledWith(
+        expect.objectContaining({ model: 'gemini-account-model' })
+      )
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://generativelanguage.googleapis.com/v1beta/models',
+        expect.objectContaining({ headers: { 'x-goog-api-key': 'fake-test-api-key' } })
+      )
+    } finally {
+      fetchSpy.mockRestore()
+    }
+  })
+
   it('classifica quota esgotada sem mascarar o estado como sucesso', async () => {
     sdkMocks.getGenerativeModel.mockImplementation(() => {
       throw Object.assign(new Error('Resource exhausted: quota'), { status: 429 })

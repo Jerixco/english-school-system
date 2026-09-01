@@ -10,6 +10,7 @@ const envSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   ENCRYPTION_KEY: z.string().min(32, 'ENCRYPTION_KEY deve ter 32 caracteres para AES-256-GCM'),
   GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().trim().min(1).optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   KV_REST_API_URL: z.string().optional(),

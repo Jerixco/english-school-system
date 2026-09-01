@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
 
       return NextResponse.json(
         { error: '⏳ O serviço de IA está temporariamente ocupado. Por favor, tente enviar novamente em alguns segundos.' },
-        { status: 429 }
+        { status: 503 }
       )
     }
 

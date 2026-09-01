@@ -12,10 +12,58 @@ CRITICAL SECURITY & BEHAVIORAL BOUNDARIES:
 💡 Quick Tip: [Correction and brief explanation].`
 
 const DEFAULT_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro']
+const GEMINI_MODELS_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models'
+
+export type AiTutorErrorCode = 'AUTHENTICATION' | 'QUOTA' | 'MODEL' | 'BLOCKED' | 'UNAVAILABLE'
+
+interface GeminiModelDescription {
+  name?: string
+  supportedGenerationMethods?: string[]
+}
+
+function normalizeModelName(modelName: string): string {
+  return modelName.trim().replace(/^models\//, '')
+}
 
 function getAvailableModels(): string[] {
-  const configuredModel = process.env.GEMINI_MODEL?.trim()
-  return [...new Set([configuredModel, ...DEFAULT_MODELS].filter(Boolean))] as string[]
+  const configuredModel = process.env.GEMINI_MODEL ? normalizeModelName(process.env.GEMINI_MODEL) : ''
+  return [...new Set([configuredModel, ...DEFAULT_MODELS].filter(Boolean))]
+}
+
+/**
+ * Modelos liberados podem variar por projeto, região, faturamento e estado da API.
+ * Consultamos a conta somente depois que os candidatos conhecidos falham, evitando
+ * uma chamada extra no caminho normal e permitindo funcionar com modelos legados.
+ */
+async function discoverAvailableModels(
+  apiKey: string
+): Promise<{ models: string[]; errorCode?: AiTutorErrorCode }> {
+  try {
+    const response = await fetch(GEMINI_MODELS_ENDPOINT, {
+      headers: { 'x-goog-api-key': apiKey },
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        return { models: [], errorCode: 'AUTHENTICATION' }
+      }
+      if (response.status === 429) {
+        return { models: [], errorCode: 'QUOTA' }
+      }
+      return { models: [], errorCode: 'UNAVAILABLE' }
+    }
+
+    const payload = (await response.json()) as { models?: GeminiModelDescription[] }
+    const models = (payload.models || [])
+      .filter((model) => model.name && model.supportedGenerationMethods?.includes('generateContent'))
+      .map((model) => normalizeModelName(model.name as string))
+      .filter((model) => model.startsWith('gemini-'))
+
+    return { models: [...new Set(models)].slice(0, 8) }
+  } catch {
+    return { models: [], errorCode: 'UNAVAILABLE' }
+  }
 }
 
 export interface ChatMessage {
@@ -28,12 +76,12 @@ export interface AiTutorOptions {
   topP?: number
 }
 
-export type AiTutorErrorCode = 'AUTHENTICATION' | 'QUOTA' | 'MODEL' | 'BLOCKED' | 'UNAVAILABLE'
-
 export class AiTutorService {
   private genAI: GoogleGenerativeAI
+  private readonly apiKey: string
 
   constructor(apiKey: string) {
+    this.apiKey = apiKey
     this.genAI = new GoogleGenerativeAI(apiKey)
   }
 
@@ -90,7 +138,11 @@ export class AiTutorService {
     let replyText = ''
     let errorCode: AiTutorErrorCode | undefined
 
-    for (const modelName of getAvailableModels()) {
+    const modelsToTry = getAvailableModels()
+    let discoveryAttempted = false
+
+    for (let modelIndex = 0; modelIndex < modelsToTry.length; modelIndex += 1) {
+      const modelName = modelsToTry[modelIndex]
       try {
         const model = this.genAI.getGenerativeModel({ 
           model: modelName, 
@@ -128,6 +180,26 @@ export class AiTutorService {
         }
 
         console.warn(`AiTutorService: Model ${modelName} notice`, { status, errorCode })
+
+        // Só descobre modelos da conta quando os candidatos conhecidos não bastam.
+        // Isso cobre chaves antigas ou projetos com catálogo de modelos diferente.
+        if (
+          !discoveryAttempted &&
+          modelIndex === modelsToTry.length - 1 &&
+          (errorCode === 'MODEL' || errorCode === 'UNAVAILABLE')
+        ) {
+          discoveryAttempted = true
+          const discovered = await discoverAvailableModels(this.apiKey)
+          if (discovered.errorCode === 'AUTHENTICATION' || discovered.errorCode === 'QUOTA') {
+            errorCode = discovered.errorCode
+            if (discovered.errorCode === 'QUOTA') isQuotaExceeded = true
+            break
+          }
+
+          for (const discoveredModel of discovered.models) {
+            if (!modelsToTry.includes(discoveredModel)) modelsToTry.push(discoveredModel)
+          }
+        }
       }
     }
 
