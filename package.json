@@ -12,12 +12,21 @@
     "test:watch": "vitest",
     "db:seed": "prisma db seed",
     "garak:scan": "python garak/run_scan.py",
+    "garak:eval": "python garak/redteam_eval.py",
     "garak:quick": "python garak/run_scan.py --profile quick",
     "garak:owasp": "python garak/run_scan.py --profile owasp",
     "garak:jailbreak": "python garak/run_scan.py --profile jailbreak"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"
+  },
+  "allowScripts": {
+    "@prisma/client": true,
+    "@prisma/engines": true,
+    "@sentry/cli": true,
+    "esbuild": true,
+    "prisma": true,
+    "unrs-resolver": true
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

@@ -53,7 +53,9 @@ export async function POST(req: NextRequest) {
 
     const normalizedEmail = (resetRecord.email || String(email || '')).toLowerCase().trim()
 
-    if (resetRecord.expiresAt < new Date()) {
+    const now = new Date()
+
+    if (resetRecord.expiresAt < now) {
       await prisma.passwordResetToken.deleteMany({
         where: { email: normalizedEmail },
       })
@@ -66,6 +68,17 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 12)
 
     await prisma.$transaction(async (tx) => {
+      // A atualização condicional faz o claim do token de forma atômica e
+      // impede que duas requisições concorrentes redefinam a mesma senha.
+      const claimed = await tx.passwordResetToken.updateMany({
+        where: { id: resetRecord.id, used: false, expiresAt: { gt: now } },
+        data: { used: true },
+      })
+
+      if (claimed.count !== 1) {
+        throw new Error('RESET_TOKEN_INVALID')
+      }
+
       // passwordChangedAt invalida todas as sessões JWT emitidas antes da troca.
       await tx.user.update({
         where: { email: normalizedEmail },
@@ -73,10 +86,6 @@ export async function POST(req: NextRequest) {
       })
 
       // Marca usado e remove qualquer outro token pendente do email.
-      await tx.passwordResetToken.update({
-        where: { id: resetRecord.id },
-        data: { used: true },
-      })
       await tx.passwordResetToken.deleteMany({
         where: { email: normalizedEmail, used: false },
       })
@@ -87,6 +96,13 @@ export async function POST(req: NextRequest) {
       message: 'Senha redefinida com sucesso!',
     })
   } catch (error) {
+    if (error instanceof Error && error.message === 'RESET_TOKEN_INVALID') {
+      return NextResponse.json(
+        { error: 'Token inválido ou já utilizado' },
+        { status: 400 }
+      )
+    }
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Dados inválidos', details: error.errors },

@@ -1,46 +1,142 @@
-// WhatsApp Business API Integration
-// This is a simplified implementation. For production, use the official WhatsApp Business API
+const DEFAULT_GRAPH_VERSION = 'v23.0'
+const REQUEST_TIMEOUT_MS = 10_000
+const MAX_TEXT_LENGTH = 4_096
 
 export interface WhatsAppMessage {
   to: string
   message: string
 }
 
+export interface WhatsAppSendResult {
+  success: boolean
+  messageId?: string
+  waId?: string
+  error?: string
+}
+
+interface WhatsAppApiResponse {
+  contacts?: Array<{ input?: string; wa_id?: string }>
+  messages?: Array<{ id?: string }>
+  error?: { message?: string; type?: string; code?: number; fbtrace_id?: string }
+}
+
+function getConfig() {
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN?.trim()
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim()
+  const graphVersion = process.env.WHATSAPP_GRAPH_VERSION?.trim() || DEFAULT_GRAPH_VERSION
+  const defaultCountryCode = (process.env.WHATSAPP_DEFAULT_COUNTRY_CODE || '55').replace(/\D/g, '')
+
+  if (!accessToken || !phoneNumberId) return null
+  if (!/^v\d+\.\d+$/.test(graphVersion) || !/^\d+$/.test(phoneNumberId)) return null
+
+  return { accessToken, phoneNumberId, graphVersion, defaultCountryCode }
+}
+
+/**
+ * Converte números nacionais e internacionais para o formato aceito pela Meta.
+ * O código padrão é 55 (Brasil), configurável por WHATSAPP_DEFAULT_COUNTRY_CODE.
+ */
+export function normalizeWhatsAppPhone(phone: string, defaultCountryCode = '55'): string {
+  const digits = phone.replace(/\D/g, '')
+  const countryCode = defaultCountryCode.replace(/\D/g, '')
+  const withoutInternationalPrefix = digits.startsWith('00') ? digits.slice(2) : digits
+  const normalized =
+    countryCode && !withoutInternationalPrefix.startsWith(countryCode)
+      ? `${countryCode}${withoutInternationalPrefix}`
+      : withoutInternationalPrefix
+
+  if (normalized.length < 10 || normalized.length > 15) {
+    throw new Error('INVALID_WHATSAPP_PHONE')
+  }
+
+  return normalized
+}
+
+async function parseResponse(response: Response): Promise<WhatsAppApiResponse> {
+  try {
+    return (await response.json()) as WhatsAppApiResponse
+  } catch {
+    return {}
+  }
+}
+
 export const sendWhatsAppMessage = async (
   to: string,
   message: string
-): Promise<{ success: boolean; error?: string }> => {
+): Promise<WhatsAppSendResult> => {
+  const config = getConfig()
+
+  if (!config) {
+    console.error('WhatsApp Cloud API is not configured: missing or invalid server configuration')
+    return { success: false, error: 'WhatsApp Business API não configurada.' }
+  }
+
+  let normalizedPhone: string
   try {
-    // In production, integrate with WhatsApp Business API
-    // This is a placeholder implementation
-    
-    console.log(`WhatsApp message sent to ${to}: ${message}`)
-    
-    // Example using WhatsApp Business API (uncomment and configure):
-    /*
-    const response = await fetch(`https://graph.facebook.com/v18.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        to: to.replace(/\D/g, ''),
-        type: 'text',
-        text: { body: message },
-      }),
-    })
+    normalizedPhone = normalizeWhatsAppPhone(to, config.defaultCountryCode)
+  } catch {
+    return { success: false, error: 'Número de WhatsApp inválido.' }
+  }
+
+  const trimmedMessage = message.trim()
+  if (!trimmedMessage || trimmedMessage.length > MAX_TEXT_LENGTH) {
+    return { success: false, error: 'Mensagem inválida para envio.' }
+  }
+
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/${config.graphVersion}/${config.phoneNumberId}/messages`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: normalizedPhone,
+          type: 'text',
+          text: { preview_url: false, body: trimmedMessage },
+        }),
+        signal: controller.signal,
+      }
+    )
+
+    const payload = await parseResponse(response)
 
     if (!response.ok) {
-      throw new Error('Failed to send WhatsApp message')
+      // Registra apenas metadados do provedor; token, telefone e conteúdo nunca vão para o log.
+      console.error('WhatsApp Cloud API rejected the message', {
+        status: response.status,
+        code: payload.error?.code,
+        type: payload.error?.type,
+        traceId: payload.error?.fbtrace_id,
+      })
+      return { success: false, error: 'O provedor do WhatsApp recusou a mensagem.' }
     }
-    */
 
-    return { success: true }
+    const messageId = payload.messages?.[0]?.id
+    if (!messageId) {
+      console.error('WhatsApp Cloud API returned no message identifier')
+      return { success: false, error: 'Resposta inválida do provedor do WhatsApp.' }
+    }
+
+    return {
+      success: true,
+      messageId,
+      waId: payload.contacts?.[0]?.wa_id,
+    }
   } catch (error) {
-    console.error('Error sending WhatsApp message:', error)
-    return { success: false, error: 'Failed to send message' }
+    console.error('WhatsApp Cloud API request failed', {
+      reason: error instanceof Error && error.name === 'AbortError' ? 'timeout' : 'network_error',
+    })
+    return { success: false, error: 'Não foi possível enviar a mensagem pelo WhatsApp.' }
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
@@ -75,7 +171,7 @@ export const sendPaymentConfirmationWhatsApp = async (
 ) => {
   const formattedAmount = new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
+    currency: 'BRL',
   }).format(amount)
 
   const message = `Olá, ${name}! 💳 Pagamento confirmado!

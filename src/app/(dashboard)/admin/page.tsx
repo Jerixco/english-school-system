@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -129,7 +129,7 @@ const LEAD_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   LOST: { label: 'Perdido', color: 'text-[hsl(20,5%,45%)]' },
 }
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') || 'overview'
 
@@ -1020,5 +1020,27 @@ export default function AdminDashboard() {
         </div>
       )}
     </DashboardShell>
+  )
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell title="Painel Administrativo" subtitle="Carregando métricas e indicadores...">
+          <div className="space-y-4">
+            <div className="h-12 w-64 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="grid md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-28 rounded-xl bg-muted/60 animate-pulse" />
+              ))}
+            </div>
+            <div className="h-64 rounded-xl bg-muted/60 animate-pulse" />
+          </div>
+        </DashboardShell>
+      }
+    >
+      <AdminDashboardContent />
+    </Suspense>
   )
 }

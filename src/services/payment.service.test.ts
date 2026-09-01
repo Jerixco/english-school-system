@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    $transaction: vi.fn(),
     student: {
       upsert: vi.fn(),
       findFirst: vi.fn(),
@@ -26,6 +27,7 @@ describe('PaymentService & Security Controls', () => {
   beforeEach(() => {
     paymentService = new PaymentService(new SandboxPaymentAdapter())
     vi.clearAllMocks()
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(prisma as any))
   })
 
   it('should enforce server-side pricing catalog for all purchasable plans', () => {

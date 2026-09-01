@@ -1,66 +1,124 @@
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { AiTutorService } from './ai-tutor.service'
 
-describe('AI Tutor Chaos & Resilience Testing (Injeção de Falhas e Entropia)', () => {
-  it('se recupera graciosamente quando o primeiro modelo sofre 429 Quota Exceeded e aciona o fallback', async () => {
-    const service = new AiTutorService('fake-test-api-key')
+const sdkMocks = vi.hoisted(() => ({
+  getGenerativeModel: vi.fn(),
+  startChat: vi.fn(),
+  sendMessage: vi.fn(),
+}))
 
-    let callCount = 0
-    // Mock interno da chamada do Gemini
-    vi.spyOn(service, 'getReply').mockImplementation(async () => {
-      callCount++
-      // Simula: Modelo 1 falhou com Quota 429, Modelo 2 respondeu com sucesso
-      return {
-        text: 'Hello! I am Alex, your English teacher. How can I help you practice today?',
-        isQuotaExceeded: true,
-      }
-    })
+vi.mock('@google/generative-ai', () => ({
+  GoogleGenerativeAI: vi.fn(function () {
+    return {
+      getGenerativeModel: sdkMocks.getGenerativeModel,
+    }
+  }),
+}))
+
+describe('AI Tutor: integração e resiliência', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    delete process.env.GEMINI_MODEL
+    sdkMocks.getGenerativeModel.mockReturnValue({ startChat: sdkMocks.startChat })
+    sdkMocks.startChat.mockReturnValue({ sendMessage: sdkMocks.sendMessage })
+    sdkMocks.sendMessage.mockResolvedValue({ response: { text: () => 'Hello! Let\'s practice.' } })
+  })
+
+  it('faz uma chamada real através do contrato do SDK e retorna a resposta', async () => {
+    const service = new AiTutorService('fake-test-api-key')
 
     const reply = await service.getReply('Hello teacher!')
-    expect(reply.text).toContain('Alex')
-    expect(reply.isQuotaExceeded).toBe(true)
+
+    expect(reply).toMatchObject({ text: "Hello! Let's practice." })
+    expect(sdkMocks.getGenerativeModel).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'gemini-2.5-flash', systemInstruction: expect.any(String) })
+    )
+    expect(sdkMocks.startChat).toHaveBeenCalledWith({ history: [] })
+    expect(sdkMocks.sendMessage).toHaveBeenCalledWith('Hello teacher!')
   })
 
-  it('suporta diferentes níveis de entropia/temperatura sem quebrar o contrato da API', async () => {
-    const service = new AiTutorService('fake-test-api-key')
+  it('aciona o fallback quando um modelo não está disponível', async () => {
+    sdkMocks.getGenerativeModel
+      .mockImplementationOnce(() => {
+        throw Object.assign(new Error('Model not found'), { status: 404 })
+      })
+      .mockReturnValue({ startChat: sdkMocks.startChat })
 
-    vi.spyOn(service, 'getReply').mockImplementation(async (_msg, _hist, options) => {
-      const temp = options?.temperature ?? 0.7
-      return {
-        text: `Response with temperature ${temp}`,
-        isQuotaExceeded: false,
+    const reply = await new AiTutorService('fake-test-api-key').getReply('Practice English')
+
+    expect(reply.text).toBe("Hello! Let's practice.")
+    expect(sdkMocks.getGenerativeModel).toHaveBeenCalledTimes(2)
+  })
+
+  it('descobre um modelo habilitado quando os candidatos padrão não estão disponíveis', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          models: [
+            { name: 'models/text-embedding-001', supportedGenerationMethods: ['embedContent'] },
+            { name: 'models/gemini-account-model', supportedGenerationMethods: ['generateContent'] },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } }
+      )
+    )
+
+    sdkMocks.getGenerativeModel.mockImplementation((config: { model: string }) => {
+      if (config.model === 'gemini-account-model') {
+        return { startChat: sdkMocks.startChat }
       }
+      throw Object.assign(new Error('Model not found'), { status: 404 })
     })
 
-    // Teste com baixa entropia (determinístico)
-    const resLow = await service.getReply('Explain verb to be', [], { temperature: 0.2 })
-    expect(resLow.text).toBe('Response with temperature 0.2')
+    try {
+      const reply = await new AiTutorService('fake-test-api-key').getReply('Practice English')
 
-    // Teste com alta entropia (criativo e conversacional)
-    const resHigh = await service.getReply('Tell me a creative story in English', [], { temperature: 0.85 })
-    expect(resHigh.text).toBe('Response with temperature 0.85')
+      expect(reply.text).toBe("Hello! Let's practice.")
+      expect(sdkMocks.getGenerativeModel).toHaveBeenLastCalledWith(
+        expect.objectContaining({ model: 'gemini-account-model' })
+      )
+      expect(fetchSpy).toHaveBeenCalledWith(
+        'https://generativelanguage.googleapis.com/v1beta/models',
+        expect.objectContaining({ headers: { 'x-goog-api-key': 'fake-test-api-key' } })
+      )
+    } finally {
+      fetchSpy.mockRestore()
+    }
   })
 
-  it('formata histórico caótico (com mensagens vazias, roles duplicados e ordem corrompida) de forma resiliente', () => {
+  it('classifica quota esgotada sem mascarar o estado como sucesso', async () => {
+    sdkMocks.getGenerativeModel.mockImplementation(() => {
+      throw Object.assign(new Error('Resource exhausted: quota'), { status: 429 })
+    })
+
+    const reply = await new AiTutorService('fake-test-api-key').getReply('Practice English')
+
+    expect(reply).toMatchObject({ text: '', isQuotaExceeded: true, errorCode: 'QUOTA' })
+    expect(sdkMocks.getGenerativeModel).toHaveBeenCalledTimes(3)
+  })
+
+  it('preserva mensagens repetidas consolidando o contexto por papel', () => {
     const service = new AiTutorService('fake-test-api-key')
-    const chaoticHistory = [
-      { role: 'model' as const, parts: 'Should be ignored because first message must be user' },
+    const formatted = (service as any).formatHistory([
+      { role: 'model' as const, parts: 'Resposta inicial ignorada' },
       { role: 'user' as const, parts: 'Valid user msg 1' },
-      { role: 'user' as const, parts: 'Duplicate user msg 2 (should be ignored)' },
-      { role: 'model' as const, parts: '' }, // Mensagem vazia (deve ser ignorada)
-      { role: 'model' as const, parts: 'Valid model msg' },
-      { role: 'user' as const, parts: 'Valid user msg 3' },
-    ]
+      { role: 'user' as const, parts: 'Valid user msg 2' },
+      { role: 'model' as const, parts: [{ text: 'Valid model msg' }] },
+    ])
 
-    const formatted = (service as any).formatHistory(chaoticHistory)
+    expect(formatted).toEqual([
+      { role: 'user', parts: [{ text: 'Valid user msg 1\nValid user msg 2' }] },
+      { role: 'model', parts: [{ text: 'Valid model msg' }] },
+    ])
+  })
 
-    // Garante que a primeira é do usuário
-    expect(formatted[0].role).toBe('user')
-    expect(formatted[0].parts[0].text).toBe('Valid user msg 1')
+  it('respeita o modelo configurado pelo ambiente', async () => {
+    process.env.GEMINI_MODEL = 'gemini-3.6-flash'
 
-    // Garante alternância perfeita (user -> model -> user)
-    expect(formatted.length).toBe(3)
-    expect(formatted[1].role).toBe('model')
-    expect(formatted[2].role).toBe('user')
+    await new AiTutorService('fake-test-api-key').getReply('Hello')
+
+    expect(sdkMocks.getGenerativeModel).toHaveBeenCalledWith(
+      expect.objectContaining({ model: 'gemini-3.6-flash' })
+    )
   })
 })

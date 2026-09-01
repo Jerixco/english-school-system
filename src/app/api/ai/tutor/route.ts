@@ -30,17 +30,17 @@ const aiMessageSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey || apiKey === 'your-gemini-api-key-here') {
-      return NextResponse.json(
-        { error: 'A chave GEMINI_API_KEY não está configurada no ambiente.' },
-        { status: 500 }
-      )
-    }
-
     const user = await getAuthenticatedUser()
     if (!user) {
       return NextResponse.json({ error: 'Sessão expirada. Por favor, faça login novamente.' }, { status: 401 })
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY?.trim()
+    if (!apiKey || apiKey === 'your-gemini-api-key-here' || apiKey === 'mock') {
+      return NextResponse.json(
+        { error: 'O Tutor IA não está configurado neste ambiente.' },
+        { status: 503 }
+      )
     }
 
     // Validação de autorização: Aluno precisa estar com status ACTIVE ou TRIAL
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         select: { status: true },
       })
 
-      if (student && student.status !== 'ACTIVE' && student.status !== 'TRIAL') {
+      if (!student || (student.status !== 'ACTIVE' && student.status !== 'TRIAL')) {
         return NextResponse.json(
           { error: 'Seu plano de estudos precisa estar ativo para utilizar o Tutor IA.' },
           { status: 403 }
@@ -70,7 +70,10 @@ export async function POST(req: NextRequest) {
     const { message, history } = aiMessageSchema.parse(body)
 
     const aiTutor = new AiTutorService(apiKey)
-    const { text, isQuotaExceeded } = await aiTutor.getReply(message, (history || []) as ChatMessage[])
+    const { text, isQuotaExceeded, errorCode } = await aiTutor.getReply(
+      message,
+      (history || []) as ChatMessage[]
+    )
 
     if (!text) {
       if (isQuotaExceeded) {
@@ -80,9 +83,23 @@ export async function POST(req: NextRequest) {
         )
       }
 
+      if (errorCode === 'AUTHENTICATION') {
+        return NextResponse.json(
+          { error: 'A configuração do provedor de IA foi rejeitada. Verifique a chave do Gemini.' },
+          { status: 503 }
+        )
+      }
+
+      if (errorCode === 'MODEL') {
+        return NextResponse.json(
+          { error: 'Nenhum modelo Gemini configurado está disponível para esta conta.' },
+          { status: 503 }
+        )
+      }
+
       return NextResponse.json(
         { error: '⏳ O serviço de IA está temporariamente ocupado. Por favor, tente enviar novamente em alguns segundos.' },
-        { status: 429 }
+        { status: 503 }
       )
     }
 

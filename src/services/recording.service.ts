@@ -158,7 +158,7 @@ export class RecordingService {
     const recording = await prisma.recording.findUnique({ where: { id } })
     if (!recording) throw new Error('RECORDING_NOT_FOUND')
 
-    if (!isAdmin && teacherId && recording.teacherId !== teacherId) {
+    if (!isAdmin && (!teacherId || recording.teacherId !== teacherId)) {
       throw new Error('UNAUTHORIZED')
     }
 

@@ -22,11 +22,9 @@ import {
 } from 'lucide-react'
 import {
   isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
   startSpeechRecognition,
-  speakEnglishText,
-  stopSpeaking,
 } from '@/lib/speech'
+import { renderTutorMessage } from '@/lib/tutor-message'
 
 interface Message {
   role: 'user' | 'model'
@@ -53,10 +51,14 @@ export default function AiTutorCard() {
   const [isRecording, setIsRecording] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [activeSpeechIdx, setActiveSpeechIdx] = useState<number | null>(null)
+  const [audioError, setAudioError] = useState<string | null>(null)
   const [autoPlayAudio, setAutoPlayAudio] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const recognitionRef = useRef<any>(null)
   const chatBottomRef = useRef<HTMLDivElement>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioCacheRef = useRef<Map<string, string>>(new Map())
+  const audioRequestIdRef = useRef(0)
 
   useEffect(() => {
     setHasMounted(true)
@@ -68,7 +70,11 @@ export default function AiTutorCard() {
 
   useEffect(() => {
     return () => {
-      stopSpeaking()
+      audioRequestIdRef.current += 1
+      audioRef.current?.pause()
+      audioRef.current = null
+      for (const url of audioCacheRef.current.values()) URL.revokeObjectURL(url)
+      audioCacheRef.current.clear()
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop()
@@ -77,12 +83,95 @@ export default function AiTutorCard() {
     }
   }, [])
 
+  const stopTutorAudio = () => {
+    audioRequestIdRef.current += 1
+    audioRef.current?.pause()
+    audioRef.current = null
+    setIsSpeaking(false)
+    setActiveSpeechIdx(null)
+    setAudioError(null)
+  }
+
+  const playTutorAudio = async (text: string, index: number) => {
+    const requestId = ++audioRequestIdRef.current
+    audioRef.current?.pause()
+    audioRef.current = null
+    setActiveSpeechIdx(index)
+    setIsSpeaking(false)
+    setAudioError(null)
+
+    try {
+      let audioUrl = audioCacheRef.current.get(text)
+      if (!audioUrl) {
+        const response = await fetch('/api/ai/tutor/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text }),
+        })
+
+        if (!response.ok) {
+          throw new Error(
+            response.status === 503
+              ? 'A voz do Alex não está configurada na ElevenLabs. Defina ELEVENLABS_VOICE_ID na Vercel.'
+              : 'A voz do Alex está temporariamente indisponível.'
+          )
+        }
+
+        audioUrl = URL.createObjectURL(await response.blob())
+        audioCacheRef.current.set(text, audioUrl)
+
+        if (audioCacheRef.current.size > 12) {
+          const oldestText = audioCacheRef.current.keys().next().value
+          if (oldestText) {
+            const oldestUrl = audioCacheRef.current.get(oldestText)
+            if (oldestUrl) URL.revokeObjectURL(oldestUrl)
+            audioCacheRef.current.delete(oldestText)
+          }
+        }
+      }
+
+      if (!audioUrl || audioRequestIdRef.current !== requestId) return
+
+      const audio = new Audio(audioUrl)
+      audioRef.current = audio
+      audio.onplay = () => {
+        if (audioRequestIdRef.current === requestId) setIsSpeaking(true)
+      }
+      audio.onended = () => {
+        if (audioRequestIdRef.current !== requestId) return
+        audioRef.current = null
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+      }
+      audio.onerror = () => {
+        if (audioRequestIdRef.current !== requestId) return
+        audioRef.current = null
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+        setAudioError('Não foi possível reproduzir a voz configurada do Alex.')
+      }
+
+      try {
+        await audio.play()
+      } catch {
+        if (audioRequestIdRef.current === requestId) {
+          setIsSpeaking(false)
+          setActiveSpeechIdx(null)
+          setAudioError('O navegador bloqueou a reprodução do áudio. Clique novamente para tentar.')
+        }
+      }
+    } catch (error) {
+      if (audioRequestIdRef.current !== requestId) return
+      setIsSpeaking(false)
+      setActiveSpeechIdx(null)
+      setAudioError(error instanceof Error ? error.message : 'Não foi possível gerar a voz do Alex.')
+    }
+  }
+
   const sendQuery = async (userMessage: string) => {
     if (!userMessage.trim() || loading) return
 
-    stopSpeaking()
-    setIsSpeaking(false)
-    setActiveSpeechIdx(null)
+    stopTutorAudio()
     setInput('')
     const updatedMessages = [...messages, { role: 'user' as const, text: userMessage }]
     setMessages(updatedMessages)
@@ -110,17 +199,9 @@ export default function AiTutorCard() {
       const newMessages: Message[] = [...updatedMessages, { role: 'model', text: replyText }]
       setMessages(newMessages)
 
-      if (autoPlayAudio && isSpeechSynthesisSupported()) {
+      if (autoPlayAudio) {
         const newMsgIdx = newMessages.length - 1
-        setActiveSpeechIdx(newMsgIdx)
-        speakEnglishText(
-          replyText,
-          () => setIsSpeaking(true),
-          () => {
-            setIsSpeaking(false)
-            setActiveSpeechIdx(null)
-          }
-        )
+        void playTutorAudio(replyText, newMsgIdx)
       }
     } catch (err: any) {
       setMessages([
@@ -168,22 +249,12 @@ export default function AiTutorCard() {
   }
 
   const handlePlayAudio = (text: string, index: number) => {
-    if (isSpeaking && activeSpeechIdx === index) {
-      stopSpeaking()
-      setIsSpeaking(false)
-      setActiveSpeechIdx(null)
+    if (activeSpeechIdx === index) {
+      stopTutorAudio()
       return
     }
 
-    setActiveSpeechIdx(index)
-    speakEnglishText(
-      text,
-      () => setIsSpeaking(true),
-      () => {
-        setIsSpeaking(false)
-        setActiveSpeechIdx(null)
-      }
-    )
+    void playTutorAudio(text, index)
   }
 
   return (
@@ -195,6 +266,8 @@ export default function AiTutorCard() {
               <img
                 src="/images/avatars/alex-tutor.jpg"
                 alt="Alex - AI Tutor"
+                width={44}
+                height={44}
                 className="w-11 h-11 rounded-full object-cover border-2 border-white/80 shadow-md"
               />
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-purple-800 rounded-full" />
@@ -216,9 +289,11 @@ export default function AiTutorCard() {
               onClick={() => {
                 const nextState = !autoPlayAudio
                 setAutoPlayAudio(nextState)
-                if (!nextState) stopSpeaking()
+                if (!nextState) stopTutorAudio()
               }}
               title={autoPlayAudio ? 'Áudio automático ativado' : 'Ativar áudio automático'}
+              aria-label={autoPlayAudio ? 'Desativar áudio automático' : 'Ativar áudio automático'}
+              aria-pressed={autoPlayAudio}
               className={`p-1.5 rounded-md text-xs flex items-center gap-1 transition-colors ${
                 autoPlayAudio
                   ? 'bg-purple-500 text-white shadow-inner'
@@ -233,7 +308,7 @@ export default function AiTutorCard() {
               size="sm"
               className="text-white hover:bg-purple-600/50 hover:text-white"
               onClick={() => {
-                stopSpeaking()
+                stopTutorAudio()
                 setMessages([
                   {
                     role: 'model',
@@ -242,6 +317,7 @@ export default function AiTutorCard() {
                 ])
               }}
               title="Reiniciar conversa"
+              aria-label="Reiniciar conversa"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -250,7 +326,13 @@ export default function AiTutorCard() {
       </CardHeader>
       <CardContent className="pt-4">
         {/* Chat Stream Window */}
-        <div className="h-64 overflow-y-auto space-y-3 pr-2 mb-3 scroll-smooth">
+        <div
+          className="h-64 overflow-y-auto space-y-3 pr-2 mb-3 scroll-smooth"
+          role="log"
+          aria-live="polite"
+          aria-busy={loading}
+          aria-label="Conversa com Alex"
+        >
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -268,6 +350,8 @@ export default function AiTutorCard() {
                     <img
                       src="/images/avatars/alex-tutor.jpg"
                       alt="Alex"
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover border border-purple-300 shadow-sm"
                     />
                   )}
@@ -282,7 +366,7 @@ export default function AiTutorCard() {
                     : 'bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200 shadow-sm'
                 }`}
               >
-                <div>{msg.text}</div>
+                <div>{renderTutorMessage(msg.text)}</div>
 
                 {/* Audio Listen Button for Model Responses */}
                 {msg.role === 'model' && !msg.isError && (
@@ -318,6 +402,8 @@ export default function AiTutorCard() {
               <img
                 src="/images/avatars/alex-tutor.jpg"
                 alt="Alex"
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-full object-cover border border-purple-300 shadow-sm opacity-70 animate-pulse"
               />
               <div className="bg-purple-50 p-2.5 rounded-lg border border-purple-100 flex items-center gap-2 text-purple-700">
@@ -328,6 +414,12 @@ export default function AiTutorCard() {
           )}
           <div ref={chatBottomRef} />
         </div>
+
+        {audioError && (
+          <div role="alert" className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {audioError}
+          </div>
+        )}
 
         {/* Quick Prompt Pills */}
         <div className="mb-3">
@@ -360,6 +452,8 @@ export default function AiTutorCard() {
               onClick={toggleRecording}
               disabled={loading}
               title={isRecording ? 'Parar gravação' : 'Falar em inglês no microfone'}
+              aria-label={isRecording ? 'Parar gravação' : 'Falar em inglês no microfone'}
+              aria-pressed={isRecording}
               className={`px-3 shrink-0 ${
                 isRecording ? 'animate-pulse ring-2 ring-red-400' : 'hover:bg-purple-50 hover:text-purple-700'
               }`}
@@ -369,6 +463,8 @@ export default function AiTutorCard() {
           )}
 
           <Input
+            id="ai-tutor-message"
+            aria-label="Mensagem para Alex, o tutor de inglês"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
@@ -384,6 +480,7 @@ export default function AiTutorCard() {
           <Button
             type="submit"
             disabled={loading || !input.trim()}
+            aria-label="Enviar mensagem"
             className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5 shadow-sm"
           >
             <Send className="h-4 w-4" />
