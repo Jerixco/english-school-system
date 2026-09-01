@@ -28,9 +28,9 @@ export default function DashboardSidebar() {
   const isDemo = userEmail === 'preview.demo@englishschool.com' || userEmail === 'demo@englishschool.com'
 
   return (
-    <aside className="w-64 min-h-screen bg-gradient-to-b from-purple-900 to-blue-900 text-white p-4 flex flex-col">
+    <aside className="flex w-full max-h-[50vh] min-h-0 flex-col bg-gradient-to-b from-sidebar-from to-sidebar-to p-4 text-sidebar-foreground md:min-h-screen md:w-64 md:max-h-none">
       <div className="mb-6">
-        <h4 className="font-bold text-xl mb-1">English School</h4>
+        <h4 className="mb-1 font-outfit text-xl font-bold">English School</h4>
         {isDemo ? (
           <div className="inline-flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-1 rounded-full border border-emerald-500/30 font-medium">
             <Eye className="h-3.5 w-3.5" />
