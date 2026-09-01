@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -51,7 +51,7 @@ interface RecordingItem {
   teacher: { id: string; name: string | null; image: string | null }
 }
 
-export default function AlunoAulasPage() {
+function AlunoAulasContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') || 'live'
 
@@ -503,12 +503,29 @@ export default function AlunoAulasPage() {
           open={Boolean(feedbackSession)}
           onClose={() => setFeedbackSession(null)}
           sessionTitle={feedbackSession.title}
-          teacherName={feedbackSession.teacher.name || undefined}
+          teacherName={feedbackSession.teacher?.name || undefined}
           onSubmit={(feedback: { rating: number; tags: string[]; comment: string }) => {
             console.log('Feedback enviado:', feedback)
           }}
         />
       )}
     </DashboardShell>
+  )
+}
+
+export default function AlunoAulasPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell title="Salas de Aula & Gravações" subtitle="Carregando suas aulas...">
+          <div className="space-y-4">
+            <div className="h-12 w-64 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="h-64 rounded-xl bg-muted/60 animate-pulse" />
+          </div>
+        </DashboardShell>
+      }
+    >
+      <AlunoAulasContent />
+    </Suspense>
   )
 }
