@@ -59,6 +59,23 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
+
+    // Radix Slot exige exatamente um filho direto. Expressões condicionais
+    // como `{loading && <Loader2 />}` criam um segundo filho booleano mesmo
+    // quando loading é false, causando "Slot failed to slot onto its children".
+    if (asChild) {
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, className }))}
+          ref={ref}
+          aria-busy={loading || undefined}
+          {...props}
+        >
+          {children}
+        </Comp>
+      )
+    }
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
