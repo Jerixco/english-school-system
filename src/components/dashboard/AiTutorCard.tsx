@@ -265,6 +265,8 @@ export default function AiTutorCard() {
               <img
                 src="/images/avatars/alex-tutor.jpg"
                 alt="Alex - AI Tutor"
+                width={44}
+                height={44}
                 className="w-11 h-11 rounded-full object-cover border-2 border-white/80 shadow-md"
               />
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-purple-800 rounded-full" />
@@ -347,6 +349,8 @@ export default function AiTutorCard() {
                     <img
                       src="/images/avatars/alex-tutor.jpg"
                       alt="Alex"
+                      width={32}
+                      height={32}
                       className="w-8 h-8 rounded-full object-cover border border-purple-300 shadow-sm"
                     />
                   )}
@@ -397,6 +401,8 @@ export default function AiTutorCard() {
               <img
                 src="/images/avatars/alex-tutor.jpg"
                 alt="Alex"
+                width={32}
+                height={32}
                 className="w-8 h-8 rounded-full object-cover border border-purple-300 shadow-sm opacity-70 animate-pulse"
               />
               <div className="bg-purple-50 p-2.5 rounded-lg border border-purple-100 flex items-center gap-2 text-purple-700">

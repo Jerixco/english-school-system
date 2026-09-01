@@ -354,6 +354,8 @@ export default function AlunoAulasPage() {
                           <img
                             src={rec.thumbnailUrl || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&q=80'}
                             alt={rec.title}
+                            width={600}
+                            height={338}
                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 opacity-80"
                           />
                           <div className="absolute inset-0 bg-black/40 flex items-center justify-center group-hover:bg-black/20 transition-colors">
