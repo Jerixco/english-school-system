@@ -6,7 +6,7 @@ Stack: Next.js 16 (App Router), React 18, TypeScript, Prisma 5, PostgreSQL, Next
 
 ## O que este projeto é (e não é)
 
-É um projeto de estudo. Há defesa em camadas de verdade (sessão HttpOnly, RBAC, Zod, rate limit, 2FA TOTP com AES-256-GCM, preços resolvidos no servidor), mas **não** é criptografia de ponta a ponta nem Zero Trust completo. Salas Jitsi públicas dependem de quem tem o link. WhatsApp no código é placeholder (`console.log`), não Business API.
+É um projeto de estudo. Há defesa em camadas de verdade (sessão HttpOnly, RBAC, Zod, rate limit, 2FA TOTP com AES-256-GCM, preços resolvidos no servidor), mas **não** é criptografia de ponta a ponta nem Zero Trust completo. Salas Jitsi públicas dependem de quem tem o link. O envio de WhatsApp usa a WhatsApp Cloud API oficial quando as credenciais estão configuradas; sem elas, o recurso falha de forma explícita e não simula sucesso.
 
 ## Pré-requisitos
 
@@ -42,6 +42,12 @@ Contas de seed usam os e-mails do `.env` (`SEED_ADMIN_EMAIL`, etc.) e a senha de
 
 - Sem `STRIPE_SECRET_KEY` real (`sk_...`), o checkout usa o **sandbox** assinado com HMAC (`NEXTAUTH_SECRET`).
 - Com chave Stripe válida e `STRIPE_PRICE_*`, o mesmo `PaymentService` abre Checkout Session. Plano do aluno só muda nesse fluxo (ou status via admin), nunca por `PATCH` do próprio aluno.
+
+## WhatsApp Business Cloud API
+
+O endpoint administrativo `/api/whatsapp/send` envia mensagens de texto pela API oficial da Meta. Configure `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_GRAPH_VERSION` e, para números nacionais, `WHATSAPP_DEFAULT_COUNTRY_CODE` (55 para Brasil). O token deve ficar somente no servidor e ter a permissão `whatsapp_business_messaging`.
+
+Mensagens de texto livres estão sujeitas às regras de janela de atendimento do WhatsApp. Para iniciar ou reabrir conversas fora da janela permitida, crie templates aprovados na Meta e adicione suporte a templates antes de usar esse fluxo em produção.
 
 ## Segurança (modelo atual)
 
