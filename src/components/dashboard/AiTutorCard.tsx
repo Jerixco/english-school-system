@@ -22,10 +22,7 @@ import {
 } from 'lucide-react'
 import {
   isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
   startSpeechRecognition,
-  speakEnglishText,
-  stopSpeaking,
 } from '@/lib/speech'
 
 interface Message {
@@ -53,6 +50,7 @@ export default function AiTutorCard() {
   const [isRecording, setIsRecording] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [activeSpeechIdx, setActiveSpeechIdx] = useState<number | null>(null)
+  const [audioError, setAudioError] = useState<string | null>(null)
   const [autoPlayAudio, setAutoPlayAudio] = useState(false)
   const [hasMounted, setHasMounted] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -71,7 +69,6 @@ export default function AiTutorCard() {
 
   useEffect(() => {
     return () => {
-      stopSpeaking()
       audioRequestIdRef.current += 1
       audioRef.current?.pause()
       audioRef.current = null
@@ -89,43 +86,18 @@ export default function AiTutorCard() {
     audioRequestIdRef.current += 1
     audioRef.current?.pause()
     audioRef.current = null
-    stopSpeaking()
     setIsSpeaking(false)
     setActiveSpeechIdx(null)
-  }
-
-  const fallbackToBrowserSpeech = (text: string, index: number) => {
-    if (!isSpeechSynthesisSupported()) {
-      setIsSpeaking(false)
-      setActiveSpeechIdx(null)
-      return
-    }
-
-    setActiveSpeechIdx(index)
-    speakEnglishText(
-      text,
-      () => setIsSpeaking(true),
-      () => {
-        setIsSpeaking(false)
-        setActiveSpeechIdx(null)
-      }
-    )
+    setAudioError(null)
   }
 
   const playTutorAudio = async (text: string, index: number) => {
     const requestId = ++audioRequestIdRef.current
     audioRef.current?.pause()
     audioRef.current = null
-    stopSpeaking()
     setActiveSpeechIdx(index)
     setIsSpeaking(false)
-
-    let fallbackUsed = false
-    const fallback = () => {
-      if (fallbackUsed || audioRequestIdRef.current !== requestId) return
-      fallbackUsed = true
-      fallbackToBrowserSpeech(text, index)
-    }
+    setAudioError(null)
 
     try {
       let audioUrl = audioCacheRef.current.get(text)
@@ -136,7 +108,13 @@ export default function AiTutorCard() {
           body: JSON.stringify({ text }),
         })
 
-        if (!response.ok) throw new Error('ElevenLabs TTS unavailable')
+        if (!response.ok) {
+          throw new Error(
+            response.status === 503
+              ? 'A voz do Alex não está configurada na ElevenLabs. Defina ELEVENLABS_VOICE_ID na Vercel.'
+              : 'A voz do Alex está temporariamente indisponível.'
+          )
+        }
 
         audioUrl = URL.createObjectURL(await response.blob())
         audioCacheRef.current.set(text, audioUrl)
@@ -164,16 +142,28 @@ export default function AiTutorCard() {
         setIsSpeaking(false)
         setActiveSpeechIdx(null)
       }
-      audio.onerror = fallback
+      audio.onerror = () => {
+        if (audioRequestIdRef.current !== requestId) return
+        audioRef.current = null
+        setIsSpeaking(false)
+        setActiveSpeechIdx(null)
+        setAudioError('Não foi possível reproduzir a voz configurada do Alex.')
+      }
 
       try {
         await audio.play()
       } catch {
-        // Alguns navegadores bloqueiam áudio iniciado após uma chamada de rede.
-        fallback()
+        if (audioRequestIdRef.current === requestId) {
+          setIsSpeaking(false)
+          setActiveSpeechIdx(null)
+          setAudioError('O navegador bloqueou a reprodução do áudio. Clique novamente para tentar.')
+        }
       }
-    } catch {
-      fallback()
+    } catch (error) {
+      if (audioRequestIdRef.current !== requestId) return
+      setIsSpeaking(false)
+      setActiveSpeechIdx(null)
+      setAudioError(error instanceof Error ? error.message : 'Não foi possível gerar a voz do Alex.')
     }
   }
 
@@ -417,6 +407,12 @@ export default function AiTutorCard() {
           )}
           <div ref={chatBottomRef} />
         </div>
+
+        {audioError && (
+          <div role="alert" className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            {audioError}
+          </div>
+        )}
 
         {/* Quick Prompt Pills */}
         <div className="mb-3">
