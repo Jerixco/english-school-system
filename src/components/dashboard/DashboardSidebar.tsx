@@ -41,7 +41,7 @@ export default function DashboardSidebar() {
         )}
       </div>
 
-      <nav className="flex flex-col flex-1 space-y-1 overflow-y-auto pr-1">
+      <nav aria-label="Navegação principal" className="flex flex-col flex-1 space-y-1 overflow-y-auto pr-1">
         {isDemo ? (
           <>
             {/* Seção Administrador */}

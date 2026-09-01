@@ -219,6 +219,8 @@ export default function AiTutorCard() {
                 if (!nextState) stopSpeaking()
               }}
               title={autoPlayAudio ? 'Áudio automático ativado' : 'Ativar áudio automático'}
+              aria-label={autoPlayAudio ? 'Desativar áudio automático' : 'Ativar áudio automático'}
+              aria-pressed={autoPlayAudio}
               className={`p-1.5 rounded-md text-xs flex items-center gap-1 transition-colors ${
                 autoPlayAudio
                   ? 'bg-purple-500 text-white shadow-inner'
@@ -242,6 +244,7 @@ export default function AiTutorCard() {
                 ])
               }}
               title="Reiniciar conversa"
+              aria-label="Reiniciar conversa"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -250,7 +253,13 @@ export default function AiTutorCard() {
       </CardHeader>
       <CardContent className="pt-4">
         {/* Chat Stream Window */}
-        <div className="h-64 overflow-y-auto space-y-3 pr-2 mb-3 scroll-smooth">
+        <div
+          className="h-64 overflow-y-auto space-y-3 pr-2 mb-3 scroll-smooth"
+          role="log"
+          aria-live="polite"
+          aria-busy={loading}
+          aria-label="Conversa com Alex"
+        >
           {messages.map((msg, index) => (
             <div
               key={index}
@@ -360,6 +369,8 @@ export default function AiTutorCard() {
               onClick={toggleRecording}
               disabled={loading}
               title={isRecording ? 'Parar gravação' : 'Falar em inglês no microfone'}
+              aria-label={isRecording ? 'Parar gravação' : 'Falar em inglês no microfone'}
+              aria-pressed={isRecording}
               className={`px-3 shrink-0 ${
                 isRecording ? 'animate-pulse ring-2 ring-red-400' : 'hover:bg-purple-50 hover:text-purple-700'
               }`}
@@ -369,6 +380,8 @@ export default function AiTutorCard() {
           )}
 
           <Input
+            id="ai-tutor-message"
+            aria-label="Mensagem para Alex, o tutor de inglês"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={
@@ -384,6 +397,7 @@ export default function AiTutorCard() {
           <Button
             type="submit"
             disabled={loading || !input.trim()}
+            aria-label="Enviar mensagem"
             className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5 shadow-sm"
           >
             <Send className="h-4 w-4" />

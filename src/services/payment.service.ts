@@ -278,39 +278,61 @@ export class PaymentService {
       return { success: false, reason: 'student_not_found' }
     }
 
-    // 2. Verificação de Idempotência: Checa se este pagamento já foi gravado
-    const existingPayment = await prisma.payment.findUnique({
-      where: { stripePaymentId: event.transactionId },
-    })
+    let paymentId: string
 
-    if (existingPayment) {
-      console.log(`PaymentService: Transaction ${event.transactionId} already processed, skipping duplicate`)
-      return { success: true, alreadyProcessed: true, paymentId: existingPayment.id }
+    try {
+      const payment = await prisma.$transaction(async (tx) => {
+        // A leitura e a gravação precisam estar na mesma transação; o índice
+        // único de stripePaymentId também protege contra duas entregas simultâneas.
+        const existingPayment = await tx.payment.findUnique({
+          where: { stripePaymentId: event.transactionId },
+        })
+
+        if (existingPayment) return { alreadyProcessed: true, id: existingPayment.id }
+
+        await tx.student.update({
+          where: { id: student.id },
+          data: {
+            status: 'ACTIVE',
+            plan: event.plan as Plan,
+            nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        })
+
+        const createdPayment = await tx.payment.create({
+          data: {
+            studentId: student.id,
+            amount: event.amountInCents,
+            currency: event.currency,
+            status: event.status,
+            paymentMethod: event.paymentMethod,
+            stripePaymentId: event.transactionId,
+            dueDate: new Date(),
+            paidAt: new Date(),
+          },
+        })
+
+        return { alreadyProcessed: false, id: createdPayment.id }
+      })
+
+      paymentId = payment.id
+
+      if (payment.alreadyProcessed) {
+        console.log(`PaymentService: Transaction ${event.transactionId} already processed, skipping duplicate`)
+        return { success: true, alreadyProcessed: true, paymentId }
+      }
+    } catch (error) {
+      // Outra entrega pode ter vencido a corrida e criado o registro primeiro.
+      if ((error as { code?: string })?.code === 'P2002') {
+        const existingPayment = await prisma.payment.findUnique({
+          where: { stripePaymentId: event.transactionId },
+        })
+        if (existingPayment) {
+          return { success: true, alreadyProcessed: true, paymentId: existingPayment.id }
+        }
+      }
+      throw error
     }
-
-    // 3. Atualiza o status e o plano do estudante
-    await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        status: 'ACTIVE',
-        plan: event.plan as Plan,
-        nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Próximo ciclo em 30 dias
-      },
-    })
-
-    // 4. Registra o pagamento com valor validado
-    const payment = await prisma.payment.create({
-      data: {
-        studentId: student.id,
-        amount: event.amountInCents,
-        currency: event.currency,
-        status: event.status,
-        paymentMethod: event.paymentMethod,
-        stripePaymentId: event.transactionId,
-        dueDate: new Date(),
-        paidAt: new Date(),
-      },
-    })
 
     // 5. Envia e-mail de confirmação se disponível
     if (student.user.email) {
@@ -322,6 +344,6 @@ export class PaymentService {
       ).catch((err) => console.error('PaymentService: Failed to send email confirmation:', err))
     }
 
-    return { success: true, paymentId: payment.id }
+    return { success: true, paymentId }
   }
 }

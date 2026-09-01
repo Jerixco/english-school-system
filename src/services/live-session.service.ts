@@ -125,7 +125,7 @@ export class LiveSessionService {
     const session = await prisma.liveSession.findUnique({ where: { id } })
     if (!session) throw new Error('SESSION_NOT_FOUND')
 
-    if (!isAdmin && teacherId && session.teacherId !== teacherId) {
+    if (!isAdmin && (!teacherId || session.teacherId !== teacherId)) {
       throw new Error('UNAUTHORIZED')
     }
 
@@ -145,7 +145,7 @@ export class LiveSessionService {
     const session = await prisma.liveSession.findUnique({ where: { id } })
     if (!session) throw new Error('SESSION_NOT_FOUND')
 
-    if (!isAdmin && teacherId && session.teacherId !== teacherId) {
+    if (!isAdmin && (!teacherId || session.teacherId !== teacherId)) {
       throw new Error('UNAUTHORIZED')
     }
 

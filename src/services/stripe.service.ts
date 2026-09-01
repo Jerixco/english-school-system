@@ -33,49 +33,49 @@ export class StripeService {
       return
     }
 
-    // 2. Verificação de Idempotência
     const stripePaymentId = (session.payment_intent as string) || session.id
-    const existingPayment = await prisma.payment.findUnique({
-      where: { stripePaymentId },
-    })
-
-    if (existingPayment) {
-      console.log(`StripeService: Payment ${stripePaymentId} already processed, skipping`)
-      return
-    }
-
-    // 3. Atualiza o perfil do estudante
     const planUpdate =
       metadataPlan && isPurchasablePlan(metadataPlan)
         ? { plan: metadataPlan as Plan }
         : {}
-
-    await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        status: 'ACTIVE',
-        customerId,
-        subscriptionId,
-        ...planUpdate,
-      },
-    })
-
-    // 4. Registra o pagamento (schema usa centavos)
     const amountInCents = session.amount_total || 0
-    await prisma.payment.create({
-      data: {
-        studentId: student.id,
-        amount: amountInCents,
-        currency: session.currency?.toUpperCase() || 'BRL',
-        status: 'COMPLETED',
-        paymentMethod: session.payment_method_types[0] || 'card',
-        stripePaymentId,
-        dueDate: new Date(),
-        paidAt: new Date(),
-      },
-    })
 
-    // 5. Notificação assíncrona
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        const existingPayment = await tx.payment.findUnique({ where: { stripePaymentId } })
+        if (existingPayment) return { alreadyProcessed: true }
+
+        await tx.student.update({
+          where: { id: student.id },
+          data: { status: 'ACTIVE', customerId, subscriptionId, ...planUpdate },
+        })
+
+        await tx.payment.create({
+          data: {
+            studentId: student.id,
+            amount: amountInCents,
+            currency: session.currency?.toUpperCase() || 'BRL',
+            status: 'COMPLETED',
+            paymentMethod: session.payment_method_types[0] || 'card',
+            stripePaymentId,
+            dueDate: new Date(),
+            paidAt: new Date(),
+          },
+        })
+
+        return { alreadyProcessed: false }
+      })
+
+      if (result.alreadyProcessed) {
+        console.log(`StripeService: Payment ${stripePaymentId} already processed, skipping`)
+        return
+      }
+    } catch (error) {
+      if ((error as { code?: string })?.code === 'P2002') return
+      throw error
+    }
+
+    // Notificação assíncrona
     await sendPaymentConfirmationEmail(
       student.user.email,
       student.user.name || 'Aluno',
