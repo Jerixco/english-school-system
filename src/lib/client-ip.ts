@@ -1,3 +1,5 @@
+import { isIP } from 'node:net'
+
 /**
  * Resolução de IP de cliente resistente a spoofing de `x-forwarded-for`.
  *
@@ -16,7 +18,6 @@ const TRUSTED_PROXY_COUNT = Math.max(
   1,
   parseInt(process.env.TRUSTED_PROXY_COUNT || '1', 10) || 1
 )
-
 export function getClientIpFromHeaders(headers: Headers): string {
   const xff = headers.get('x-forwarded-for')
   if (xff) {
@@ -29,14 +30,14 @@ export function getClientIpFromHeaders(headers: Headers): string {
     // consegue empurrar valores para essa posição — o proxy sempre anexa depois.
     if (parts.length >= TRUSTED_PROXY_COUNT) {
       const ip = parts[parts.length - TRUSTED_PROXY_COUNT]
-      if (ip) return ip
+      if (ip && isIP(ip) !== 0) return ip
     }
     // Menos entradas que o esperado = cabeçalho provavelmente forjado; ignora.
   }
 
   // Cabeçalho definido pelo proxy confiável (não pelo cliente).
   const realIp = headers.get('x-real-ip')
-  if (realIp) return realIp.trim()
+  if (realIp && isIP(realIp.trim()) !== 0) return realIp.trim()
 
   return 'unknown'
 }

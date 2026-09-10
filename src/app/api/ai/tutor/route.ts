@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
-import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { checkRateLimit, aiRateLimiter } from '@/lib/rate-limiter'
 import { AiTutorService, ChatMessage } from '@/services/ai-tutor.service'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const rateLimit = await checkRateLimit(aiRateLimiter, getClientIdentifier(req))
+    const rateLimit = await checkRateLimit(aiRateLimiter, `user:${user.id}`)
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: '⏳ Limite de mensagens para o Tutor IA atingido. Por favor, aguarde 1 minuto.' },

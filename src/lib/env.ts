@@ -16,6 +16,7 @@ const envSchema = z.object({
   ELEVENLABS_MODEL_ID: z.string().optional(),
   ELEVENLABS_OUTPUT_FORMAT: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
+  PAYMENT_MODE: z.enum(['stripe', 'sandbox']).optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   KV_REST_API_URL: z.string().optional(),
   KV_REST_API_TOKEN: z.string().optional(),

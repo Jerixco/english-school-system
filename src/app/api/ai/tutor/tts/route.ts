@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { getAuthenticatedUser, isAdmin } from '@/lib/security'
-import { checkRateLimit, aiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
+import { checkRateLimit, aiRateLimiter } from '@/lib/rate-limiter'
 import { prisma } from '@/lib/prisma'
 
 const ELEVENLABS_TTS_ENDPOINT = 'https://api.elevenlabs.io/v1/text-to-speech'
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const rateLimit = await checkRateLimit(aiRateLimiter, `${getClientIdentifier(req)}:tts`)
+    const rateLimit = await checkRateLimit(aiRateLimiter, `user:${user.id}:tts`)
     if (!rateLimit.success) {
       return NextResponse.json(
         { error: '⏳ Limite de áudio do Tutor IA atingido. Aguarde um minuto.' },

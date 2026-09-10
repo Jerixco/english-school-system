@@ -45,35 +45,6 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    if (!student && session.user.role === 'ADMIN') {
-      student = await prisma.student.findFirst({
-        include: {
-          user: {
-            select: { name: true, email: true, twoFactorEnabled: true },
-          },
-          classes: {
-            where: {
-              scheduledAt: { gte: new Date() },
-              status: 'SCHEDULED',
-            },
-            orderBy: { scheduledAt: 'asc' },
-            take: 5,
-            include: {
-              teacher: {
-                include: {
-                  user: { select: { name: true } },
-                },
-              },
-            },
-          },
-          payments: {
-            orderBy: { dueDate: 'desc' },
-            take: 20,
-          },
-        },
-      })
-    }
-
     if (!student) {
       return NextResponse.json({ error: 'Perfil de aluno não encontrado' }, { status: 404 })
     }

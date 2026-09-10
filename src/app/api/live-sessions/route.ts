@@ -14,6 +14,7 @@ const createLiveSessionSchema = z.object({
   description: z.string().max(1000).optional(),
   scheduledFor: z.string().datetime().or(z.string().min(10)),
   duration: z.number().int().min(15).max(240).optional(),
+  teacherId: z.string().min(1).optional(),
   studentId: z.string().optional(),
 })
 
@@ -58,20 +59,24 @@ export async function POST(req: NextRequest) {
     const demoBlock = blockDemoMutations(user)
     if (demoBlock) return demoBlock
 
+    const body = await req.json()
+    const validatedData = createLiveSessionSchema.parse(body)
+
     let teacherId = ''
     if (user.role === 'TEACHER') {
       const teacher = await prisma.teacher.findUnique({ where: { userId: user.id } })
       if (!teacher) return NextResponse.json({ error: 'Perfil de professor não encontrado' }, { status: 404 })
       teacherId = teacher.id
     } else {
-      // Se for admin criando para um professor, busca o primeiro professor disponível
-      const teacher = await prisma.teacher.findFirst()
-      if (!teacher) return NextResponse.json({ error: 'Nenhum professor cadastrado para vincular' }, { status: 400 })
+      if (!validatedData.teacherId) {
+        return NextResponse.json({ error: 'teacherId é obrigatório para administradores' }, { status: 400 })
+      }
+      const teacher = await prisma.teacher.findUnique({ where: { id: validatedData.teacherId } })
+      if (!teacher || !teacher.isActive) {
+        return NextResponse.json({ error: 'Professor não encontrado ou inativo' }, { status: 404 })
+      }
       teacherId = teacher.id
     }
-
-    const body = await req.json()
-    const validatedData = createLiveSessionSchema.parse(body)
 
     const session = await liveSessionService.createSession({
       ...validatedData,

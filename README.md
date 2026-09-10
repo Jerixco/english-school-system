@@ -40,8 +40,9 @@ Contas de seed usam os e-mails do `.env` (`SEED_ADMIN_EMAIL`, etc.) e a senha de
 
 ## Pagamentos
 
-- Sem `STRIPE_SECRET_KEY` real (`sk_...`), o checkout usa o **sandbox** assinado com HMAC (`NEXTAUTH_SECRET`).
-- Com chave Stripe válida e `STRIPE_PRICE_*`, o mesmo `PaymentService` abre Checkout Session. Plano do aluno só muda nesse fluxo (ou status via admin), nunca por `PATCH` do próprio aluno.
+- Em desenvolvimento/testes, sem `STRIPE_SECRET_KEY` real (`sk_...`), o checkout usa o **sandbox** assinado com HMAC (`NEXTAUTH_SECRET`).
+- Em produção, configure `PAYMENT_MODE=stripe` e uma `STRIPE_SECRET_KEY` válida; o sistema falha fechado se o provedor não estiver configurado e nunca ativa o sandbox.
+- Os dois endpoints de checkout usam o mesmo catálogo de preços no servidor. Plano do aluno só muda nesse fluxo (ou status via admin), nunca por `PATCH` do próprio aluno.
 
 ## WhatsApp Business Cloud API
 

@@ -53,6 +53,10 @@ interface AdminData {
     activeRecordingsCount: number
     leadsByStatus: Record<string, number>
   }
+  teachers: Array<{
+    id: string
+    name: string
+  }>
   allPayments?: Array<{
     id: string
     amount: number
@@ -143,6 +147,7 @@ function AdminDashboardContent() {
   const [financialSearch, setFinancialSearch] = useState('')
   const [financialStatusFilter, setFinancialStatusFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING' | 'FAILED'>('ALL')
   const [newLiveTitle, setNewLiveTitle] = useState('')
+  const [newLiveTeacherId, setNewLiveTeacherId] = useState('')
   const [isCreatingLive, setIsCreatingLive] = useState(false)
 
   useEffect(() => {
@@ -157,6 +162,7 @@ function AdminDashboardContent() {
         const json = await res.json()
         if (!res.ok) throw new Error(json.error || 'Falha ao carregar dashboard')
         setData(json)
+        setNewLiveTeacherId((current) => current || json.teachers?.[0]?.id || '')
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
@@ -187,7 +193,7 @@ function AdminDashboardContent() {
 
   const handleCreateLiveSession = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newLiveTitle) return
+    if (!newLiveTitle || !newLiveTeacherId) return
     setIsCreatingLive(true)
     try {
       const res = await fetch('/api/live-sessions', {
@@ -195,6 +201,7 @@ function AdminDashboardContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newLiveTitle,
+          teacherId: newLiveTeacherId,
           scheduledFor: new Date().toISOString(),
           duration: 60,
         }),
@@ -669,6 +676,20 @@ function AdminDashboardContent() {
                   className="bg-white"
                   required
                 />
+                <select
+                  aria-label="Professor responsável pela sala"
+                  value={newLiveTeacherId}
+                  onChange={(e) => setNewLiveTeacherId(e.target.value)}
+                  className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+                  required
+                >
+                  <option value="">Selecione o professor</option>
+                  {data.teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </select>
                 <Button type="submit" disabled={isCreatingLive} className="bg-[hsl(220,25%,12%)] hover:bg-[hsl(220,25%,16%)] text-white whitespace-nowrap gap-2">
                   {isCreatingLive ? (
                     <>

@@ -5,6 +5,22 @@ import { Plan } from '@prisma/client'
 import Stripe from 'stripe'
 
 export class StripeService {
+  private async findStudentByCustomerId(customerId: string | null | undefined) {
+    if (!customerId) return null
+    return prisma.student.findFirst({ where: { customerId } })
+  }
+
+  private async deactivateStudentByCustomerId(customerId: string | null | undefined) {
+    const student = await this.findStudentByCustomerId(customerId)
+    if (!student) return null
+
+    await prisma.student.update({
+      where: { id: student.id },
+      data: { status: 'INACTIVE' },
+    })
+    return student
+  }
+
   /**
    * Processa a finalização de um checkout bem-sucedido.
    */
@@ -119,5 +135,53 @@ export class StripeService {
         data: { status: 'INACTIVE' },
       })
     }
+  }
+
+  /** Revoga o acesso quando uma cobrança de assinatura falha. */
+  async handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
+    const customerId = typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id
+    await this.deactivateStudentByCustomerId(customerId)
+
+    const paymentIntentId = typeof invoice.payment_intent === 'string' ? invoice.payment_intent : invoice.payment_intent?.id
+    if (paymentIntentId) {
+      await prisma.payment.updateMany({
+        where: { stripePaymentId: paymentIntentId },
+        data: { status: 'FAILED' },
+      })
+    }
+  }
+
+  /** Marca o pagamento como reembolsado e revoga o acesso do aluno. */
+  async handleChargeRefunded(charge: Stripe.Charge) {
+    const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : charge.payment_intent?.id
+    const payment = paymentIntentId
+      ? await prisma.payment.findUnique({ where: { stripePaymentId: paymentIntentId } })
+      : null
+
+    if (payment) {
+      await prisma.payment.update({
+        where: { id: payment.id },
+        data: { status: 'REFUNDED' },
+      })
+      await prisma.student.update({
+        where: { id: payment.studentId },
+        data: { status: 'INACTIVE' },
+      })
+      return
+    }
+
+    const customerId = typeof charge.customer === 'string' ? charge.customer : charge.customer?.id
+    await this.deactivateStudentByCustomerId(customerId)
+  }
+
+  /** Revoga o acesso para uma falha de PaymentIntent sem cliente conhecido. */
+  async handlePaymentIntentFailed(paymentIntent: Stripe.PaymentIntent) {
+    const customerId = typeof paymentIntent.customer === 'string' ? paymentIntent.customer : paymentIntent.customer?.id
+    await this.deactivateStudentByCustomerId(customerId)
+
+    await prisma.payment.updateMany({
+      where: { stripePaymentId: paymentIntent.id },
+      data: { status: 'FAILED' },
+    })
   }
 }

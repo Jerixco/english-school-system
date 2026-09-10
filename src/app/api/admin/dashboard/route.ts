@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       totalStudents,
       activeStudents,
       totalTeachers,
+      activeTeachers,
       totalLeads,
       leadsByStatus,
       completedPayments,
@@ -39,6 +40,15 @@ export async function GET(req: NextRequest) {
       prisma.student.count({ where: { status: 'ACTIVE' } }),
       // 3. Total de professores
       prisma.teacher.count({ where: { isActive: true } }),
+      // 3b. Professores disponíveis para novas salas administrativas
+      prisma.teacher.findMany({
+        where: { isActive: true },
+        select: {
+          id: true,
+          user: { select: { name: true, email: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
       // 4. Total de leads
       prisma.lead.count(),
       // 5. Leads por status
@@ -147,6 +157,10 @@ export async function GET(req: NextRequest) {
           return acc
         }, {} as Record<string, number>),
       },
+      teachers: activeTeachers.map((teacher) => ({
+        id: teacher.id,
+        name: teacher.user.name || teacher.user.email,
+      })),
       allPayments: allPaymentsList.map((p) => ({
         id: p.id,
         amount: p.amount / 100,

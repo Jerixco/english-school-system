@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createCheckoutSession, getStripeCustomerId } from '@/lib/stripe'
 import { validateCheckout } from '@/lib/validations'
-import { getPriceIdForPlan } from '@/lib/plans'
+import { PaymentService } from '@/services/payment.service'
 import { getAuthenticatedUser } from '@/lib/security'
 import { checkRateLimit, stripeRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 
@@ -37,28 +36,19 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json()
 
-    // Valida apenas a chave do plano; o priceId é resolvido no servidor.
+    // Mantém o endpoint legado, mas delega a criação ao mesmo serviço/catálogo
+    // usado pelo checkout atual para evitar divergência de preços.
     const { plan } = validateCheckout(body)
-    const priceId = getPriceIdForPlan(plan)
+    const checkout = await new PaymentService().createCheckout({
+      userId: user.id,
+      userEmail: user.email,
+      userName: user.name || undefined,
+      plan,
+      successUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL || ''}/canceled`,
+    })
 
-    if (!priceId) {
-      return NextResponse.json(
-        { error: 'Plano indisponível' },
-        { status: 400 }
-      )
-    }
-
-    const customerId = await getStripeCustomerId(user.email, user.name || undefined)
-
-    const session = await createCheckoutSession(
-      customerId,
-      priceId,
-      `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-      `${process.env.NEXT_PUBLIC_APP_URL}/canceled`,
-      { userId: user.id, plan }
-    )
-
-    return NextResponse.json({ url: session.url })
+    return NextResponse.json({ url: checkout.url, sessionId: checkout.sessionId, provider: checkout.provider })
   } catch (error: any) {
     console.error('Error creating checkout session:', error)
 

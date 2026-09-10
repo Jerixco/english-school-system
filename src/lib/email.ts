@@ -1,6 +1,16 @@
 import nodemailer from 'nodemailer'
+import type { Transporter } from 'nodemailer'
 
-let transporterInstance: nodemailer.Transporter | null = null
+let transporterInstance: Transporter | null = null
+
+export function escapeHtml(value: unknown): string {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
 
 function getTransporter() {
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD) {
@@ -31,7 +41,7 @@ export const sendEmail = async (
     const transporter = getTransporter()
     if (!transporter) {
       console.warn(`[EMAIL NOTICE]: SMTP não configurado. Email para ${to} registrado (Subject: "${subject}")`)
-      return { success: true, mocked: true }
+      return { success: false, mocked: true, error: new Error('SMTP não configurado') }
     }
 
     await transporter.sendMail({
@@ -68,10 +78,10 @@ export const sendWelcomeEmail = async (email: string, name: string) => {
           <h1>Bem-vindo(a) à Nossa Escola de Inglês!</h1>
         </div>
         <div class="content">
-          <p>Olá, ${name}!</p>
+          <p>Olá, ${escapeHtml(name)}!</p>
           <p>É um prazer ter você conosco. Estamos muito animados em começar essa jornada de aprendizado de inglês com você.</p>
           <p>Para começar, agende sua primeira aula gratuita através do nosso calendário.</p>
-          <a href="${process.env.NEXT_PUBLIC_CALENDLY_URL}" class="button">Agendar Aula Gratuita</a>
+          <a href="${escapeHtml(process.env.NEXT_PUBLIC_CALENDLY_URL)}" class="button">Agendar Aula Gratuita</a>
           <p style="margin-top: 30px;">Se tiver alguma dúvida, não hesite em nos contatar.</p>
           <p>Atenciosamente,<br>Equipe da Escola de Inglês</p>
         </div>
@@ -111,10 +121,10 @@ export const sendConsultationConfirmationEmail = async (
           <h1>Consulta Confirmada!</h1>
         </div>
         <div class="content">
-          <p>Olá, ${name}!</p>
+          <p>Olá, ${escapeHtml(name)}!</p>
           <p>Sua consulta foi agendada com sucesso. Aqui estão os detalhes:</p>
           <div class="details">
-            <p><strong>Data:</strong> ${date}</p>
+            <p><strong>Data:</strong> ${escapeHtml(date)}</p>
             <p><strong>Duração:</strong> 30 minutos</p>
             <p><strong>Formato:</strong> Videoconferência</p>
           </div>
@@ -163,10 +173,10 @@ export const sendPaymentConfirmationEmail = async (
           <h1>Pagamento Confirmado!</h1>
         </div>
         <div class="content">
-          <p>Olá, ${name}!</p>
+          <p>Olá, ${escapeHtml(name)}!</p>
           <p>Seu pagamento foi processado com sucesso.</p>
           <div class="details">
-            <p><strong>Plano:</strong> ${plan}</p>
+            <p><strong>Plano:</strong> ${escapeHtml(plan)}</p>
             <p><strong>Valor:</strong> ${formattedAmount}</p>
             <p><strong>Status:</strong> Pago</p>
           </div>
@@ -216,11 +226,11 @@ export const sendPaymentReminderEmail = async (
           <h1>Lembrete de Pagamento</h1>
         </div>
         <div class="content">
-          <p>Olá, ${name}!</p>
+          <p>Olá, ${escapeHtml(name)}!</p>
           <p>Este é um lembrete sobre seu próximo pagamento.</p>
           <div class="details">
             <p><strong>Valor:</strong> ${formattedAmount}</p>
-            <p><strong>Data de vencimento:</strong> ${dueDate}</p>
+            <p><strong>Data de vencimento:</strong> ${escapeHtml(dueDate)}</p>
           </div>
           <p>O pagamento será processado automaticamente através do cartão cadastrado.</p>
           <p>Atenciosamente,<br>Equipe da Escola de Inglês</p>
@@ -260,7 +270,7 @@ export const sendPasswordResetEmail = async (email: string, resetUrl: string) =>
           <p>Olá!</p>
           <p>Você solicitou a recuperação de senha para sua conta na Escola de Inglês.</p>
           <p>Clique no botão abaixo para definir uma nova senha:</p>
-          <a href="${resetUrl}" class="button">Redefinir Senha</a>
+          <a href="${escapeHtml(resetUrl)}" class="button">Redefinir Senha</a>
           <p style="margin-top: 30px;">Se você não solicitou isso, por favor ignore este email.</p>
           <p>Atenciosamente,<br>Equipe da Escola de Inglês</p>
         </div>

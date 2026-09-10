@@ -1,0 +1,78 @@
+- generic [active] [ref=e1]:
+  - navigation [ref=e2]:
+    - generic [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: 🌟
+        - generic [ref=e6]:
+          - heading "GitHub Starred Hub" [level=1] [ref=e7]
+          - text: Curadoria técnica por @Jerixco
+      - generic [ref=e8]:
+        - status "03/09/2026, 15:08:32" [ref=e9]: Catálogo atualizado há 29 min
+        - button "🔄 Sincronizar Agora" [ref=e10] [cursor=pointer]:
+          - generic [ref=e11]: 🔄
+          - generic [ref=e12]: Sincronizar Agora
+  - generic [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: "368"
+        - generic [ref=e17]: Favoritos Catalogados
+      - button "67 Estrelados nos últimos 7 dias Clique para filtrar" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: "67"
+        - generic [ref=e20]: Estrelados nos últimos 7 dias
+        - generic [ref=e21]: Clique para filtrar
+      - generic [ref=e22]:
+        - generic [ref=e23]: "30"
+        - generic [ref=e24]: Linguagens & Stacks
+      - button "0 Para explorar Sua lista “Quero testar” · clique para filtrar" [ref=e25] [cursor=pointer]:
+        - generic [ref=e26]: "0"
+        - generic [ref=e27]: Para explorar
+        - generic [ref=e28]: Sua lista “Quero testar” · clique para filtrar
+    - generic [ref=e29]:
+      - textbox "🔍 Buscar por nome, tecnologia, caso de uso ou tags..." [ref=e30]
+      - combobox [ref=e31] [cursor=pointer]:
+        - option "🏷️ Todas as Linguagens" [selected]
+        - option "Python (116)"
+        - option "TypeScript (73)"
+        - option "Docs / Shell (40)"
+        - option "JavaScript (31)"
+        - option "Rust (21)"
+        - option "Go (20)"
+        - option "Shell (14)"
+        - option "HTML (9)"
+        - option "Java (6)"
+        - option "Jupyter Notebook (6)"
+        - option "C (5)"
+        - option "PHP (3)"
+        - option "C++ (3)"
+        - option "Dart (2)"
+        - option "Kotlin (2)"
+        - option "Swift (2)"
+        - option "C# (2)"
+        - option "GLSL (1)"
+        - option "Crystal (1)"
+        - option "Jinja (1)"
+        - option "Makefile (1)"
+        - option "Zig (1)"
+        - option "CSS (1)"
+        - option "Astro (1)"
+        - option "Svelte (1)"
+        - option "Inno Setup (1)"
+        - option "Clojure (1)"
+        - option "OCaml (1)"
+        - option "PowerShell (1)"
+        - option "Assembly (1)"
+      - combobox [ref=e32] [cursor=pointer]:
+        - option "🔢 Ordem do Catálogo" [selected]
+        - option "🕒 Estrelados Mais Recentemente"
+        - option "🕰️ Estrelados Há Mais Tempo"
+        - option "⭐ Mais Estrelas"
+        - option "🔤 Alfabética (A-Z)"
+      - combobox "Filtrar por exploração" [ref=e33] [cursor=pointer]:
+        - option "📌 Todas as marcações" [selected]
+        - option "Quero testar"
+        - option "Já explorei"
+        - option "Sem marcação"
+      - button "Limpar filtros" [ref=e34] [cursor=pointer]
+      - generic [ref=e35]:
+        - button "Resumido" [ref=e36] [cursor=pointer]
+        - button "Completo" [ref=e37] [cursor=pointer]
