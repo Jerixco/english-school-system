@@ -1,0 +1,42 @@
+{
+  "frontend_analisado": true,
+  "criticos": [
+    "Arquivo src/components/ScheduleForm.tsx está truncado e com sintaxe quebrada na linha 156: fecho de form/button/código cortado, causando erro de build que impede compilação do front-end.",
+    "Arquivo src/app/(dashboard)/professor/aulas/page.tsx truncado na linha 28 com tag aberta sem fechamento, resultando em erro de compilação TypeScript.",
+    "Arquivo src/app/api/auth/register/route.ts contém código JavaScript inválido na linha 94: estrutura de try/catch incompleta com ')' solto, impedindo execução da rota.",
+    "Arquivo src/app/api/email/send/route.ts contém sintaxe quebrada na linha 76 com fragmento de texto solto e estrutura de erro incorreta, causando falha na rota de envio de e-mails.",
+    "Uso de dangerouslySetInnerHTML em src/app/blog/[slug]/page.tsx (linha 102): apesar de sanitização com isomorphic-dompurify, qualquer falha no sanitizer expõe o app a XSS armazenado, especialmente crítico para conteúdo gerado por usuários/admins.",
+    "Ausência de proteção CSRF em rotas POST — rotas de login, registro e leads aceitam POST sem validação de token CSRF, explorável via sites maliciosos.",
+    "CSP permite 'unsafe-inline' para scripts e estilos em next.config.js, reduzindo significativamente a proteção contra XSS e injeção de código arbitrário.",
+    "Script GTM injetado via dangerouslySetInnerHTML no layout.tsx (linhas 93-99 e 105-117) com ID vindo de variável de ambiente — risco de iframe injection se configuração for comprometida."
+  ],
+  "moderados": [
+    "Estado global ausente: não há library de estado global (zustand/redux/context) configurada — cada página faz fetch direto com useEffect, gerando duplicação de dados entre dashboards.",
+    "Fetch manual em todas as pages sem padronização: não há interceptors, retry logic ou manejo centralizado de erros de API; cada component implementa seu próprio bloco try/catch.",
+    "Sem lazy loading ou code splitting em componentes pesados (AiTutorCard, DashboardSidebar, modais de vídeo) — todos importados estaticamente aumentando bundle size inicial.",
+    "Iframes Jitsi integrados sem sandbox attributes adequados — falta allowfullscreen explícito e sandbox para restringir permissões do iframe.",
+    "Calendly widget injetado dinamicamente via script no DOM sem validação de integridade — risco de supply chain attack se CDN for comprometido.",
+    "Acessibilidade comprometida: botões de navegação por tabs usam <button> sem aria-selected, aria-controls ou role='tab', dificultando navegação por teclado.",
+    "Labels e inputs nem sempre associados corretamente via htmlFor/id em formulários públicos (ContactForm, LeadForm, ScheduleForm).",
+    "Ausência de skeleton loading padronizado: cada page cria placeholders animados inline ao invés de reutilizar o componente Skeleton UI existente.",
+    "Lógica de demo hardcoded no client-side (DashboardSidebar verifica email demo) — deveria ser tratada via feature flag no server.",
+    "Sem validação de tamanho de payload nos formulários públicos antes do envio — leads podem ser criados com dados excessivos.",
+    "Botões de ação (entrar na sala, criar aula) não possuem tratamento de loading state consistente em todos os casos."
+  ],
+  "recomendacoes": [
+    "Corrigir imediatamente arquivos com syntax error: ScheduleForm.tsx, professor/aulas/page.tsx, register/route.ts, email/send/route.ts — estes impedem build e deploy.",
+    "Implementar Zustand ou Jotai para estado global compartilhado entre dashboards (aluno/professor/admin) para evitar requisições duplicadas.",
+    "Adicionar React.lazy() com Suspense para components pesados: AiTutorCard, DevicePreCheckModal, ClassFeedbackModal, video players e Calendly widget.",
+    "Remover 'unsafe-inline' da CSP e migrar para nonce-based ou hash-based inline scripts, especialmente para GA/GTM.",
+    "Adicionar validação de CSRF token em todas as rotas mutáveis (POST/PATCH/DELETE) usando next-auth csrf protection ou biblioteca especializada.",
+    "Padronizar consumo de API com tanstack-query ou swr para caching, deduplicação, retry automático e manejo centralizado de loading/error states.",
+    "Reforçar sanitização: implementar Content-Security-Policy com report-uri para detectar tentativas de XSS, e adicionar output encoding em todos os pontos de entrada.",
+    "Corrigir acessibilidade: adicionar aria-selected, role='tab', aria-controls nos botões de tab navigation e garantir associações label-input corretas.",
+    "Adicionar sandbox attributes nos iframes Jitsi: sandbox='allow-scripts allow-same-origin allow-forms allow-popups'.",
+    "Implementar feature flags centralizadas ao invés de verificar email demo no client-side, movendo lógica para server com headers ou cookies assinados.",
+    "Criar custom hook useApi() com interceptors para erros HTTP, retry e loading states padronizados em toda a aplicação.",
+    "Adicionar rate limiting client-side nos formulários públicos para prevenir spam além do rate limiting server-side.",
+    "Implementar error boundaries dedicados por rota ao invés de apenas error.tsx global, permitindo fallbacks mais específicos por feature.",
+    "Considerar migrar de next-auth v4 para v5 para melhor segurança, performance e DX com suporte aprimorado a middleware."
+  ]
+}

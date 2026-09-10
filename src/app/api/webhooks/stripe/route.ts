@@ -21,9 +21,9 @@ export async function POST(req: NextRequest) {
 
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-  } catch (err: any) {
-    console.error(`Webhook signature verification failed: ${err.message}`)
-    return NextResponse.json({ error: `Webhook Error: ${err.message}` }, { status: 400 })
+  } catch (err: unknown) {
+    console.error('Webhook signature verification failed:', err)
+    return NextResponse.json({ error: 'Webhook signature verification failed' }, { status: 400 })
   }
 
   const stripeService = new StripeService()
@@ -40,6 +40,18 @@ export async function POST(req: NextRequest) {
 
       case 'customer.subscription.deleted':
         await stripeService.handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+        break
+
+      case 'invoice.payment_failed':
+        await stripeService.handleInvoicePaymentFailed(event.data.object as Stripe.Invoice)
+        break
+
+      case 'payment_intent.payment_failed':
+        await stripeService.handlePaymentIntentFailed(event.data.object as Stripe.PaymentIntent)
+        break
+
+      case 'charge.refunded':
+        await stripeService.handleChargeRefunded(event.data.object as Stripe.Charge)
         break
 
       default:

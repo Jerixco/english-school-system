@@ -36,17 +36,21 @@ export const authOptions: NextAuthOptions = {
           // Conta a falha e bloqueia após o limite (brute-force / stuffing).
           const MAX_FAILED = 5
           const LOCK_MS = 15 * 60 * 1000
-          const nextCount = user.failedLoginCount + 1
-          await prisma.user.update({
+          const updatedUser = await prisma.user.update({
             where: { id: user.id },
             data: {
-              failedLoginCount: nextCount,
+              failedLoginCount: { increment: 1 },
               lastFailedLogin: new Date(),
-              ...(nextCount >= MAX_FAILED
-                ? { lockedUntil: new Date(Date.now() + LOCK_MS), failedLoginCount: 0 }
-                : {}),
             },
+            select: { failedLoginCount: true },
           })
+
+          if (updatedUser.failedLoginCount >= MAX_FAILED) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { lockedUntil: new Date(Date.now() + LOCK_MS), failedLoginCount: 0 },
+            })
+          }
           throw new Error('Credenciais inválidas')
         }
 

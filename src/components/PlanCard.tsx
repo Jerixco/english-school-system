@@ -54,29 +54,29 @@ export default function PlanCard({ name, description, price, plan, features, pop
   }
 
   return (
-    <Card className={`relative flex flex-col justify-between transition-all hover:shadow-xl ${popular ? 'border-2 border-indigo-600 shadow-indigo-100 shadow-lg' : 'border border-gray-200'}`}>
+    <Card className={`relative flex flex-col justify-between border-border bg-card transition-all hover:-translate-y-0.5 hover:shadow-tinted ${popular ? 'border-2 border-primary' : 'border'}`}>
       {popular && (
         <div className="absolute -top-3.5 left-1/2 transform -translate-x-1/2">
-          <span className="bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-md uppercase tracking-wider">
+          <span className="rounded-full bg-primary px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary-foreground shadow-md">
             Mais Escolhido
           </span>
         </div>
       )}
       <div>
         <CardHeader className="pb-4">
-          <CardTitle className="text-2xl font-extrabold text-gray-900">{name}</CardTitle>
-          <CardDescription className="text-gray-500">{description}</CardDescription>
+          <CardTitle className="text-2xl font-extrabold text-card-foreground">{name}</CardTitle>
+          <CardDescription className="text-muted-foreground">{description}</CardDescription>
           <div className="mt-4 flex items-baseline">
-            <span className="text-4xl font-black text-gray-900">{price}</span>
-            <span className="text-gray-500 text-sm font-medium ml-1.5">/mês</span>
+            <span className="text-4xl font-black text-card-foreground">{price}</span>
+            <span className="ml-1.5 text-sm font-medium text-muted-foreground">/mês</span>
           </div>
         </CardHeader>
         <CardContent className="pt-0">
           <ul className="space-y-3 mb-6">
             {features.map((feature, index) => (
               <li key={index} className="flex items-start">
-                <Check className="h-5 w-5 text-emerald-600 mr-2.5 flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-gray-700">{feature}</span>
+                <Check className="mr-2.5 mt-0.5 h-5 w-5 flex-shrink-0 text-success" />
+                <span className="text-sm text-card-foreground">{feature}</span>
               </li>
             ))}
           </ul>
@@ -85,7 +85,7 @@ export default function PlanCard({ name, description, price, plan, features, pop
 
       <CardContent className="pt-0">
         {error && (
-          <p className="text-xs text-red-600 mb-3 bg-red-50 p-2 rounded border border-red-200">
+          <p className="mb-3 rounded border border-destructive/20 bg-destructive/10 p-2 text-xs text-destructive">
             {error}
           </p>
         )}
@@ -93,8 +93,8 @@ export default function PlanCard({ name, description, price, plan, features, pop
           onClick={handleSubscribe}
           className={`w-full h-11 font-bold shadow-sm transition-all ${
             popular
-              ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200'
-              : 'bg-gray-900 hover:bg-gray-800 text-white'
+              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+              : 'bg-foreground text-background hover:bg-foreground/90'
           }`}
           disabled={loading}
         >

@@ -39,6 +39,18 @@ export const SERVER_PLAN_PRICES: Record<PurchasablePlan, { amount: number; name:
   PREMIUM: { amount: 79700, name: 'Plano Premium', currency: 'BRL' },
 }
 
+function hasRealStripeKey(): boolean {
+  const key = process.env.STRIPE_SECRET_KEY?.trim()
+  return Boolean(key) && key!.startsWith('sk_') && !key!.includes('mock') && !key!.includes('your_stripe')
+}
+
+export function isSandboxPaymentEnabled(): boolean {
+  const mode = process.env.PAYMENT_MODE?.trim().toLowerCase()
+  if (mode === 'sandbox') return process.env.NODE_ENV !== 'production'
+  if (mode === 'stripe') return false
+  return process.env.NODE_ENV !== 'production' && !hasRealStripeKey()
+}
+
 /**
  * Interface do Gateway de Pagamentos (Adapter Pattern).
  */
@@ -131,6 +143,18 @@ export class StripePaymentAdapter implements PaymentGateway {
 
       case 'customer.subscription.deleted':
         await stripeService.handleSubscriptionDeleted(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      case 'invoice.payment_failed':
+        await stripeService.handleInvoicePaymentFailed(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      case 'payment_intent.payment_failed':
+        await stripeService.handlePaymentIntentFailed(event.data.object)
+        return { processed: true, paymentId: event.data.object.id }
+
+      case 'charge.refunded':
+        await stripeService.handleChargeRefunded(event.data.object)
         return { processed: true, paymentId: event.data.object.id }
 
       default:
@@ -230,14 +254,26 @@ export class PaymentService {
     if (gateway) {
       this.gateway = gateway
     } else {
-      // Se STRIPE_SECRET_KEY estiver presente e não for placeholder, usa Stripe; senão, usa Sandbox Seguro
-      const hasRealStripeKey = 
-        Boolean(process.env.STRIPE_SECRET_KEY) && 
-        process.env.STRIPE_SECRET_KEY!.startsWith('sk_') &&
-        !process.env.STRIPE_SECRET_KEY!.includes('mock') &&
-        !process.env.STRIPE_SECRET_KEY!.includes('your_stripe')
+      const mode = process.env.PAYMENT_MODE?.trim().toLowerCase()
+      if (mode && mode !== 'stripe' && mode !== 'sandbox') {
+        throw new Error('PAYMENT_MODE deve ser stripe ou sandbox.')
+      }
 
-      this.gateway = hasRealStripeKey ? new StripePaymentAdapter() : new SandboxPaymentAdapter()
+      if (mode === 'sandbox' && process.env.NODE_ENV === 'production') {
+        throw new Error('Sandbox de pagamentos desabilitado em produção.')
+      }
+
+      if (mode === 'stripe' && !hasRealStripeKey()) {
+        throw new Error('STRIPE_SECRET_KEY não configurada para o modo Stripe.')
+      }
+
+      if (mode === 'sandbox' || isSandboxPaymentEnabled()) {
+        this.gateway = new SandboxPaymentAdapter()
+      } else if (hasRealStripeKey()) {
+        this.gateway = new StripePaymentAdapter()
+      } else {
+        throw new Error('Provedor de pagamentos não configurado.')
+      }
     }
   }
 
@@ -278,39 +314,61 @@ export class PaymentService {
       return { success: false, reason: 'student_not_found' }
     }
 
-    // 2. Verificação de Idempotência: Checa se este pagamento já foi gravado
-    const existingPayment = await prisma.payment.findUnique({
-      where: { stripePaymentId: event.transactionId },
-    })
+    let paymentId: string
 
-    if (existingPayment) {
-      console.log(`PaymentService: Transaction ${event.transactionId} already processed, skipping duplicate`)
-      return { success: true, alreadyProcessed: true, paymentId: existingPayment.id }
+    try {
+      const payment = await prisma.$transaction(async (tx) => {
+        // A leitura e a gravação precisam estar na mesma transação; o índice
+        // único de stripePaymentId também protege contra duas entregas simultâneas.
+        const existingPayment = await tx.payment.findUnique({
+          where: { stripePaymentId: event.transactionId },
+        })
+
+        if (existingPayment) return { alreadyProcessed: true, id: existingPayment.id }
+
+        await tx.student.update({
+          where: { id: student.id },
+          data: {
+            status: 'ACTIVE',
+            plan: event.plan as Plan,
+            nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          },
+        })
+
+        const createdPayment = await tx.payment.create({
+          data: {
+            studentId: student.id,
+            amount: event.amountInCents,
+            currency: event.currency,
+            status: event.status,
+            paymentMethod: event.paymentMethod,
+            stripePaymentId: event.transactionId,
+            dueDate: new Date(),
+            paidAt: new Date(),
+          },
+        })
+
+        return { alreadyProcessed: false, id: createdPayment.id }
+      })
+
+      paymentId = payment.id
+
+      if (payment.alreadyProcessed) {
+        console.log(`PaymentService: Transaction ${event.transactionId} already processed, skipping duplicate`)
+        return { success: true, alreadyProcessed: true, paymentId }
+      }
+    } catch (error) {
+      // Outra entrega pode ter vencido a corrida e criado o registro primeiro.
+      if ((error as { code?: string })?.code === 'P2002') {
+        const existingPayment = await prisma.payment.findUnique({
+          where: { stripePaymentId: event.transactionId },
+        })
+        if (existingPayment) {
+          return { success: true, alreadyProcessed: true, paymentId: existingPayment.id }
+        }
+      }
+      throw error
     }
-
-    // 3. Atualiza o status e o plano do estudante
-    await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        status: 'ACTIVE',
-        plan: event.plan as Plan,
-        nextPaymentDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Próximo ciclo em 30 dias
-      },
-    })
-
-    // 4. Registra o pagamento com valor validado
-    const payment = await prisma.payment.create({
-      data: {
-        studentId: student.id,
-        amount: event.amountInCents,
-        currency: event.currency,
-        status: event.status,
-        paymentMethod: event.paymentMethod,
-        stripePaymentId: event.transactionId,
-        dueDate: new Date(),
-        paidAt: new Date(),
-      },
-    })
 
     // 5. Envia e-mail de confirmação se disponível
     if (student.user.email) {
@@ -322,6 +380,6 @@ export class PaymentService {
       ).catch((err) => console.error('PaymentService: Failed to send email confirmation:', err))
     }
 
-    return { success: true, paymentId: payment.id }
+    return { success: true, paymentId }
   }
 }

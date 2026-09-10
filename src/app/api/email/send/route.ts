@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { sendEmail, sendWelcomeEmail, sendConsultationConfirmationEmail, sendPaymentConfirmationEmail, sendPaymentReminderEmail } from '@/lib/email'
 import { checkRateLimit, apiRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { getAuthenticatedUser, isAdmin, blockDemoMutations } from '@/lib/security'
-import { sanitizeRichHtml } from '@/lib/sanitize-html'
 import { z } from 'zod'
 
 const emailSchema = z.object({

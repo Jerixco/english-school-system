@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -76,7 +76,7 @@ const STATUS_LABELS: Record<string, string> = {
   TRIAL: 'Período de Teste',
 }
 
-export default function AlunoDashboardPage() {
+function AlunoDashboardContent() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') === 'financeiro' ? 'financeiro' : 'overview'
   const [activeTab, setActiveTab] = useState<'overview' | 'financeiro'>(tabFromUrl)
@@ -130,11 +130,13 @@ export default function AlunoDashboardPage() {
     )
   }
 
-  const completedPayments = data.recentPayments.filter((p) => p.status === 'COMPLETED')
-  const pendingPayments = data.recentPayments.filter((p) => p.status === 'PENDING')
-  const failedPayments = data.recentPayments.filter((p) => p.status === 'FAILED')
+  const recentPayments = data.recentPayments || []
+  const upcomingClasses = data.upcomingClasses || []
+  const completedPayments = recentPayments.filter((p) => p.status === 'COMPLETED')
+  const pendingPayments = recentPayments.filter((p) => p.status === 'PENDING')
+  const failedPayments = recentPayments.filter((p) => p.status === 'FAILED')
 
-  const filteredPayments = data.recentPayments.filter((p) => {
+  const filteredPayments = recentPayments.filter((p) => {
     if (paymentFilter === 'ALL') return true
     return p.status === paymentFilter
   })
@@ -143,11 +145,11 @@ export default function AlunoDashboardPage() {
 
   return (
     <DashboardShell
-      title={`Olá, ${data.user.name?.split(' ')[0] || 'Aluno'}! 👋`}
+      title={`Olá, ${data.user?.name?.split(' ')[0] || 'Aluno'}! 👋`}
       subtitle="Bem-vindo ao seu portal de estudos. Acompanhe suas aulas, converse com o tutor e gerencie seu plano e parcelas."
     >
       {/* Alerta de 2FA opcional */}
-      {!data.user.twoFactorEnabled && (
+      {!data.user?.twoFactorEnabled && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl mb-6 flex items-center justify-between gap-3 text-sm shadow-sm">
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-5 w-5 text-amber-600 flex-shrink-0" />
@@ -222,7 +224,7 @@ export default function AlunoDashboardPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-500">Aulas Agendadas</p>
                     <h3 className="text-2xl font-extrabold text-gray-900 mt-0.5">
-                      {data.upcomingClasses.length}
+                      {upcomingClasses.length}
                     </h3>
                     <small className="text-sky-600 font-medium">Nesta semana</small>
                   </div>
@@ -278,7 +280,7 @@ export default function AlunoDashboardPage() {
                   </Link>
                 </CardHeader>
                 <CardContent>
-                  {data.upcomingClasses.length === 0 ? (
+                  {upcomingClasses.length === 0 ? (
                     <EmptyState
                       icon={Calendar}
                       title="Nenhuma aula agendada no momento"
@@ -289,7 +291,7 @@ export default function AlunoDashboardPage() {
                     />
                   ) : (
                     <div className="space-y-3">
-                      {data.upcomingClasses.map((cls) => (
+                      {upcomingClasses.map((cls) => (
                         <div key={cls.id} className="p-3.5 bg-gray-50 rounded-lg flex justify-between items-center hover:bg-sky-50/50 transition-colors border border-gray-100">
                           <div>
                             <div className="font-semibold text-gray-900 capitalize">
@@ -339,7 +341,7 @@ export default function AlunoDashboardPage() {
                   </button>
                 </CardHeader>
                 <CardContent>
-                  {data.recentPayments.length === 0 ? (
+                  {recentPayments.length === 0 ? (
                     <EmptyState
                       icon={CreditCard}
                       title="Nenhum pagamento registrado"
@@ -348,7 +350,7 @@ export default function AlunoDashboardPage() {
                     />
                   ) : (
                     <div className="space-y-3">
-                      {data.recentPayments.slice(0, 4).map((payment) => (
+                      {recentPayments.slice(0, 4).map((payment) => (
                         <div key={payment.id} className="p-3 bg-gray-50 rounded-lg flex justify-between items-center border border-gray-100">
                           <div>
                             <div className="font-bold text-gray-900">
@@ -525,7 +527,7 @@ export default function AlunoDashboardPage() {
                     paymentFilter === 'ALL' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Todas ({data.recentPayments.length})
+                  Todas ({recentPayments.length})
                 </button>
                 <button
                   onClick={() => setPaymentFilter('COMPLETED')}
@@ -641,7 +643,7 @@ export default function AlunoDashboardPage() {
                               </span>
                             ) : (
                               <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-xs">
-                                <Link href={`/checkout/sandbox?plan=${data.plan.toLowerCase()}`}>
+                                <Link href={`/checkout/sandbox?plan=${(data.plan || 'basic').toLowerCase()}`}>
                                   Pagar Agora →
                                 </Link>
                               </Button>
@@ -658,5 +660,30 @@ export default function AlunoDashboardPage() {
         </div>
       )}
     </DashboardShell>
+  )
+}
+
+export default function AlunoDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell title="Portal do Aluno" subtitle="Carregando seu ambiente de estudos...">
+          <div className="space-y-4">
+            <div className="h-24 rounded-xl bg-muted/60 animate-pulse" />
+            <div className="grid md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 rounded-xl bg-muted/60 animate-pulse" />
+              ))}
+            </div>
+            <div className="grid lg:grid-cols-7 gap-6">
+              <div className="lg:col-span-4 h-64 rounded-xl bg-muted/60 animate-pulse" />
+              <div className="lg:col-span-3 h-64 rounded-xl bg-muted/60 animate-pulse" />
+            </div>
+          </div>
+        </DashboardShell>
+      }
+    >
+      <AlunoDashboardContent />
+    </Suspense>
   )
 }

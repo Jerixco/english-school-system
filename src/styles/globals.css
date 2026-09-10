@@ -20,10 +20,20 @@
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
+    --success: 145 60% 36%;
+    --success-foreground: 0 0% 100%;
+    --info: 210 90% 45%;
+    --info-foreground: 0 0% 100%;
+    --warning: 38 92% 45%;
+    --warning-foreground: 20 10% 10%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 262.1 83.3% 57.8%;
     --radius: 0.5rem;
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-from: 262.1 83.3% 30%;
+    --sidebar-to: 222.2 47.4% 11.2%;
   }
 
   .dark {
@@ -43,9 +53,19 @@
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
+    --success: 145 55% 42%;
+    --success-foreground: 0 0% 100%;
+    --info: 210 85% 60%;
+    --info-foreground: 222.2 47.4% 11.2%;
+    --warning: 38 90% 58%;
+    --warning-foreground: 222.2 47.4% 11.2%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 262.1 83.3% 57.8%;
+    --sidebar-background: 222.2 47.4% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-from: 262.1 70% 24%;
+    --sidebar-to: 222.2 47.4% 8%;
   }
 }
 
@@ -56,16 +76,48 @@
   body {
     @apply bg-background text-foreground;
   }
+  :where(h1, h2, h3, h4, h5, h6) {
+    @apply font-outfit;
+    text-wrap: balance;
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .shadow-tinted {
+    box-shadow: 0 4px 24px -4px hsl(var(--primary) / 0.14), 0 2px 8px -2px hsl(var(--foreground) / 0.08);
+  }
+
+  .shadow-card {
+    box-shadow: 0 1px 3px hsl(var(--foreground) / 0.06), 0 4px 16px -8px hsl(var(--foreground) / 0.08);
+  }
 }
 
 html {
   scroll-behavior: smooth;
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 body {

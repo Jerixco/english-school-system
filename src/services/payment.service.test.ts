@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
+    $transaction: vi.fn(),
     student: {
       upsert: vi.fn(),
       findFirst: vi.fn(),
@@ -26,6 +27,7 @@ describe('PaymentService & Security Controls', () => {
   beforeEach(() => {
     paymentService = new PaymentService(new SandboxPaymentAdapter())
     vi.clearAllMocks()
+    vi.mocked(prisma.$transaction).mockImplementation(async (callback: any) => callback(prisma as any))
   })
 
   it('should enforce server-side pricing catalog for all purchasable plans', () => {
@@ -138,11 +140,14 @@ describe('PaymentService & Security Controls', () => {
     expect(expiredResult).toBeNull()
   })
 
-  it('should instantiate StripePaymentAdapter when real STRIPE_SECRET_KEY is present and Sandbox when absent', () => {
+  it('should instantiate StripePaymentAdapter when real STRIPE_SECRET_KEY is present and Sandbox when absent outside production', () => {
     const originalKey = process.env.STRIPE_SECRET_KEY
+    const originalNodeEnv = process.env.NODE_ENV
+    const originalMode = process.env.PAYMENT_MODE
 
     // Sem chave: Sandbox
     delete process.env.STRIPE_SECRET_KEY
+    delete process.env.PAYMENT_MODE
     const serviceWithoutKey = new PaymentService()
     expect((serviceWithoutKey as any).gateway.name).toBe('sandbox')
 
@@ -151,7 +156,13 @@ describe('PaymentService & Security Controls', () => {
     const serviceWithKey = new PaymentService()
     expect((serviceWithKey as any).gateway.name).toBe('stripe')
 
+    ;(process.env as Record<string, string | undefined>).NODE_ENV = 'production'
+    delete process.env.STRIPE_SECRET_KEY
+    expect(() => new PaymentService()).toThrow(/Provedor de pagamentos não configurado/)
+
     // Restaura chave original
     process.env.STRIPE_SECRET_KEY = originalKey
+    ;(process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv
+    process.env.PAYMENT_MODE = originalMode
   })
 })

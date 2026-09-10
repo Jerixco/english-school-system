@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthenticatedUser, logAuditAction } from '@/lib/security'
 import { checkRateLimit, stripeRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
-import { SandboxPaymentAdapter, PaymentService, SERVER_PLAN_PRICES } from '@/services/payment.service'
+import { SandboxPaymentAdapter, PaymentService, SERVER_PLAN_PRICES, isSandboxPaymentEnabled } from '@/services/payment.service'
 import { z } from 'zod'
 
 const sandboxSubmitSchema = z.object({
@@ -13,6 +13,10 @@ const sandboxSubmitSchema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isSandboxPaymentEnabled()) {
+      return NextResponse.json({ error: 'Sandbox de pagamentos indisponível neste ambiente.' }, { status: 404 })
+    }
+
     // 1. Rate limiting
     const identifier = getClientIdentifier(req)
     const rateLimitResult = await checkRateLimit(stripeRateLimiter, identifier)

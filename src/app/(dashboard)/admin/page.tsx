@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -53,6 +53,10 @@ interface AdminData {
     activeRecordingsCount: number
     leadsByStatus: Record<string, number>
   }
+  teachers: Array<{
+    id: string
+    name: string
+  }>
   allPayments?: Array<{
     id: string
     amount: number
@@ -129,7 +133,7 @@ const LEAD_STATUS_LABELS: Record<string, { label: string; color: string }> = {
   LOST: { label: 'Perdido', color: 'text-[hsl(20,5%,45%)]' },
 }
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const searchParams = useSearchParams()
   const tabFromUrl = searchParams.get('tab') || 'overview'
 
@@ -143,6 +147,7 @@ export default function AdminDashboard() {
   const [financialSearch, setFinancialSearch] = useState('')
   const [financialStatusFilter, setFinancialStatusFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING' | 'FAILED'>('ALL')
   const [newLiveTitle, setNewLiveTitle] = useState('')
+  const [newLiveTeacherId, setNewLiveTeacherId] = useState('')
   const [isCreatingLive, setIsCreatingLive] = useState(false)
 
   useEffect(() => {
@@ -157,6 +162,7 @@ export default function AdminDashboard() {
         const json = await res.json()
         if (!res.ok) throw new Error(json.error || 'Falha ao carregar dashboard')
         setData(json)
+        setNewLiveTeacherId((current) => current || json.teachers?.[0]?.id || '')
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
@@ -187,7 +193,7 @@ export default function AdminDashboard() {
 
   const handleCreateLiveSession = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newLiveTitle) return
+    if (!newLiveTitle || !newLiveTeacherId) return
     setIsCreatingLive(true)
     try {
       const res = await fetch('/api/live-sessions', {
@@ -195,6 +201,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: newLiveTitle,
+          teacherId: newLiveTeacherId,
           scheduledFor: new Date().toISOString(),
           duration: 60,
         }),
@@ -669,6 +676,20 @@ export default function AdminDashboard() {
                   className="bg-white"
                   required
                 />
+                <select
+                  aria-label="Professor responsável pela sala"
+                  value={newLiveTeacherId}
+                  onChange={(e) => setNewLiveTeacherId(e.target.value)}
+                  className="h-10 rounded-md border border-input bg-white px-3 text-sm"
+                  required
+                >
+                  <option value="">Selecione o professor</option>
+                  {data.teachers.map((teacher) => (
+                    <option key={teacher.id} value={teacher.id}>
+                      {teacher.name}
+                    </option>
+                  ))}
+                </select>
                 <Button type="submit" disabled={isCreatingLive} className="bg-[hsl(220,25%,12%)] hover:bg-[hsl(220,25%,16%)] text-white whitespace-nowrap gap-2">
                   {isCreatingLive ? (
                     <>
@@ -1020,5 +1041,27 @@ export default function AdminDashboard() {
         </div>
       )}
     </DashboardShell>
+  )
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell title="Painel Administrativo" subtitle="Carregando métricas e indicadores...">
+          <div className="space-y-4">
+            <div className="h-12 w-64 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="grid md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-28 rounded-xl bg-muted/60 animate-pulse" />
+              ))}
+            </div>
+            <div className="h-64 rounded-xl bg-muted/60 animate-pulse" />
+          </div>
+        </DashboardShell>
+      }
+    >
+      <AdminDashboardContent />
+    </Suspense>
   )
 }

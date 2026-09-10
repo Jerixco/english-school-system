@@ -1,0 +1,27 @@
+{
+  "backend_analisado": true,
+  "criticos": [
+    "Ausência de pasta migrations no Prisma - schema.prisma existe mas não há histórico de migrações, impedindo versionamento seguro do banco e rollback em produção",
+    "Header x-forwarded-for usado para rate limiting sem validação de proxy confiável permite spoofing de IP e contorno dos limites de requisições",
+    "CORS não configurado explicitamente - rely em defaults do Next.js pode expor a vulnerabilidades cross-origin em produção",
+    "NEXTAUTH_SECRET pode ser sobrescrita por variáveis de ambiente não validadas em desenvolvimento, comprometendo assinatura de tokens JWT",
+    "API admin/dashboard expõe emails completos e IDs de Stripe sem sanitização adequada em respostas JSON"
+  ],
+  "moderados": [
+    "Rate limiter usa fallback para memória quando Upstash Redis não está configurado, causando comportamento inconsistente entre ambientes dev e prod",
+    "Emails de usuários aparecem em logs e respostas de API em diversos endpoints sem ofuscação",
+    "Função sanitizeErrorMessage usa regex simples que pode falhar ao lidar com payloads maliciosos complexos",
+    "Sandbox payment adapter usa NEXTAUTH_SECRET como signing key HMAC, potencialmente comprometendo integridade se chave for vazada",
+    "Não há validação de permissão em PUT/PATCH para atualização de estudantes/professores existentes, apenas criação"
+  ],
+  "recomendacoes": [
+    "Implementar migrações Prisma (prisma migrate dev) e versionar no repositório antes de qualquer deploy produção",
+    "Configurar middleware CORS explícito com whitelist de origens permitidas via variável de ambiente",
+    "Adicionar validação de IP confiável usando x-real-ip ou configurar TRUSTED_PROXY_COUNT corretamente",
+    "Ofuscar dados sensíveis (emails, IDs Stripe) em todas as respostas de API usando rotas dedicadas de sanitização",
+    "Implementar CSRF token para formulários de autenticação e mutações sensíveis",
+    "Padronizar tratamento de erros com classe Error personalizada e máscaras de segurança para stack traces",
+    "Adicionar testes de integração para fluxos críticos de pagamento (checkout, webhook, sandbox)",
+    "Configurar Sentry para captura de erros em produção com máscara automática de PII (emails, IPs, tokens)"
+  ]
+}

@@ -42,22 +42,26 @@ export async function recordLoginAttempt(params: {
 
   const user = await prisma.user.findUnique({
     where: { email: params.email },
-    select: { id: true, failedLoginCount: true },
+    select: { id: true },
   })
 
   if (!user) return
 
-  const newCount = user.failedLoginCount + 1
-  const shouldLock = newCount >= MAX_FAILED_ATTEMPTS
-
-  await prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: { id: user.id },
     data: {
-      failedLoginCount: newCount,
+      failedLoginCount: { increment: 1 },
       lastFailedLogin: new Date(),
-      lockedUntil: shouldLock ? new Date(Date.now() + LOCKOUT_DURATION_MS) : undefined,
     },
+    select: { failedLoginCount: true },
   })
+
+  if (updatedUser.failedLoginCount >= MAX_FAILED_ATTEMPTS) {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lockedUntil: new Date(Date.now() + LOCKOUT_DURATION_MS), failedLoginCount: 0 },
+    })
+  }
 }
 
 export async function createAuditLog(params: {

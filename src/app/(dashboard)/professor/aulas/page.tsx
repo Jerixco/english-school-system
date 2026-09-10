@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import DashboardShell from '@/components/dashboard/DashboardShell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -58,7 +58,7 @@ interface ProfessorData {
   }>
 }
 
-export default function ProfessorAulasPage() {
+function ProfessorAulasContent() {
   const searchParams = useSearchParams()
   const initialTab = searchParams.get('tab') || 'live'
 
@@ -569,5 +569,22 @@ export default function ProfessorAulasPage() {
         </div>
       )}
     </DashboardShell>
+  )
+}
+
+export default function ProfessorAulasPage() {
+  return (
+    <Suspense
+      fallback={
+        <DashboardShell title="Gestão de Aulas & Transmissões" subtitle="Carregando ambiente docente...">
+          <div className="space-y-4">
+            <div className="h-12 w-64 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="h-64 rounded-xl bg-muted/60 animate-pulse" />
+          </div>
+        </DashboardShell>
+      }
+    >
+      <ProfessorAulasContent />
+    </Suspense>
   )
 }

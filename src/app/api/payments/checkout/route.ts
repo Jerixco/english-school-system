@@ -70,10 +70,10 @@ export async function POST(req: NextRequest) {
       sessionId: checkoutSession.sessionId,
       provider: checkoutSession.provider,
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao gerar checkout:', error)
     return NextResponse.json(
-      { error: error.message || 'Erro ao processar checkout' },
+      { error: 'Erro ao processar checkout' },
       { status: 500 }
     )
   }

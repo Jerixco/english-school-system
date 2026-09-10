@@ -27,11 +27,11 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    if (!teacher && user.role !== 'ADMIN') {
+    if (!teacher) {
       return NextResponse.json({ error: 'Perfil de professor não encontrado' }, { status: 404 })
     }
 
-    const teacherId = teacher ? teacher.id : (await prisma.teacher.findFirst())?.id || ''
+    const teacherId = teacher.id
 
     const [upcomingClasses, liveSessions, recordings, students] = await Promise.all([
       prisma.class.findMany({

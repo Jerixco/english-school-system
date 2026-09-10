@@ -8,9 +8,9 @@ const whatsappService = new WhatsAppService()
 
 const whatsappSchema = z.object({
   type: z.enum(['welcome', 'consultation', 'payment', 'reminder', 'custom']),
-  to: z.string().min(10, 'Phone number must be at least 10 digits'),
-  data: z.record(z.any()).optional(),
-  customMessage: z.string().optional(),
+  to: z.string().min(10, 'Phone number must be at least 10 digits').max(20),
+  data: z.record(z.string(), z.union([z.string(), z.number()])).optional(),
+  customMessage: z.string().max(4096).optional(),
 })
 
 export async function POST(req: NextRequest) {
@@ -42,24 +42,28 @@ export async function POST(req: NextRequest) {
     const result = await whatsappService.sendMessage(validatedData)
 
     if (result?.success) {
-      return NextResponse.json({ success: true })
+      return NextResponse.json({
+        success: true,
+        messageId: result.messageId,
+        waId: result.waId,
+      })
     } else {
       return NextResponse.json(
-        { error: 'Failed to send WhatsApp message', details: result?.error },
+        { error: result?.error || 'Falha ao enviar mensagem pelo WhatsApp' },
         { status: 500 }
       )
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error sending WhatsApp message:', error)
     
-    if (error.message === 'CUSTOM_MESSAGE_REQUIRED') {
+    if (error instanceof Error && error.message === 'CUSTOM_MESSAGE_REQUIRED') {
       return NextResponse.json(
         { error: 'Custom messages require message content' },
         { status: 400 }
       )
     }
 
-    if (error.name === 'ZodError') {
+    if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input data', details: error.errors },
         { status: 400 }

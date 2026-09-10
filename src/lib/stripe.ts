@@ -1,4 +1,5 @@
 import Stripe from 'stripe'
+import crypto from 'crypto'
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-04-10',
@@ -7,15 +8,20 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const getStripeCustomerId = async (email: string, name?: string) => {
   try {
-    const customers = await stripe.customers.list({ email: email.toLowerCase() })
+    const normalizedEmail = email.trim().toLowerCase()
+    const customers = await stripe.customers.list({ email: normalizedEmail, limit: 1 })
     
     if (customers.data.length > 0) {
       return customers.data[0].id
     }
 
     const customer = await stripe.customers.create({
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       name: name || '',
+    }, {
+      // Evita clientes duplicados quando dois checkouts concorrentes não
+      // encontram um cliente existente ao mesmo tempo.
+      idempotencyKey: `customer-${crypto.createHash('sha256').update(normalizedEmail).digest('hex')}`,
     })
 
     return customer.id

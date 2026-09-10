@@ -12,9 +12,34 @@ import {
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { createAuditLog } from '@/lib/account-security'
-import { getClientIdentifier } from '@/lib/rate-limiter'
+import { checkRateLimit, authRateLimiter, getClientIdentifier } from '@/lib/rate-limiter'
 import { twoFactorTokenSchema } from '@/lib/validations'
-import { ZodError } from 'zod'
+import { ZodError, z } from 'zod'
+
+const disableTwoFactorSchema = z.object({
+  token: twoFactorTokenSchema.shape.token,
+  password: z.string().min(1, 'Senha obrigatória'),
+})
+
+async function enforceTwoFactorRateLimit(req: NextRequest, userId: string) {
+  const result = await checkRateLimit(
+    authRateLimiter,
+    `2fa:${userId}:${getClientIdentifier(req)}`
+  )
+
+  if (!result.success) {
+    const retryAfter = Math.max(
+      1,
+      Math.ceil(((result.resetTime?.getTime() ?? Date.now()) - Date.now()) / 1000)
+    )
+    return NextResponse.json(
+      { error: 'Muitas tentativas. Tente novamente mais tarde.' },
+      { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+    )
+  }
+
+  return null
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,6 +48,9 @@ export async function POST(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
+
+    const rateLimitResponse = await enforceTwoFactorRateLimit(req, session.user.id)
+    if (rateLimitResponse) return rateLimitResponse
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -72,6 +100,9 @@ export async function PUT(req: NextRequest) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
+
+    const rateLimitResponse = await enforceTwoFactorRateLimit(req, session.user.id)
+    if (rateLimitResponse) return rateLimitResponse
 
     const body = await req.json()
     const { token } = twoFactorTokenSchema.parse(body)
@@ -126,8 +157,11 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
     }
 
+    const rateLimitResponse = await enforceTwoFactorRateLimit(req, session.user.id)
+    if (rateLimitResponse) return rateLimitResponse
+
     const body = await req.json()
-    const { token, password } = body
+    const { token, password } = disableTwoFactorSchema.parse(body)
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
